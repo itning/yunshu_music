@@ -50,10 +50,8 @@ class _MusicMiniPlayControllerWidgetState
       child: SizedBox(
         height: 54.0,
         child: InkWell(
-          onTap: () {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const MusicPlayPage()));
-          },
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const MusicPlayPage())),
           child: Flex(
             direction: Axis.horizontal,
             children: [

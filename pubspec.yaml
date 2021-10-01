@@ -37,6 +37,7 @@ dependencies:
   flutter_rest_template:
     path: ../flutter_rest_template
   provider: ^6.0.1
+  just_audio: ^0.9.12
 
 dev_dependencies:
   flutter_test:

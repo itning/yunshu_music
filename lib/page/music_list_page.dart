@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:yunshu_music/component/music_mini_play_controller_widget.dart';
+import 'package:yunshu_music/page/music_play_page.dart';
 
 /// 音乐列表
 class MusicListPage extends StatefulWidget {
@@ -55,6 +56,8 @@ class _ListItem extends StatelessWidget {
       onTap: () {
         // TODO ITNING:设置点击播放
         print('短按点击了');
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const MusicPlayPage()));
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 8.0, top: 8.0),
