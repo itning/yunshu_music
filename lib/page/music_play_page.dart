@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/component/rotate_cover_image_widget.dart';
 import 'package:yunshu_music/core/lyric/lyric_controller.dart';
 import 'package:yunshu_music/core/lyric/lyric_util.dart';
@@ -22,20 +23,36 @@ class _MusicPlayPageState extends State<MusicPlayPage>
   /// 播放暂停按钮动画控制器
   late AnimationController _playPauseController;
 
-  final ValueNotifier<double> _valueNotifier = ValueNotifier(0.0);
-
   @override
   void initState() {
     super.initState();
     _playPauseController = AnimationController(vsync: this)
       ..drive(Tween(begin: 0, end: 1))
-      ..duration = const Duration(milliseconds: 500);
+      ..duration = const Duration(milliseconds: 500)
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          PlayStatusModel status =
+              Provider.of<PlayStatusModel>(context, listen: false);
+          status.setPlay(true);
+        } else if (status == AnimationStatus.dismissed) {
+          PlayStatusModel status =
+              Provider.of<PlayStatusModel>(context, listen: false);
+          status.setPlay(false);
+        }
+      });
   }
 
   @override
   void dispose() {
     _playPauseController.dispose();
     super.dispose();
+  }
+
+  String _printDuration(Duration duration) {
+    int seconds = duration.inSeconds;
+    return '${(seconds / 60).floor()}'.padLeft(2, '0') +
+        ':' +
+        '${seconds % 60}'.padLeft(2, '0');
   }
 
   @override
@@ -100,9 +117,11 @@ class _MusicPlayPageState extends State<MusicPlayPage>
                   child: Flex(
                     direction: Axis.horizontal,
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          '02:05',
+                          _printDuration(
+                              context.select<PlayStatusModel, Duration>(
+                                  (value) => value.position)),
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -124,27 +143,35 @@ class _MusicPlayPageState extends State<MusicPlayPage>
                                 overlayRadius: 10, // 滑块外圈大小
                               ),
                             ),
-                            child: ValueListenableBuilder<double>(
-                              valueListenable: _valueNotifier,
-                              builder: (context, value, _) {
-                                return Slider(
-                                  min: 0,
-                                  max: 60,
-                                  onChanged: (double value) {
-                                    // TODO ITNING:组件回调
-                                    _valueNotifier.value = value;
-                                  },
-                                  value: value,
-                                );
-                              },
+                            child: Selector<PlayStatusModel,
+                                Tuple2<double, double>>(
+                              builder:
+                                  (context, Tuple2<double, double> value, _) =>
+                                      Slider(
+                                min: 0,
+                                max: value.item1,
+                                onChanged: (double value) => context
+                                    .read<PlayStatusModel>()
+                                    .seek(
+                                        Duration(milliseconds: value.toInt())),
+                                value: value.item2 > value.item1
+                                    ? value.item1
+                                    : value.item2,
+                              ),
+                              selector: (_, status) => Tuple2(
+                                status.duration.inMilliseconds.toDouble(),
+                                status.position.inMilliseconds.toDouble(),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          '04:45',
-                          style: TextStyle(color: Colors.white),
+                          _printDuration(
+                              context.select<PlayStatusModel, Duration>(
+                                  (value) => value.duration)),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ),
                     ],
@@ -175,10 +202,6 @@ class _MusicPlayPageState extends State<MusicPlayPage>
                             AnimationStatus.dismissed) {
                           _playPauseController.forward();
                         }
-                        PlayStatusModel status = Provider.of<PlayStatusModel>(
-                            context,
-                            listen: false);
-                        status.setPlay(!status.isPlayNow);
                       },
                     ),
                     IconButton(
@@ -218,9 +241,9 @@ class _CoverPageState extends State<_CoverPage>
     print('CoverPage initState');
     playStatusModel = Provider.of<PlayStatusModel>(context, listen: false);
     Provider.of<PlayStatusModel>(context, listen: false).addListener(() {
-      !playStatusModel.isPlayNow && _rotateCoverImageController.isAnimating
-          ? _rotateCoverImageController.stop()
-          : _rotateCoverImageController.repeat();
+      playStatusModel.isPlayNow
+          ? _rotateCoverImageController.repeat()
+          : _rotateCoverImageController.stop();
     });
   }
 
@@ -232,20 +255,15 @@ class _CoverPageState extends State<_CoverPage>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     print('CoverPage build');
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        // TODO ITNING:封面页跳转
-      },
-      child: Center(
-        child: RotateCoverImageWidget(
-          width: 225,
-          height: 225,
-          duration: const Duration(seconds: 20),
-          name: 'asserts/images/thz.jpg',
-          controller: _rotateCoverImageController,
-        ),
+    return Center(
+      child: RotateCoverImageWidget(
+        width: 225,
+        height: 225,
+        duration: const Duration(seconds: 20),
+        name: 'asserts/images/thz.jpg',
+        controller: _rotateCoverImageController,
       ),
     );
   }
@@ -268,23 +286,15 @@ class _LyricPageState extends State<_LyricPage>
   var songLyc =
       "[00:00.000] 作曲 : Maynard Plant/Blaise Plant/菊池拓哉 \n[00:00.226] 作词 : Maynard Plant/Blaise Plant/菊池拓哉\n[00:00.680]明日を照らすよSunshine\n[00:03.570]窓から射し込む…扉開いて\n[00:20.920]Stop!'cause you got me thinking\n[00:22.360]that I'm a little quicker\n[00:23.520]Go!Maybe the rhythm's off,\n[00:25.100]but I will never let you\n[00:26.280]Know!I wish that you could see it for yourself.\n[00:28.560]It's not,it's not,just stop,hey y'all!やだ!\n[00:30.930]I never thought that I would take over it all.\n[00:33.420]And now I know that there's no way I could fall.\n[00:35.970]You know it's on and on and off and on,\n[00:38.210]And no one gets away.\n[00:40.300]僕の夢は何処に在るのか?\n[00:45.100]影も形も見えなくて\n[00:50.200]追いかけていた守るべきもの\n[00:54.860]There's a sunshine in my mind\n[01:02.400]明日を照らすよSunshineどこまでも続く\n[01:07.340]目の前に広がるヒカリの先へ\n[01:12.870]未来の\n[01:15.420]輝く\n[01:18.100]You know it's hard,just take a chance.\n[01:19.670]信じて\n[01:21.289]明日も晴れるかな?\n[01:32.960]ほんの些細なことに何度も躊躇ったり\n[01:37.830]誰かのその言葉いつも気にして\n[01:42.850]そんな弱い僕でも「いつか必ずきっと!」\n[01:47.800]強がり?それも負け惜しみ?\n[01:51.940]僕の夢は何だったのか\n[01:56.720]大事なことも忘れて\n[02:01.680]目の前にある守るべきもの\n[02:06.640]There's a sunshine in my mind\n[02:14.500]明日を照らすよSunshineどこまでも続く\n[02:19.000]目の前に広がるヒカリの先へ\n[02:24.670]未来のSunshine\n[02:27.200]輝くSunshine\n[02:29.900]You know it's hard,just take a chance.\n[02:31.420]信じて\n[02:33.300]明日も晴れるかな?\n[02:47.200]Rain's got me now\n[03:05.650]I guess I'm waiting for that Sunshine\n[03:09.200]Why's It only shine in my mind\n[03:15.960]I guess I'm waiting for that Sunshine\n[03:19.110]Why's It only shine in my mind\n[03:25.970]明日を照らすよSunshineどこまでも続く\n[03:30.690]目の前に広がるヒカリの先へ\n[03:36.400]未来のSunshine\n[03:38.840]輝くSunshine\n[03:41.520]You know it's hard,just take a chance.\n[03:43.200]信じて\n[03:44.829]明日も晴れるかな?\n";
 
-  //音译/翻译歌词
-  var remarkSongLyc =
-      "[00:00.680]照亮明天的阳光\n[00:03.570]从窗外洒进来…敞开门扉\n[00:20.920]停下!因为你让我感觉到\n[00:22.360]自己有点过快\n[00:23.520]走吧!也许脱离了节奏\n[00:25.100]但我绝不放开你\n[00:26.280]知道吗!我希望你能亲自看看\n[00:28.560]不是这样不是这样快停下听好!糟了!\n[00:30.930]我从来没想过我会接受这一切\n[00:33.420]现在我知道我没办法降低速度\n[00:35.970]你知道这是不断地和不时地\n[00:38.210]于是谁也无法逃脱\n[00:40.300]我的梦想究竟落在何方?\n[00:45.100]为何形影不见\n[00:50.200]奋力追赶着应当守护的事物\n[00:54.860]阳光至始至终都在我心底里\n[01:02.400]照亮明天的阳光无限延伸\n[01:07.340]向着展现眼前的光明前路\n[01:12.870]Sunshine未来的阳光\n[01:15.420]Sunshine耀眼的阳光\n[01:18.100]你知道难以达成只是想去尝试一番\n[01:19.670]相信吧\n[01:21.289]明天也会放晴吗?\n[01:32.960]常因些微不足道的事情踌躇不前\n[01:37.830]总是很在意某人说过的话\n[01:42.850]如此脆弱的我亦坚信「早日必定成功!」\n[01:47.800]这是逞强还是不服输?\n[01:51.940]我的梦想实为何物\n[01:56.720]竟忘了如此重要的事\n[02:01.680]应当守护的事物就在眼前\n[02:06.640]阳光至始至终都在我心底里\n[02:14.500]照亮明天的阳光无限延伸\n[02:19.000]向着展现眼前的光明前路\n[02:24.670]未来的阳光\n[02:27.200]耀眼的阳光\n[02:29.900]你知道难以达成只是想去尝试一番\n[02:31.420]相信吧\n[02:33.300]明天也会放晴吗?\n[02:47.200]此刻雨水纷飞\n[03:05.650]我推测我所等待的就是这缕阳光\n[03:09.200]为什么它只在我心中闪烁\n[03:15.960]我推测我所等待的就是这缕阳光\n[03:19.110]为什么它只在我心中闪烁\n[03:25.970]照亮明天的阳光无限延伸\n[03:30.690]向着展现眼前的光明前路\n[03:36.400]未来的阳光\n[03:38.840]耀眼的阳光\n[03:41.520]你知道难以达成只是想去尝试一番\n[03:43.200]相信吧\n[03:44.829]明天也会放晴吗?";
-
   //是否显示选择器
   bool showSelect = false;
-  Duration start = const Duration(seconds: 0);
 
   //歌词控制器
   late LyricController controller;
 
-  double slider = 0;
-
   @override
   void initState() {
     super.initState();
-    print('LyricPage initState');
     controller = LyricController(vsync: this);
     //监听控制器
     controller.addListener(() {
@@ -301,73 +311,60 @@ class _LyricPageState extends State<_LyricPage>
 
   @override
   Widget build(BuildContext context) {
-    print('LyricPage build');
+    super.build(context);
+    // TODO ITNING:从地方歌曲变了要重新读歌词
     var lyrics = LyricUtil.formatLyric(songLyc);
-    var remarkLyrics = LyricUtil.formatLyric(remarkSongLyc);
 
-    return GestureDetector(
-      onTap: () {
-        // TODO ITNING:歌词页跳转
-      },
-      child: Column(
-        children: <Widget>[
-          Expanded(
-            child: Stack(
-              alignment: Alignment.center,
-              children: <Widget>[
-                Center(
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+              Center(
+                child: Selector<PlayStatusModel, Duration>(
+                  builder: (BuildContext context, value, Widget? child) {
+                    controller.progress = value;
+                    return child!;
+                  },
+                  selector: (_, status) => status.position,
                   child: LyricWidget(
                     size: const Size(double.infinity, double.infinity),
                     lyrics: lyrics!,
                     controller: controller,
-                    remarkLyrics: remarkLyrics,
                   ),
                 ),
-                Offstage(
-                  offstage: !showSelect,
-                  child: GestureDetector(
-                    onTap: () {
-                      //点击选择器后移动歌词到滑动位置;
-                      controller.draggingComplete();
-                      //当前进度
-                      print("进度:${controller.draggingProgress}");
-                      setState(() {
-                        slider =
-                            controller.draggingProgress.inSeconds.toDouble();
-                      });
-                    },
-                    child: Row(
-                      children: const [
-                        Icon(
-                          Icons.play_arrow,
-                          color: Colors.white,
-                        ),
-                        Expanded(
-                            child: Divider(
-                          color: Colors.grey,
-                        )),
-                      ],
-                    ),
+              ),
+              Offstage(
+                offstage: !showSelect,
+                child: GestureDetector(
+                  onTap: () {
+                    //点击选择器后移动歌词到滑动位置;
+                    controller.draggingComplete();
+                    //当前进度
+                    print("进度:${controller.draggingProgress}");
+                    context
+                        .read<PlayStatusModel>()
+                        .seek(controller.draggingProgress);
+                  },
+                  child: Row(
+                    children: const [
+                      Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                      ),
+                      Expanded(
+                          child: Divider(
+                        color: Colors.grey,
+                      )),
+                    ],
                   ),
-                )
-              ],
-            ),
+                ),
+              )
+            ],
           ),
-          Slider(
-            onChanged: (d) {
-              setState(() {
-                slider = d;
-              });
-            },
-            onChangeEnd: (d) {
-              controller.progress = Duration(seconds: d.toInt());
-            },
-            value: slider,
-            max: 320,
-            min: 0,
-          )
-        ],
-      ),
+        )
+      ],
     );
   }
 

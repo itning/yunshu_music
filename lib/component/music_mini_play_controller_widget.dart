@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/rotate_cover_image_widget.dart';
 import 'package:yunshu_music/page/music_play_page.dart';
+import 'package:yunshu_music/provider/play_status_model.dart';
 
 /// 小型音乐控制器Widget
 class MusicMiniPlayControllerWidget extends StatefulWidget {
@@ -24,7 +26,30 @@ class _MusicMiniPlayControllerWidgetState
     super.initState();
     _playPauseController = AnimationController(vsync: this)
       ..drive(Tween(begin: 0, end: 1))
-      ..duration = const Duration(milliseconds: 500);
+      ..duration = const Duration(milliseconds: 500)
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          PlayStatusModel status =
+              Provider.of<PlayStatusModel>(context, listen: false);
+          status.setPlay(true);
+          if (status.isPlayNow) {
+            _rotateCoverImageController.repeat();
+          } else {
+            _rotateCoverImageController.stop();
+          }
+        } else if (status == AnimationStatus.dismissed) {
+          PlayStatusModel status =
+              Provider.of<PlayStatusModel>(context, listen: false);
+          status.setPlay(false);
+          if (status.isPlayNow) {
+            _rotateCoverImageController.repeat();
+          } else {
+            _rotateCoverImageController.stop();
+          }
+        }
+      });
+    Provider.of<PlayStatusModel>(context, listen: false)
+        .setSource('http://192.168.0.108:8080/a.flac');
   }
 
   @override
@@ -85,19 +110,12 @@ class _MusicMiniPlayControllerWidgetState
                         ),
                       ),
                       onTap: () {
-                        // TODO ITNING:播放暂停按钮回调
                         if (_playPauseController.status ==
                             AnimationStatus.completed) {
                           _playPauseController.reverse();
                         } else if (_playPauseController.status ==
                             AnimationStatus.dismissed) {
                           _playPauseController.forward();
-                        }
-
-                        if (_rotateCoverImageController.isAnimating) {
-                          _rotateCoverImageController.stop();
-                        } else {
-                          _rotateCoverImageController.repeat();
                         }
                       },
                     )
