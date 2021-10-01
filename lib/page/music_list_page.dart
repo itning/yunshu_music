@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:yunshu_music/page/music_mini_play_controller_widget.dart';
+import 'package:yunshu_music/component/music_mini_play_controller_widget.dart';
 
 /// 音乐列表
 class MusicListPage extends StatefulWidget {
