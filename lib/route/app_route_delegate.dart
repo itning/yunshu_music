@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:yunshu_music/page/music_list_page.dart';
-import 'package:yunshu_music/page/music_play_page.dart';
 import 'package:yunshu_music/route/app_route_path.dart';
 
 /// 路由
@@ -12,8 +11,7 @@ class AppRouterDelegate extends RouterDelegate<AppRoutePath>
   AppRouterDelegate() : navigatorKey = GlobalKey<NavigatorState>();
 
   final List<MaterialPage<dynamic>> _pages = [
-    _generatePage(MusicListPage()),
-    _generatePage(MusicPlayPage()),
+    _generatePage(const MusicListPage()),
   ];
 
   @override

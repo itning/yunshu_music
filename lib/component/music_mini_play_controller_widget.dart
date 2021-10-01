@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:yunshu_music/component/rotate_cover_image_widget.dart';
+import 'package:yunshu_music/page/music_play_page.dart';
 
 /// 小型音乐控制器Widget
 class MusicMiniPlayControllerWidget extends StatefulWidget {
@@ -14,8 +16,8 @@ class _MusicMiniPlayControllerWidgetState
   /// 播放暂停按钮动画控制器
   late AnimationController _playPauseController;
 
-  /// 封面旋转动画控制器
-  late AnimationController _coverController;
+  final RotateCoverImageController _rotateCoverImageController =
+      RotateCoverImageController();
 
   @override
   void initState() {
@@ -23,15 +25,11 @@ class _MusicMiniPlayControllerWidgetState
     _playPauseController = AnimationController(vsync: this)
       ..drive(Tween(begin: 0, end: 1))
       ..duration = const Duration(milliseconds: 500);
-
-    _coverController =
-        AnimationController(duration: const Duration(seconds: 20), vsync: this);
   }
 
   @override
   void dispose() {
     _playPauseController.dispose();
-    _coverController.dispose();
     super.dispose();
   }
 
@@ -53,7 +51,8 @@ class _MusicMiniPlayControllerWidgetState
         height: 54.0,
         child: InkWell(
           onTap: () {
-            // TODO ITNING:点击
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const MusicPlayPage()));
           },
           child: Flex(
             direction: Axis.horizontal,
@@ -61,18 +60,12 @@ class _MusicMiniPlayControllerWidgetState
               Expanded(
                 flex: 2,
                 child: Center(
-                  child: RotationTransition(
-                    alignment: Alignment.center,
-                    turns: _coverController,
-                    child: ClipOval(
-                      // TODO ITNING:封面图从网络获取
-                      child: Image.asset(
-                        'asserts/images/thz.jpg',
-                        fit: BoxFit.cover,
-                        width: 52,
-                        height: 52,
-                      ),
-                    ),
+                  child: RotateCoverImageWidget(
+                    name: 'asserts/images/thz.jpg',
+                    width: 52,
+                    height: 52,
+                    duration: const Duration(seconds: 20),
+                    controller: _rotateCoverImageController,
                   ),
                 ),
               ),
@@ -103,10 +96,10 @@ class _MusicMiniPlayControllerWidgetState
                           _playPauseController.forward();
                         }
 
-                        if (_coverController.isAnimating) {
-                          _coverController.stop();
+                        if (_rotateCoverImageController.isAnimating) {
+                          _rotateCoverImageController.stop();
                         } else {
-                          _coverController.repeat();
+                          _rotateCoverImageController.repeat();
                         }
                       },
                     )
