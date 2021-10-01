@@ -316,12 +316,13 @@ class _LyricPageState extends State<_LyricPage>
               alignment: Alignment.center,
               children: <Widget>[
                 Center(
-                    child: LyricWidget(
-                  size: const Size(double.infinity, double.infinity),
-                  lyrics: lyrics!,
-                  controller: controller,
-                  remarkLyrics: remarkLyrics,
-                )),
+                  child: LyricWidget(
+                    size: const Size(double.infinity, double.infinity),
+                    lyrics: lyrics!,
+                    controller: controller,
+                    remarkLyrics: remarkLyrics,
+                  ),
+                ),
                 Offstage(
                   offstage: !showSelect,
                   child: GestureDetector(
