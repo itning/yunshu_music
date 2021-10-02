@@ -71,9 +71,9 @@ class _RotateCoverImageWidgetState extends State<RotateCoverImageWidget>
 typedef BoolFunction = bool Function();
 
 class RotateCoverImageController {
-  late VoidCallback repeat;
+  VoidCallback repeat = () {};
 
-  late VoidCallback stop;
+  VoidCallback stop = () {};
 
   late BoolFunction _isAnimating;
 

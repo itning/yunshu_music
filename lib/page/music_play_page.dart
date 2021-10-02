@@ -233,37 +233,27 @@ class _CoverPageState extends State<_CoverPage>
     with AutomaticKeepAliveClientMixin<_CoverPage> {
   final RotateCoverImageController _rotateCoverImageController =
       RotateCoverImageController();
-  late PlayStatusModel playStatusModel;
-
-  @override
-  void initState() {
-    super.initState();
-    print('CoverPage initState');
-    playStatusModel = Provider.of<PlayStatusModel>(context, listen: false);
-    Provider.of<PlayStatusModel>(context, listen: false).addListener(() {
-      playStatusModel.isPlayNow
-          ? _rotateCoverImageController.repeat()
-          : _rotateCoverImageController.stop();
-    });
-  }
-
-  @override
-  void dispose() {
-    print('CoverPage dispose');
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
     print('CoverPage build');
     return Center(
-      child: RotateCoverImageWidget(
-        width: 225,
-        height: 225,
-        duration: const Duration(seconds: 20),
-        name: 'asserts/images/thz.jpg',
-        controller: _rotateCoverImageController,
+      child: Selector<PlayStatusModel, bool>(
+        selector: (_, status) => status.isPlayNow,
+        builder: (BuildContext context, value, Widget? child) {
+          value
+              ? _rotateCoverImageController.repeat()
+              : _rotateCoverImageController.stop();
+          return child!;
+        },
+        child: RotateCoverImageWidget(
+          width: 225,
+          height: 225,
+          duration: const Duration(seconds: 20),
+          name: 'asserts/images/thz.jpg',
+          controller: _rotateCoverImageController,
+        ),
       ),
     );
   }
