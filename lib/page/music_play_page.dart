@@ -23,7 +23,7 @@ class _MusicPlayPageState extends State<MusicPlayPage>
   /// 播放暂停按钮动画控制器
   late AnimationController _playPauseController;
 
-  bool lastPlayStatus = false;
+  bool fromThisPage = false;
 
   @override
   void initState() {
@@ -181,15 +181,15 @@ class _MusicPlayPageState extends State<MusicPlayPage>
                       icon: Selector<PlayStatusModel, bool>(
                         selector: (_, status) => status.isPlayNow,
                         builder: (BuildContext context, value, Widget? child) {
-                          if (lastPlayStatus != value) {
-                            lastPlayStatus = value;
-                            value
-                                ? _playPauseController.forward()
-                                : _playPauseController.reverse();
-                          } else {
+                          // 如果在播放并且播放状态改变事件不是从当前页面触发的则动画直接结束运行
+                          if (value && !fromThisPage) {
                             value
                                 ? _playPauseController.forward(from: 1)
                                 : _playPauseController.reverse(from: 0);
+                          } else {
+                            value
+                                ? _playPauseController.forward()
+                                : _playPauseController.reverse();
                           }
                           return child!;
                         },
@@ -202,6 +202,7 @@ class _MusicPlayPageState extends State<MusicPlayPage>
                       color: Colors.white,
                       iconSize: 35,
                       onPressed: () {
+                        fromThisPage = true;
                         PlayStatusModel status = Provider.of<PlayStatusModel>(
                             context,
                             listen: false);
