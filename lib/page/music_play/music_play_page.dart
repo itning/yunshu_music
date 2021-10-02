@@ -22,8 +22,8 @@ class MusicPlayPage extends StatelessWidget {
           image: Image.memory(
             base64Decode(context
                 .select<MusicDataModel, String>((value) => value.coverBase64)),
-            // excludeFromSemantics: true,
-            // gaplessPlayback: true,
+            excludeFromSemantics: true,
+            gaplessPlayback: true,
           ).image,
           fit: BoxFit.cover,
         ),
