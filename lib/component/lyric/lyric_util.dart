@@ -17,7 +17,7 @@ limitations under the License.
 1. 适配dart空安全
 2. 注释修改
 */
-import 'package:yunshu_music/core/lyric/lyric.dart';
+import 'package:yunshu_music/component/lyric/lyric.dart';
 
 class LyricUtil {
   static var tags = ['ti', 'ar', 'al', 'offset', 'by'];

@@ -21,9 +21,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:yunshu_music/core/lyric/lyric.dart';
-import 'package:yunshu_music/core/lyric/lyric_controller.dart';
-import 'package:yunshu_music/core/lyric/lyric_painter.dart';
+import 'package:yunshu_music/component/lyric/lyric.dart';
+import 'package:yunshu_music/component/lyric/lyric_controller.dart';
+import 'package:yunshu_music/component/lyric/lyric_painter.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 
 class LyricWidget extends StatefulWidget {

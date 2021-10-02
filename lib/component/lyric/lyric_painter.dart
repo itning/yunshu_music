@@ -19,7 +19,7 @@ limitations under the License.
 */
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:yunshu_music/core/lyric/lyric.dart';
+import 'package:yunshu_music/component/lyric/lyric.dart';
 
 class LyricPainter extends CustomPainter with ChangeNotifier {
   /// 歌词列表

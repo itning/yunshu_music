@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_rest_template/response_entity.dart';
-import 'package:yunshu_music/core/lyric/lyric.dart';
-import 'package:yunshu_music/core/lyric/lyric_util.dart';
+import 'package:yunshu_music/component/lyric/lyric.dart';
+import 'package:yunshu_music/component/lyric/lyric_util.dart';
 import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/net/model/music_meta_info_entity.dart';
