@@ -21,7 +21,6 @@ class PlayStatusModel extends ChangeNotifier {
     _player.durationStream.listen((event) {
       print('>>>音频持续时间 $event');
       _duration = event ?? const Duration();
-      notifyListeners();
     });
     _player.playbackEventStream.listen((event) {
       print('>>>playbackEventStream $event');
@@ -37,6 +36,24 @@ class PlayStatusModel extends ChangeNotifier {
       _position = event;
       notifyListeners();
     });
+    _player.playingStream.listen((event) {
+      print('>>>正在播放状态 $event');
+    });
+    _player.playerStateStream.listen((event) {
+      print('>>>播放状态 $event');
+    });
+    _player.processingStateStream.listen((event) {
+      print('>>>状态改变 $event');
+      if (event == ProcessingState.completed) {
+        // TODO ITNING:处理下一曲或循环播放
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    print('>>>PlayStatusModel dispose');
   }
 
   /// 当前播放进度
@@ -46,7 +63,8 @@ class PlayStatusModel extends ChangeNotifier {
   Duration get duration => _duration;
 
   /// 现在正在播放吗？
-  bool get isPlayNow => _player.playing;
+  bool get isPlayNow =>
+      _player.playing && _player.processingState != ProcessingState.completed;
 
   /// 手动更新播放进度
   Future<void> seek(Duration? position) async {
@@ -81,6 +99,5 @@ class PlayStatusModel extends ChangeNotifier {
   /// 设置播放状态
   Future<void> setPlay(bool needPlay) async {
     needPlay ? await _player.play() : await _player.pause();
-    notifyListeners();
   }
 }
