@@ -27,7 +27,7 @@ class _MusicListPageState extends State<MusicListPage> {
   void initState() {
     super.initState();
     Provider.of<MusicDataModel>(context, listen: false)
-        .refreshMusicList()
+        .refreshMusicList(needInit: true)
         .then(message)
         .onError((error, stackTrace) {
       message(error.toString());

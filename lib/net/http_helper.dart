@@ -26,7 +26,7 @@ class HttpHelper {
 
   Future<ResponseEntity<MusicEntity>> getMusic() async {
     ResponseEntity<Map<String, dynamic>> responseEntity =
-        await _restTemplate.getForMapEntry("$baseUrl/music?size=10");
+        await _restTemplate.getForMapEntry("$baseUrl/music?size=5000");
     Map<String, dynamic>? body = responseEntity.body;
     if (null != body) {
       MusicEntity musicEntity = MusicEntity().fromJson(body);

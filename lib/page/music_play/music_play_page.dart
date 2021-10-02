@@ -18,10 +18,12 @@ class MusicPlayPage extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
+          colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.modulate),
           image: Image.memory(
-            base64Decode(context.select<MusicDataModel, String>((value) => value.coverBase64)),
-            excludeFromSemantics: true,
-            gaplessPlayback: true,
+            base64Decode(context
+                .select<MusicDataModel, String>((value) => value.coverBase64)),
+            // excludeFromSemantics: true,
+            // gaplessPlayback: true,
           ).image,
           fit: BoxFit.cover,
         ),

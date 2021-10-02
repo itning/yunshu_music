@@ -70,10 +70,12 @@ class PlayStatusModel extends ChangeNotifier {
   /// 当前音频时长
   Duration get duration => _duration;
 
+  /// 播放器状态
+  ProcessingState get processingState => _player.processingState;
+
   /// 现在正在播放吗？
   bool get isPlayNow =>
-      _player.processingState == ProcessingState.loading ||
-      (_player.playing && _player.processingState != ProcessingState.completed);
+      _player.playing && _player.processingState != ProcessingState.completed;
 
   /// 手动更新播放进度
   Future<void> seek(Duration? position) async {

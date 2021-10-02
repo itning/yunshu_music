@@ -19,6 +19,8 @@ class MusicDataModel extends ChangeNotifier {
     return _instance!;
   }
 
+  bool _isInit = false;
+
   /// 正在播放的列表
   final List<MusicDataContent> _playList = [];
 
@@ -47,7 +49,7 @@ class MusicDataModel extends ChangeNotifier {
   String get coverBase64 => _coverBase64 ?? defaultCoverBase64;
 
   /// 刷新音乐列表
-  Future<String?> refreshMusicList() async {
+  Future<String?> refreshMusicList({bool needInit = false}) async {
     ResponseEntity<MusicEntity> responseEntity =
         await HttpHelper.get().getMusic();
     if (responseEntity.body == null) {
@@ -60,6 +62,9 @@ class MusicDataModel extends ChangeNotifier {
       return null;
     }
     _musicList = responseEntity.body!.data!.content!;
+    if (needInit) {
+      await _initPlay();
+    }
     notifyListeners();
   }
 
@@ -89,6 +94,28 @@ class MusicDataModel extends ChangeNotifier {
     _playList.add(music);
     _nowPlayIndex = _playList.length - 1;
     await doPlay();
+  }
+
+  /// 初始化播放信息，这时候没播放但是应该让用户知道播放哪首歌
+  Future<void> _initPlay() async {
+    if (_isInit) {
+      return;
+    }
+    _isInit = true;
+    // TODO ITNING:历史播放列表的读取
+    // 移除在所有音乐列表中不存在的历史播放歌曲，初始化完成后调用
+    MusicDataContent? music = _getNextMusic();
+    if (null == music) {
+      return;
+    }
+    if (null != music.lyricId) {
+      await _initLyric(music.lyricId!);
+    }
+    if (null != music.musicId) {
+      await _initCover(music.musicId!);
+      await PlayStatusModel.get()
+          .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
+    }
   }
 
   Future<void> doPlay() async {
