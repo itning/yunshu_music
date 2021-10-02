@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/component/rotate_cover_image_widget.dart';
+import 'package:yunshu_music/core/lyric/lyric.dart';
 import 'package:yunshu_music/core/lyric/lyric_controller.dart';
-import 'package:yunshu_music/core/lyric/lyric_util.dart';
 import 'package:yunshu_music/core/lyric/lyric_widget.dart';
+import 'package:yunshu_music/net/model/music_entity.dart';
+import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 
 /// 音乐播放页面
@@ -60,19 +62,32 @@ class _MusicPlayPageState extends State<MusicPlayPage>
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             centerTitle: true,
-            title: Column(
-              children: const [
-                Text(
-                  '童话镇',
-                  style: TextStyle(fontSize: 18.0),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  '陈一发',
-                  style: TextStyle(fontSize: 10.0),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            title: Selector<MusicDataModel, MusicDataContent?>(
+              selector: (_, model) => model.getNowPlayMusic(),
+              builder: (BuildContext context, value, Widget? child) {
+                if (null == value) {
+                  return const Text(
+                    '云舒音乐',
+                    style: TextStyle(fontSize: 18.0),
+                    overflow: TextOverflow.ellipsis,
+                  );
+                } else {
+                  return Column(
+                    children: [
+                      Text(
+                        '${value.name}',
+                        style: TextStyle(fontSize: 18.0),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '${value.singer}',
+                        style: TextStyle(fontSize: 10.0),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  );
+                }
+              },
             ),
             elevation: 0,
             backgroundColor: Colors.transparent,
@@ -165,7 +180,10 @@ class _MusicPlayPageState extends State<MusicPlayPage>
                       color: Colors.white,
                       iconSize: 35,
                       icon: const Icon(Icons.skip_previous_outlined),
-                      onPressed: () {},
+                      onPressed: () {
+                        Provider.of<MusicDataModel>(context, listen: false)
+                            .toPrevious();
+                      },
                     ),
                     IconButton(
                       icon: Selector<PlayStatusModel, bool>(
@@ -203,7 +221,10 @@ class _MusicPlayPageState extends State<MusicPlayPage>
                       icon: const Icon(Icons.skip_next_outlined),
                       color: Colors.white,
                       iconSize: 35,
-                      onPressed: () {},
+                      onPressed: () {
+                        Provider.of<MusicDataModel>(context, listen: false)
+                            .toNext();
+                      },
                     ),
                   ],
                 ),
@@ -267,10 +288,6 @@ class _LyricPage extends StatefulWidget {
 
 class _LyricPageState extends State<_LyricPage>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin<_LyricPage> {
-  //歌词
-  var songLyc =
-      "[00:00.000] 作曲 : Maynard Plant/Blaise Plant/菊池拓哉 \n[00:00.226] 作词 : Maynard Plant/Blaise Plant/菊池拓哉\n[00:00.680]明日を照らすよSunshine\n[00:03.570]窓から射し込む…扉開いて\n[00:20.920]Stop!'cause you got me thinking\n[00:22.360]that I'm a little quicker\n[00:23.520]Go!Maybe the rhythm's off,\n[00:25.100]but I will never let you\n[00:26.280]Know!I wish that you could see it for yourself.\n[00:28.560]It's not,it's not,just stop,hey y'all!やだ!\n[00:30.930]I never thought that I would take over it all.\n[00:33.420]And now I know that there's no way I could fall.\n[00:35.970]You know it's on and on and off and on,\n[00:38.210]And no one gets away.\n[00:40.300]僕の夢は何処に在るのか?\n[00:45.100]影も形も見えなくて\n[00:50.200]追いかけていた守るべきもの\n[00:54.860]There's a sunshine in my mind\n[01:02.400]明日を照らすよSunshineどこまでも続く\n[01:07.340]目の前に広がるヒカリの先へ\n[01:12.870]未来の\n[01:15.420]輝く\n[01:18.100]You know it's hard,just take a chance.\n[01:19.670]信じて\n[01:21.289]明日も晴れるかな?\n[01:32.960]ほんの些細なことに何度も躊躇ったり\n[01:37.830]誰かのその言葉いつも気にして\n[01:42.850]そんな弱い僕でも「いつか必ずきっと!」\n[01:47.800]強がり?それも負け惜しみ?\n[01:51.940]僕の夢は何だったのか\n[01:56.720]大事なことも忘れて\n[02:01.680]目の前にある守るべきもの\n[02:06.640]There's a sunshine in my mind\n[02:14.500]明日を照らすよSunshineどこまでも続く\n[02:19.000]目の前に広がるヒカリの先へ\n[02:24.670]未来のSunshine\n[02:27.200]輝くSunshine\n[02:29.900]You know it's hard,just take a chance.\n[02:31.420]信じて\n[02:33.300]明日も晴れるかな?\n[02:47.200]Rain's got me now\n[03:05.650]I guess I'm waiting for that Sunshine\n[03:09.200]Why's It only shine in my mind\n[03:15.960]I guess I'm waiting for that Sunshine\n[03:19.110]Why's It only shine in my mind\n[03:25.970]明日を照らすよSunshineどこまでも続く\n[03:30.690]目の前に広がるヒカリの先へ\n[03:36.400]未来のSunshine\n[03:38.840]輝くSunshine\n[03:41.520]You know it's hard,just take a chance.\n[03:43.200]信じて\n[03:44.829]明日も晴れるかな?\n";
-
   //是否显示选择器
   bool showSelect = false;
 
@@ -297,9 +314,6 @@ class _LyricPageState extends State<_LyricPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // TODO ITNING:从地方歌曲变了要重新读歌词
-    var lyrics = LyricUtil.formatLyric(songLyc);
-
     return Column(
       children: <Widget>[
         Expanded(
@@ -307,18 +321,30 @@ class _LyricPageState extends State<_LyricPage>
             alignment: Alignment.center,
             children: <Widget>[
               Center(
-                child: Selector<PlayStatusModel, Duration>(
-                  builder: (BuildContext context, value, Widget? child) {
-                    controller.progress = value;
-                    return child!;
-                  },
-                  selector: (_, status) => status.position,
-                  child: LyricWidget(
-                    size: const Size(double.infinity, double.infinity),
-                    lyrics: lyrics!,
-                    controller: controller,
-                  ),
-                ),
+                child: Selector<MusicDataModel, List<Lyric>?>(
+                    selector: (_, data) => data.lyricList,
+                    builder: (_, value, __) {
+                      if (null == value) {
+                        return const Text(
+                          '该歌曲暂无歌词',
+                          style: TextStyle(color: Colors.white),
+                        );
+                      } else {
+                        return Selector<PlayStatusModel, Duration>(
+                          builder:
+                              (BuildContext context, value, Widget? child) {
+                            controller.progress = value;
+                            return child!;
+                          },
+                          selector: (_, status) => status.position,
+                          child: LyricWidget(
+                            size: const Size(double.infinity, double.infinity),
+                            lyrics: value,
+                            controller: controller,
+                          ),
+                        );
+                      }
+                    }),
               ),
               Offstage(
                 offstage: !showSelect,

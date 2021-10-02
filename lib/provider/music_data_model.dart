@@ -1,0 +1,220 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_rest_template/response_entity.dart';
+import 'package:yunshu_music/core/lyric/lyric.dart';
+import 'package:yunshu_music/core/lyric/lyric_util.dart';
+import 'package:yunshu_music/net/http_helper.dart';
+import 'package:yunshu_music/net/model/music_entity.dart';
+import 'package:yunshu_music/provider/play_status_model.dart';
+
+/// 音乐数据模型
+class MusicDataModel extends ChangeNotifier {
+  static MusicDataModel? _instance;
+
+  static MusicDataModel get() {
+    _instance ??= MusicDataModel();
+    return _instance!;
+  }
+
+  /// 正在播放的列表
+  final List<MusicDataContent> _playList = [];
+
+  /// 所有音乐列表
+  List<MusicDataContent> _musicList = [];
+
+  /// 随机过的音乐集合
+  final Set<MusicDataContent> _randomPlayedSet = {};
+
+  /// 正在播放的音乐在_playList里的索引
+  int _nowPlayIndex = 0;
+
+  /// 当前歌曲的歌词信息
+  List<Lyric>? _lyricList;
+
+  /// 获取音乐列表
+  List<MusicDataContent> get musicList => _musicList;
+
+  /// 当前歌词信息
+  List<Lyric>? get lyricList => _lyricList;
+
+  /// 刷新音乐列表
+  Future<String?> refreshMusicList() async {
+    ResponseEntity<MusicEntity> responseEntity =
+        await HttpHelper.get().getMusic();
+    if (responseEntity.body == null) {
+      return '服务器<${responseEntity.status.value}> BODY NULL';
+    }
+    if (responseEntity.body!.code != 200 || responseEntity.body!.data == null) {
+      return responseEntity.body!.msg ?? '服务器错误';
+    }
+    if (responseEntity.body!.data!.content == null) {
+      return null;
+    }
+    _musicList = responseEntity.body!.data!.content!;
+    notifyListeners();
+  }
+
+  /// 获取现在正在播放的音乐信息
+  MusicDataContent? getNowPlayMusic() {
+    if (_playList.isEmpty) {
+      return null;
+    } else {
+      return _playList[_nowPlayIndex];
+    }
+  }
+
+  /// 设置现在正在播放的音乐信息
+  Future<void> setNowPlayMusic(int index) async {
+    if (index > _musicList.length - 1) {
+      return;
+    }
+    MusicDataContent music = _musicList[index];
+    // 检查播放列表有没有这首歌，有的话直接将播放
+    for (int i = 0; i < _playList.length; i++) {
+      if (music.musicId == _playList[i].musicId) {
+        _nowPlayIndex = i;
+        notifyListeners();
+        return;
+      }
+    }
+    _playList.add(music);
+    _nowPlayIndex = _playList.length - 1;
+    if (null != music.musicId) {
+      // 'http://192.168.0.108:8080/a.flac'
+      // PlayStatusModel.get()
+      //     .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
+      await PlayStatusModel.get().setSource('http://192.168.0.108:8080/a.flac');
+      await PlayStatusModel.get().setPlay(true);
+      if (null != music.lyricId) {
+        await _initLyric(music.lyricId!);
+      }
+      notifyListeners();
+    }
+  }
+
+  /// 上一曲
+  Future<void> toPrevious() async {
+    if (_musicList.isEmpty) {
+      return;
+    }
+    MusicDataContent? previousMusic = _getPreviousMusic();
+    if (null == previousMusic) {
+      return;
+    }
+    if (null != previousMusic.musicId) {
+      // 'http://192.168.0.108:8080/a.flac'
+      // PlayStatusModel.get()
+      //     .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
+      await PlayStatusModel.get().setSource('http://192.168.0.108:8080/a.flac');
+      await PlayStatusModel.get().setPlay(true);
+      if (null != previousMusic.lyricId) {
+        await _initLyric(previousMusic.lyricId!);
+      }
+      notifyListeners();
+    }
+  }
+
+  /// 下一曲
+  Future<void> toNext() async {
+    if (_musicList.isEmpty) {
+      return;
+    }
+    MusicDataContent? nextMusic = _getNextMusic();
+    if (null == nextMusic) {
+      print('下一曲为空');
+      return;
+    }
+    if (null != nextMusic.musicId) {
+      // 'http://192.168.0.108:8080/a.flac'
+      // PlayStatusModel.get()
+      //     .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
+      await PlayStatusModel.get().setSource('http://192.168.0.108:8080/a.flac');
+      await PlayStatusModel.get().setPlay(true);
+      if (null != nextMusic.lyricId) {
+        await _initLyric(nextMusic.lyricId!);
+      }
+      notifyListeners();
+    }
+  }
+
+  Future<void> _initLyric(String lyricId) async {
+    String? lyric = await HttpHelper.get().getLyric(lyricId);
+    List<Lyric>? list = LyricUtil.formatLyric(lyric);
+    _lyricList = list;
+  }
+
+  /// 上一曲
+  MusicDataContent? _getPreviousMusic() {
+    // 如果播放列表为空则获取一首歌曲
+    if (_playList.isEmpty) {
+      // TODO ITNING:歌曲模式
+      MusicDataContent? music = _getSongsRandomly();
+      if (null == music) {
+        return null;
+      }
+      _playList.insert(0, music);
+      _nowPlayIndex = 0;
+      return music;
+    } else {
+      // 播放列表不是空的，尝试索引位置-1
+      if (_nowPlayIndex - 1 <= 0) {
+        // 说明是上一首歌不存在了，获取一首
+        MusicDataContent? music = _getSongsRandomly();
+        if (null == music) {
+          return null;
+        }
+        _playList.insert(0, music);
+        _nowPlayIndex = 0;
+        return music;
+      } else {
+        return _playList[--_nowPlayIndex];
+      }
+    }
+  }
+
+  /// 下一曲
+  MusicDataContent? _getNextMusic() {
+    // 播放列表是空的：用户没播放过歌曲
+    if (_playList.isEmpty) {
+      // TODO ITNING:歌曲模式
+      MusicDataContent? music = _getSongsRandomly();
+      if (null == music) {
+        return null;
+      }
+      _playList.add(music);
+      _nowPlayIndex = 0;
+      return music;
+    } else {
+      // 播放列表不是空的，尝试索引位置+1
+      if (_playList.length <= _nowPlayIndex + 1) {
+        // 说明播放到播放列表中最后一首歌了，需要获取下一首
+        MusicDataContent? music = _getSongsRandomly();
+        if (null == music) {
+          return null;
+        }
+        _playList.add(music);
+        _nowPlayIndex = _playList.length - 1;
+        return music;
+      } else {
+        // 不是最后一首，索引+1返回
+        return _playList[++_nowPlayIndex];
+      }
+    }
+  }
+
+  /// 随机获取一首
+  MusicDataContent? _getSongsRandomly() {
+    if (_musicList.isEmpty) {
+      return null;
+    }
+    List<MusicDataContent> canPlayList =
+        _musicList.where((music) => !_randomPlayedSet.contains(music)).toList();
+    if (canPlayList.isEmpty) {
+      _randomPlayedSet.clear();
+      canPlayList = _musicList;
+    }
+    int index = Random().nextInt(canPlayList.length);
+    return canPlayList[index];
+  }
+}

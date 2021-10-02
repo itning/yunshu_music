@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/route/app_route_delegate.dart';
 
@@ -11,8 +12,11 @@ class YunShuMusicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => PlayStatusModel(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => PlayStatusModel.get()),
+        ChangeNotifierProvider(create: (_) => MusicDataModel.get()),
+      ],
       child: MaterialApp(
         title: '云舒音乐',
         home: Router(

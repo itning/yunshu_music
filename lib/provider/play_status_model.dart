@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:yunshu_music/provider/music_data_model.dart';
 
 /// 播放状态
 class PlayStatusModel extends ChangeNotifier {
+  static PlayStatusModel? _instance;
+
+  static PlayStatusModel get() {
+    _instance ??= PlayStatusModel();
+    return _instance!;
+  }
+
   final AudioPlayer _player;
 
   /// 播放进度，实时
@@ -11,7 +19,6 @@ class PlayStatusModel extends ChangeNotifier {
   /// 音频持续时间
   Duration _duration = const Duration();
 
-  // TODO ITNING:APP关闭释放资源
   // TODO ITNING:https://pub.dev/packages/audio_session/install 增加占用监听
 
   PlayStatusModel() : _player = AudioPlayer() {
@@ -45,15 +52,16 @@ class PlayStatusModel extends ChangeNotifier {
     _player.processingStateStream.listen((event) {
       print('>>>状态改变 $event');
       if (event == ProcessingState.completed) {
-        // TODO ITNING:处理下一曲或循环播放
+        MusicDataModel.get().toNext();
       }
     });
   }
 
   @override
   void dispose() {
-    super.dispose();
     print('>>>PlayStatusModel dispose');
+    _player.dispose();
+    super.dispose();
   }
 
   /// 当前播放进度
