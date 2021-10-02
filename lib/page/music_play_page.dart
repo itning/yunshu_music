@@ -23,23 +23,14 @@ class _MusicPlayPageState extends State<MusicPlayPage>
   /// 播放暂停按钮动画控制器
   late AnimationController _playPauseController;
 
+  bool lastPlayStatus = false;
+
   @override
   void initState() {
     super.initState();
     _playPauseController = AnimationController(vsync: this)
       ..drive(Tween(begin: 0, end: 1))
-      ..duration = const Duration(milliseconds: 500)
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          PlayStatusModel status =
-              Provider.of<PlayStatusModel>(context, listen: false);
-          status.setPlay(true);
-        } else if (status == AnimationStatus.dismissed) {
-          PlayStatusModel status =
-              Provider.of<PlayStatusModel>(context, listen: false);
-          status.setPlay(false);
-        }
-      });
+      ..duration = const Duration(milliseconds: 500);
   }
 
   @override
@@ -187,21 +178,34 @@ class _MusicPlayPageState extends State<MusicPlayPage>
                       onPressed: () {},
                     ),
                     IconButton(
-                      icon: AnimatedIcon(
-                        icon: AnimatedIcons.play_pause,
-                        progress: _playPauseController,
-                        size: 35.0,
+                      icon: Selector<PlayStatusModel, bool>(
+                        selector: (_, status) => status.isPlayNow,
+                        builder: (BuildContext context, value, Widget? child) {
+                          if (lastPlayStatus != value) {
+                            lastPlayStatus = value;
+                            value
+                                ? _playPauseController.forward()
+                                : _playPauseController.reverse();
+                          } else {
+                            value
+                                ? _playPauseController.forward(from: 1)
+                                : _playPauseController.reverse(from: 0);
+                          }
+                          return child!;
+                        },
+                        child: AnimatedIcon(
+                          icon: AnimatedIcons.play_pause,
+                          progress: _playPauseController,
+                          size: 35.0,
+                        ),
                       ),
                       color: Colors.white,
                       iconSize: 35,
                       onPressed: () {
-                        if (_playPauseController.status ==
-                            AnimationStatus.completed) {
-                          _playPauseController.reverse();
-                        } else if (_playPauseController.status ==
-                            AnimationStatus.dismissed) {
-                          _playPauseController.forward();
-                        }
+                        PlayStatusModel status = Provider.of<PlayStatusModel>(
+                            context,
+                            listen: false);
+                        status.setPlay(!status.isPlayNow);
                       },
                     ),
                     IconButton(

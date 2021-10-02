@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:yunshu_music/provider/play_status_model.dart';
 
 /// 可旋转的封面图Widget
 class RotateCoverImageWidget extends StatefulWidget {
@@ -42,6 +44,16 @@ class _RotateCoverImageWidgetState extends State<RotateCoverImageWidget>
       }
     };
     widget.controller._isAnimating = () => _coverController.isAnimating;
+    // 初始化时判断是否正在播放，如播放直接开始动画
+    if (Provider.of<PlayStatusModel>(context, listen: false).isPlayNow) {
+      if (mounted) {
+        _coverController.repeat();
+      }
+    } else {
+      if (mounted) {
+        _coverController.stop();
+      }
+    }
   }
 
   @override
