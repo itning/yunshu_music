@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/rotate_cover_image_widget.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
-import 'package:yunshu_music/page/music_play_page.dart';
+import 'package:yunshu_music/page/music_play/music_play_page.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 
@@ -19,9 +19,6 @@ class _MusicMiniPlayControllerWidgetState
     extends State<MusicMiniPlayControllerWidget> with TickerProviderStateMixin {
   /// 播放暂停按钮动画控制器
   late AnimationController _playPauseController;
-
-  final RotateCoverImageController _rotateCoverImageController =
-      RotateCoverImageController();
 
   bool lastPlayStatus = false;
 
@@ -64,21 +61,16 @@ class _MusicMiniPlayControllerWidgetState
               Expanded(
                 flex: 2,
                 child: Center(
-                  child: Selector<PlayStatusModel, bool>(
-                    builder: (BuildContext context, value, Widget? child) {
-                      value
-                          ? _rotateCoverImageController.repeat()
-                          : _rotateCoverImageController.stop();
-                      return child!;
+                  child: Selector<MusicDataModel, String>(
+                    selector: (_, model) => model.coverBase64,
+                    builder: (_, value, __) {
+                      return RotateCoverImageWidget(
+                        name: value,
+                        width: 52,
+                        height: 52,
+                        duration: const Duration(seconds: 20),
+                      );
                     },
-                    selector: (_, status) => status.isPlayNow,
-                    child: RotateCoverImageWidget(
-                      name: 'asserts/images/thz.jpg',
-                      width: 52,
-                      height: 52,
-                      duration: const Duration(seconds: 20),
-                      controller: _rotateCoverImageController,
-                    ),
                   ),
                 ),
               ),

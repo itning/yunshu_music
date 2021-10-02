@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:yunshu_music/component/music_mini_play_controller_widget.dart';
-import 'package:yunshu_music/page/music_play_page.dart';
+import 'package:yunshu_music/page/music_list/component/music_mini_play_controller_widget.dart';
+import 'package:yunshu_music/page/music_play/music_play_page.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 
 /// 音乐列表
@@ -62,12 +62,12 @@ class _MusicListPageState extends State<MusicListPage> {
                   subTitle: value.musicList[index].singer,
                   rightButtonIcon: Icons.more_vert,
                   onTap: () {
-                    Provider.of<MusicDataModel>(context, listen: false)
-                        .setNowPlayMusic(index);
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (_) => const MusicPlayPage()));
+                    Provider.of<MusicDataModel>(context, listen: false)
+                        .setNowPlayMusic(index);
                   },
                   onLongPress: () {
                     // TODO ITNING:长按复制？

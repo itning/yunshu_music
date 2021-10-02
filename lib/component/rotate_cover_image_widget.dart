@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
@@ -6,17 +8,15 @@ import 'package:yunshu_music/provider/play_status_model.dart';
 class RotateCoverImageWidget extends StatefulWidget {
   final double width;
   final double height;
-  final String name;
+  final String? name;
   final Duration duration;
-  final RotateCoverImageController controller;
 
   const RotateCoverImageWidget(
       {Key? key,
       required this.width,
       required this.height,
-      required this.name,
-      required this.duration,
-      required this.controller})
+      this.name,
+      required this.duration})
       : super(key: key);
 
   @override
@@ -33,27 +33,6 @@ class _RotateCoverImageWidgetState extends State<RotateCoverImageWidget>
     super.initState();
     _coverController =
         AnimationController(duration: widget.duration, vsync: this);
-    widget.controller.repeat = () {
-      if (mounted) {
-        _coverController.repeat();
-      }
-    };
-    widget.controller.stop = () {
-      if (mounted) {
-        _coverController.stop();
-      }
-    };
-    widget.controller._isAnimating = () => _coverController.isAnimating;
-    // 初始化时判断是否正在播放，如播放直接开始动画
-    if (Provider.of<PlayStatusModel>(context, listen: false).isPlayNow) {
-      if (mounted) {
-        _coverController.repeat();
-      }
-    } else {
-      if (mounted) {
-        _coverController.stop();
-      }
-    }
   }
 
   @override
@@ -64,30 +43,31 @@ class _RotateCoverImageWidgetState extends State<RotateCoverImageWidget>
 
   @override
   Widget build(BuildContext context) {
-    return RotationTransition(
-      alignment: Alignment.center,
-      turns: _coverController,
-      child: ClipOval(
-        // TODO ITNING:封面图从网络获取
-        child: Image.asset(
-          widget.name,
-          fit: BoxFit.cover,
-          width: widget.width,
-          height: widget.height,
+    return Selector<PlayStatusModel, bool>(
+      builder: (_, value, Widget? child) {
+        value ? _coverController.repeat() : _coverController.stop();
+        return child!;
+      },
+      selector: (_, model) => model.isPlayNow,
+      child: RotationTransition(
+        alignment: Alignment.center,
+        turns: _coverController,
+        child: ClipOval(
+          child: widget.name != null
+              ? Image.memory(
+                  base64Decode(widget.name!),
+                  fit: BoxFit.cover,
+                  width: widget.width,
+                  height: widget.height,
+                )
+              : Image.asset(
+                  'asserts/images/default_cover.png',
+                  fit: BoxFit.cover,
+                  width: widget.width,
+                  height: widget.height,
+                ),
         ),
       ),
     );
   }
-}
-
-typedef BoolFunction = bool Function();
-
-class RotateCoverImageController {
-  VoidCallback repeat = () {};
-
-  VoidCallback stop = () {};
-
-  late BoolFunction _isAnimating;
-
-  get isAnimating => _isAnimating();
 }

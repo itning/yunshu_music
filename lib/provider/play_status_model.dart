@@ -72,7 +72,8 @@ class PlayStatusModel extends ChangeNotifier {
 
   /// 现在正在播放吗？
   bool get isPlayNow =>
-      _player.playing && _player.processingState != ProcessingState.completed;
+      _player.processingState == ProcessingState.loading ||
+      (_player.playing && _player.processingState != ProcessingState.completed);
 
   /// 手动更新播放进度
   Future<void> seek(Duration? position) async {
@@ -107,5 +108,10 @@ class PlayStatusModel extends ChangeNotifier {
   /// 设置播放状态
   Future<void> setPlay(bool needPlay) async {
     needPlay ? await _player.play() : await _player.pause();
+  }
+
+  /// 停止播放
+  Future<void> stopPlay() async {
+    _player.stop();
   }
 }

@@ -20,9 +20,11 @@ limitations under the License.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:yunshu_music/core/lyric/lyric.dart';
 import 'package:yunshu_music/core/lyric/lyric_controller.dart';
 import 'package:yunshu_music/core/lyric/lyric_painter.dart';
+import 'package:yunshu_music/provider/play_status_model.dart';
 
 class LyricWidget extends StatefulWidget {
   final List<Lyric> lyrics;
@@ -167,34 +169,54 @@ class _LyricWidgetState extends State<LyricWidget> {
     } else {
       _lyricPainter.offset = -computeScrollY(_lyricPainter.currentLyricIndex);
     }
-    return widget.enableDrag
-        ? GestureDetector(
-            onVerticalDragUpdate: (e) {
-              cancelTimer();
-              double temOffset = (_lyricPainter.offset + e.delta.dy);
-              if (temOffset < 0 && temOffset >= -totalHeight) {
-                widget.controller.draggingOffset = temOffset;
-                widget.controller.draggingLine =
-                    getCurrentDraggingLine(temOffset + widget.lyricGap);
-                _lyricPainter.draggingLine = widget.controller.draggingLine;
-                widget.controller.draggingProgress =
-                    widget.lyrics[widget.controller.draggingLine].startTime +
-                        const Duration(milliseconds: 1);
-                widget.controller.isDragging = true;
-                _lyricPainter.offset = temOffset;
-              }
-            },
-            onVerticalDragEnd: (e) {
-              cancelTimer();
-              widget.controller.draggingTimer = Timer(
-                  widget.controller.draggingTimerDuration ??
-                      const Duration(seconds: 3), () {
-                resetDragging();
-              });
-            },
-            child: buildCustomPaint(),
-          )
-        : buildCustomPaint();
+    return Selector<PlayStatusModel, Duration>(
+      selector: (_, model) => model.position,
+      builder: (_, value, Widget? child) {
+        widget.controller.progress = value;
+        var curLine =
+            findLyricIndexByDuration(widget.controller.progress, widget.lyrics);
+        if (widget.controller.oldLine != curLine) {
+          _lyricPainter.currentLyricIndex = curLine;
+          if (!widget.controller.isDragging) {
+            if (widget.controller.vsync == null) {
+              _lyricPainter.offset = -computeScrollY(curLine);
+            } else {
+              animationScrollY(curLine, widget.controller.vsync!);
+            }
+          }
+          widget.controller.oldLine = curLine;
+        }
+        return child!;
+      },
+      child: widget.enableDrag
+          ? GestureDetector(
+              onVerticalDragUpdate: (e) {
+                cancelTimer();
+                double temOffset = (_lyricPainter.offset + e.delta.dy);
+                if (temOffset < 0 && temOffset >= -totalHeight) {
+                  widget.controller.draggingOffset = temOffset;
+                  widget.controller.draggingLine =
+                      getCurrentDraggingLine(temOffset + widget.lyricGap);
+                  _lyricPainter.draggingLine = widget.controller.draggingLine;
+                  widget.controller.draggingProgress =
+                      widget.lyrics[widget.controller.draggingLine].startTime +
+                          const Duration(milliseconds: 1);
+                  widget.controller.isDragging = true;
+                  _lyricPainter.offset = temOffset;
+                }
+              },
+              onVerticalDragEnd: (e) {
+                cancelTimer();
+                widget.controller.draggingTimer = Timer(
+                    widget.controller.draggingTimerDuration ??
+                        const Duration(seconds: 3), () {
+                  resetDragging();
+                });
+              },
+              child: buildCustomPaint(),
+            )
+          : buildCustomPaint(),
+    );
   }
 
   CustomPaint buildCustomPaint() {

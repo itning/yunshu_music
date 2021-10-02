@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:yunshu_music/page/music_list_page.dart';
+import 'package:yunshu_music/page/music_list/music_list_page.dart';
 import 'package:yunshu_music/route/app_route_path.dart';
 
 /// 路由

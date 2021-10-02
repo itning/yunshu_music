@@ -6,6 +6,8 @@ import 'package:yunshu_music/core/lyric/lyric.dart';
 import 'package:yunshu_music/core/lyric/lyric_util.dart';
 import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
+import 'package:yunshu_music/net/model/music_meta_info_entity.dart';
+import 'package:yunshu_music/provider/base64.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 
 /// 音乐数据模型
@@ -32,11 +34,17 @@ class MusicDataModel extends ChangeNotifier {
   /// 当前歌曲的歌词信息
   List<Lyric>? _lyricList;
 
+  /// 音乐封面
+  String? _coverBase64;
+
   /// 获取音乐列表
   List<MusicDataContent> get musicList => _musicList;
 
-  /// 当前歌词信息
+  /// 获取当前歌词信息
   List<Lyric>? get lyricList => _lyricList;
+
+  /// 获取音乐封面
+  String get coverBase64 => _coverBase64 ?? defaultCoverBase64;
 
   /// 刷新音乐列表
   Future<String?> refreshMusicList() async {
@@ -74,21 +82,33 @@ class MusicDataModel extends ChangeNotifier {
     for (int i = 0; i < _playList.length; i++) {
       if (music.musicId == _playList[i].musicId) {
         _nowPlayIndex = i;
-        notifyListeners();
+        await doPlay();
         return;
       }
     }
     _playList.add(music);
     _nowPlayIndex = _playList.length - 1;
+    await doPlay();
+  }
+
+  Future<void> doPlay() async {
+    await PlayStatusModel.get().setPlay(false);
+    await PlayStatusModel.get().stopPlay();
+    if (_playList.isEmpty) {
+      return;
+    }
+    if (_playList.length < _nowPlayIndex + 1) {
+      return;
+    }
+    MusicDataContent music = _playList[_nowPlayIndex];
     if (null != music.musicId) {
-      // 'http://192.168.0.108:8080/a.flac'
-      // PlayStatusModel.get()
-      //     .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
-      await PlayStatusModel.get().setSource('http://192.168.0.108:8080/a.flac');
-      await PlayStatusModel.get().setPlay(true);
+      await _initCover(music.musicId!);
       if (null != music.lyricId) {
         await _initLyric(music.lyricId!);
       }
+      await PlayStatusModel.get()
+          .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
+      await PlayStatusModel.get().setPlay(true);
       notifyListeners();
     }
   }
@@ -102,17 +122,7 @@ class MusicDataModel extends ChangeNotifier {
     if (null == previousMusic) {
       return;
     }
-    if (null != previousMusic.musicId) {
-      // 'http://192.168.0.108:8080/a.flac'
-      // PlayStatusModel.get()
-      //     .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
-      await PlayStatusModel.get().setSource('http://192.168.0.108:8080/a.flac');
-      await PlayStatusModel.get().setPlay(true);
-      if (null != previousMusic.lyricId) {
-        await _initLyric(previousMusic.lyricId!);
-      }
-      notifyListeners();
-    }
+    await doPlay();
   }
 
   /// 下一曲
@@ -125,23 +135,44 @@ class MusicDataModel extends ChangeNotifier {
       print('下一曲为空');
       return;
     }
-    if (null != nextMusic.musicId) {
-      // 'http://192.168.0.108:8080/a.flac'
-      // PlayStatusModel.get()
-      //     .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
-      await PlayStatusModel.get().setSource('http://192.168.0.108:8080/a.flac');
-      await PlayStatusModel.get().setPlay(true);
-      if (null != nextMusic.lyricId) {
-        await _initLyric(nextMusic.lyricId!);
-      }
-      notifyListeners();
-    }
+    await doPlay();
   }
 
   Future<void> _initLyric(String lyricId) async {
     String? lyric = await HttpHelper.get().getLyric(lyricId);
     List<Lyric>? list = LyricUtil.formatLyric(lyric);
     _lyricList = list;
+    notifyListeners();
+  }
+
+  Future<void> _initCover(String musicId) async {
+    ResponseEntity<MusicMetaInfoEntity> responseEntity =
+        await HttpHelper.get().getMetaInfo(musicId);
+    if (responseEntity.status.value != 200) {
+      _coverBase64 = null;
+      return;
+    }
+
+    if (responseEntity.body == null || responseEntity.body!.data == null) {
+      _coverBase64 = null;
+      return;
+    }
+
+    if (responseEntity.body!.data!.coverPictures == null) {
+      _coverBase64 = null;
+      return;
+    }
+
+    if (responseEntity.body!.data!.coverPictures!.isEmpty) {
+      _coverBase64 = null;
+      return;
+    }
+
+    MusicMetaInfoDataCoverPictures pictures =
+        responseEntity.body!.data!.coverPictures![0];
+    _coverBase64 = pictures.base64;
+    print(">>>初始化封面完成 有封面：${null != _coverBase64}");
+    notifyListeners();
   }
 
   /// 上一曲

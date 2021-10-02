@@ -27,7 +27,6 @@ class LyricController extends ChangeNotifier {
 
   set progress(Duration value) {
     _progress = value;
-    notifyListeners();
   }
 
   Duration get progress => _progress;

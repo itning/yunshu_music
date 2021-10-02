@@ -45,6 +45,11 @@ class LyricUtil {
         var temp = list[i];
         var title = temp[1];
         if (!tags.contains(title)) {
+          try {
+            int.parse(title);
+          } on FormatException catch (_, __) {
+            continue;
+          }
           lyrics.add(
             Lyric(
               list[i][3],
@@ -61,6 +66,9 @@ class LyricUtil {
     for (int i = 0; i < lyrics.length - 1; i++) {
       lyrics[i].endTime = lyrics[i + 1].startTime;
     }
+    if (lyrics.isEmpty) {
+      return lyrics;
+    }
     lyrics.last.endTime = const Duration(hours: 200);
     return lyrics;
   }
@@ -73,7 +81,7 @@ class LyricUtil {
     var minute = time.substring(0, minuteSeparatorIndex);
     // 秒
     var seconds =
-    time.substring(minuteSeparatorIndex + 1, secondSeparatorIndex);
+        time.substring(minuteSeparatorIndex + 1, secondSeparatorIndex);
     // 微秒
     var millsceconds = time.substring(secondSeparatorIndex + 1);
     var microseconds = '0';
