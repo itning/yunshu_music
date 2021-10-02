@@ -2,20 +2,21 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yunshu_music/component/image_fade.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 
 /// 可旋转的封面图Widget
 class RotateCoverImageWidget extends StatefulWidget {
   final double width;
   final double height;
-  final String? name;
+  final String name;
   final Duration duration;
 
   const RotateCoverImageWidget(
       {Key? key,
       required this.width,
       required this.height,
-      this.name,
+      required this.name,
       required this.duration})
       : super(key: key);
 
@@ -53,19 +54,12 @@ class _RotateCoverImageWidgetState extends State<RotateCoverImageWidget>
         alignment: Alignment.center,
         turns: _coverController,
         child: ClipOval(
-          child: widget.name != null
-              ? Image.memory(
-                  base64Decode(widget.name!),
-                  fit: BoxFit.cover,
-                  width: widget.width,
-                  height: widget.height,
-                )
-              : Image.asset(
-                  'asserts/images/default_cover.png',
-                  fit: BoxFit.cover,
-                  width: widget.width,
-                  height: widget.height,
-                ),
+          child: ImageFade(
+            fit: BoxFit.cover,
+            width: widget.width,
+            height: widget.height,
+            image: Image.memory(base64Decode(widget.name)).image,
+          ),
         ),
       ),
     );

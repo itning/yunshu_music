@@ -20,6 +20,7 @@ class _CoverPageState extends State<CoverPage>
     return Center(
       child: Selector<MusicDataModel, String>(
         shouldRebuild: (a, b) {
+          // TODO ITNING:都没封面的时候 需要重新构建
           print('>>>CoverPage shouldRebuild');
           return a != b;
         },
