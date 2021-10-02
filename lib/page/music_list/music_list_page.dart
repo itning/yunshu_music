@@ -53,27 +53,29 @@ class _MusicListPageState extends State<MusicListPage> {
         child: Consumer<MusicDataModel>(
             builder: (BuildContext context, value, Widget? child) {
           // TODO ITNING:性能优化
-          return ListView.builder(
-              itemCount: value.musicList.length,
-              itemBuilder: (BuildContext context, int index) {
-                return _ListItem(
-                  serialNumber: index + 1,
-                  title: value.musicList[index].name,
-                  subTitle: value.musicList[index].singer,
-                  rightButtonIcon: Icons.more_vert,
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const MusicPlayPage()));
-                    Provider.of<MusicDataModel>(context, listen: false)
-                        .setNowPlayMusic(index);
-                  },
-                  onLongPress: () {
-                    // TODO ITNING:长按复制？
-                  },
-                );
-              });
+          return Scrollbar(
+            child: ListView.builder(
+                itemCount: value.musicList.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return _ListItem(
+                    serialNumber: index + 1,
+                    title: value.musicList[index].name,
+                    subTitle: value.musicList[index].singer,
+                    rightButtonIcon: Icons.more_vert,
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const MusicPlayPage()));
+                      Provider.of<MusicDataModel>(context, listen: false)
+                          .setNowPlayMusic(index);
+                    },
+                    onLongPress: () {
+                      // TODO ITNING:长按复制？
+                    },
+                  );
+                }),
+          );
         }),
       ),
       bottomNavigationBar: const MusicMiniPlayControllerWidget(),
