@@ -8,9 +8,16 @@ class AppRouterDelegate extends RouterDelegate<AppRoutePath>
   @override
   final GlobalKey<NavigatorState> navigatorKey;
 
-  AppRouterDelegate() : navigatorKey = GlobalKey<NavigatorState>();
+  AppRouterDelegate() : navigatorKey = GlobalKey<NavigatorState>() {
+    NavigatorHelper.get().init((widget) {
+      List<MaterialPage<dynamic>> page = [..._pages];
+      page.add(_generatePage(widget));
+      _pages = page;
+      notifyListeners();
+    });
+  }
 
-  final List<MaterialPage<dynamic>> _pages = [
+  static List<MaterialPage<dynamic>> _pages = [
     _generatePage(const MusicListPage()),
   ];
 
@@ -23,6 +30,7 @@ class AppRouterDelegate extends RouterDelegate<AppRoutePath>
         if (!route.didPop(result)) {
           return false;
         }
+        _pages.removeLast();
         return true;
       },
     );
@@ -34,5 +42,30 @@ class AppRouterDelegate extends RouterDelegate<AppRoutePath>
   /// 生成一个Page
   static MaterialPage _generatePage(Widget widget) {
     return MaterialPage(key: ValueKey(widget.hashCode), child: widget);
+  }
+}
+
+typedef OnJumpTo = void Function(Widget widget);
+
+class NavigatorHelper {
+  static NavigatorHelper? _instance;
+
+  static NavigatorHelper get() {
+    _instance ??= NavigatorHelper._();
+    return _instance!;
+  }
+
+  NavigatorHelper._();
+
+  OnJumpTo? _onJumpTo;
+
+  void init(OnJumpTo onJumpTo) {
+    _onJumpTo = onJumpTo;
+  }
+
+  void push(Widget widget) {
+    if (null != _onJumpTo) {
+      _onJumpTo!(widget);
+    }
   }
 }

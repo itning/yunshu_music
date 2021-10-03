@@ -7,6 +7,7 @@ import 'package:yunshu_music/page/music_list/component/music_mini_play_controlle
 import 'package:yunshu_music/page/music_play/music_play_page.dart';
 import 'package:yunshu_music/page/setting/app_setting_page.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
+import 'package:yunshu_music/route/app_route_delegate.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 /// 音乐列表
@@ -32,7 +33,8 @@ class MusicListPage extends StatelessWidget {
             ),
             PopupMenuButton<String>(
               onSelected: (value) {
-                Navigator.push(context, createRoute(const AppSettingPage()));
+                NavigatorHelper.get().push(const AppSettingPage());
+                //Navigator.push(context, createRoute(const AppSettingPage()));
               },
               itemBuilder: (BuildContext context) {
                 return {'设置'}.map((String choice) {
