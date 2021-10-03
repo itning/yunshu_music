@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/rotate_cover_image_widget.dart';
@@ -18,20 +20,24 @@ class _CoverPageState extends State<CoverPage>
     super.build(context);
     print('>>>CoverPage build');
     return Center(
-      child: Selector<MusicDataModel, String>(
-        shouldRebuild: (a, b) {
-          // TODO ITNING:都没封面的时候 需要重新构建
-          print('>>>CoverPage shouldRebuild');
-          return a != b;
-        },
+      child: Selector<MusicDataModel, String?>(
         selector: (_, model) => model.coverBase64,
-        builder: (BuildContext context, value, Widget? child) {
-          return RotateCoverImageWidget(
-            width: 225,
-            height: 225,
-            duration: const Duration(seconds: 20),
-            name: value,
-          );
+        builder: (_, value, __) {
+          if (value == null) {
+            return RotateCoverImageWidget(
+              width: 225,
+              height: 225,
+              duration: const Duration(seconds: 20),
+              image: Image.asset('asserts/images/default_cover.jpg').image,
+            );
+          } else {
+            return RotateCoverImageWidget(
+              width: 225,
+              height: 225,
+              duration: const Duration(seconds: 20),
+              image: Image.memory(base64Decode(value)).image,
+            );
+          }
         },
       ),
     );
