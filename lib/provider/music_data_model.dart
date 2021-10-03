@@ -32,6 +32,9 @@ class MusicDataModel extends ChangeNotifier {
   /// 正在播放的音乐在_playList里的索引
   int _nowPlayIndex = 0;
 
+  /// 正在播放的音乐在_musicList里的索引
+  int _nowMusicIndex = 0;
+
   /// 当前歌曲的歌词信息
   List<Lyric>? _lyricList;
 
@@ -46,6 +49,9 @@ class MusicDataModel extends ChangeNotifier {
 
   /// 获取音乐封面
   String? get coverBase64 => _coverBase64;
+
+  /// 获取正在播放的音乐在_musicList里的索引
+  int get nowMusicIndex => _nowMusicIndex;
 
   /// 刷新音乐列表
   Future<String?> refreshMusicList({bool needInit = false}) async {
@@ -142,6 +148,8 @@ class MusicDataModel extends ChangeNotifier {
       await _initLyric(music.lyricId!);
     }
     if (null != music.musicId) {
+      _nowMusicIndex =
+          _musicList.indexWhere((element) => element.musicId == music.musicId);
       await _initCover(music.musicId!);
       await PlayStatusModel.get()
           .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
@@ -159,6 +167,8 @@ class MusicDataModel extends ChangeNotifier {
     }
     MusicDataContent music = _playList[_nowPlayIndex];
     if (null != music.musicId) {
+      _nowMusicIndex =
+          _musicList.indexWhere((element) => element.musicId == music.musicId);
       await _initCover(music.musicId!);
       if (null != music.lyricId) {
         await _initLyric(music.lyricId!);
