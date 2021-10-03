@@ -42,7 +42,7 @@ class AppSettingPage extends StatelessWidget {
                       value: darkMode,
                       onChanged: (value) => context
                           .read<ThemeModel>()
-                          .setFollowSystemTheme(value));
+                          .setDarkTheme(value));
                 },
               ),
             ],
