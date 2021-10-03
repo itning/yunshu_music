@@ -36,6 +36,23 @@ class _MusicMiniPlayControllerWidgetState
     super.dispose();
   }
 
+  Route _createRoute() {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const MusicPlayPage(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: animation.drive(
+            Tween(begin: const Offset(0.0, 1.0), end: Offset.zero).chain(
+              CurveTween(curve: Curves.linear),
+            ),
+          ),
+          child: child,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -53,8 +70,7 @@ class _MusicMiniPlayControllerWidgetState
       child: SizedBox(
         height: 54.0,
         child: InkWell(
-          onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const MusicPlayPage())),
+          onTap: () => Navigator.push(context, _createRoute()),
           child: Flex(
             direction: Axis.horizontal,
             children: [
