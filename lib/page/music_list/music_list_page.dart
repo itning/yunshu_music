@@ -4,8 +4,6 @@ import 'package:move_to_background/move_to_background.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/page/music_list/component/music_mini_play_controller_widget.dart';
-import 'package:yunshu_music/page/music_play/music_play_page.dart';
-import 'package:yunshu_music/page/setting/app_setting_page.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/route/app_route_delegate.dart';
 import 'package:yunshu_music/util/common_utils.dart';
@@ -32,10 +30,8 @@ class MusicListPage extends StatelessWidget {
               icon: const Icon(Icons.search),
             ),
             PopupMenuButton<String>(
-              onSelected: (value) {
-                NavigatorHelper.get().push(const AppSettingPage());
-                //Navigator.push(context, createRoute(const AppSettingPage()));
-              },
+              onSelected: (value) =>
+                  AppRouterDelegate.of(context).push('/setting'),
               itemBuilder: (BuildContext context) {
                 return {'设置'}.map((String choice) {
                   return PopupMenuItem<String>(
@@ -131,7 +127,7 @@ class MusicSearchDelegate extends SearchDelegate {
 
   void _play(BuildContext context, String? musicId) {
     close(context, null);
-    Navigator.push(context, createRoute(const MusicPlayPage()));
+    AppRouterDelegate.of(context).push('/musicPlay');
     Provider.of<MusicDataModel>(context, listen: false)
         .setNowPlayMusicUseMusicId(musicId);
   }
@@ -197,8 +193,7 @@ class _ListPageState extends State<ListPage> {
                       subTitle: musicList[index].singer,
                       rightButtonIcon: Icons.more_vert,
                       onTap: () {
-                        Navigator.push(
-                            context, createRoute(const MusicPlayPage()));
+                        AppRouterDelegate.of(context).push('/musicPlay');
                         Provider.of<MusicDataModel>(context, listen: false)
                             .setNowPlayMusic(index);
                       },

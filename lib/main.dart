@@ -4,6 +4,7 @@ import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 import 'package:yunshu_music/route/app_route_delegate.dart';
+import 'package:yunshu_music/route/app_route_parser.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,8 +13,15 @@ void main() async {
 }
 
 /// 主入口
-class YunShuMusicApp extends StatelessWidget {
+class YunShuMusicApp extends StatefulWidget {
   const YunShuMusicApp({Key? key}) : super(key: key);
+
+  @override
+  State<YunShuMusicApp> createState() => _YunShuMusicAppState();
+}
+
+class _YunShuMusicAppState extends State<YunShuMusicApp> {
+  final delegate = AppRouterDelegate();
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +33,12 @@ class YunShuMusicApp extends StatelessWidget {
       ],
       child: Consumer<ThemeModel>(
         builder: (_, theme, __) {
-          return MaterialApp(
+          return MaterialApp.router(
             darkTheme: ThemeData.dark(),
             themeMode: theme.themeMode,
             title: '云舒音乐',
-            home: Router(
-              routerDelegate: AppRouterDelegate(),
-              // Android实体返回键
-              backButtonDispatcher: RootBackButtonDispatcher(),
-            ),
+            routeInformationParser: AppRouteParser(),
+            routerDelegate: delegate,
           );
         },
       ),

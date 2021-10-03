@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/rotate_cover_image_widget.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
-import 'package:yunshu_music/page/music_play/music_play_page.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
-import 'package:yunshu_music/util/common_utils.dart';
+import 'package:yunshu_music/route/app_route_delegate.dart';
 
 /// 小型音乐控制器Widget
 class MusicMiniPlayControllerWidget extends StatefulWidget {
@@ -56,7 +55,7 @@ class _MusicMiniPlayControllerWidgetState
       child: SizedBox(
         height: 54.0,
         child: InkWell(
-          onTap: () => Navigator.push(context, createRoute(const MusicPlayPage())),
+          onTap: () => AppRouterDelegate.of(context).push('/musicPlay'),
           child: Flex(
             direction: Axis.horizontal,
             children: [
