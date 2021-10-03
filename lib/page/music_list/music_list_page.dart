@@ -23,6 +23,23 @@ class _MusicListPageState extends State<MusicListPage> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
+  Route _createRoute() {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const MusicPlayPage(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: animation.drive(
+            Tween(begin: const Offset(0.0, 1.0), end: Offset.zero).chain(
+              CurveTween(curve: Curves.linear),
+            ),
+          ),
+          child: child,
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -63,10 +80,7 @@ class _MusicListPageState extends State<MusicListPage> {
                     subTitle: value.musicList[index].singer,
                     rightButtonIcon: Icons.more_vert,
                     onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const MusicPlayPage()));
+                      Navigator.push(context, _createRoute());
                       Provider.of<MusicDataModel>(context, listen: false)
                           .setNowPlayMusic(index);
                     },
