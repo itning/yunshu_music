@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:move_to_background/move_to_background.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/page/music_list/component/music_mini_play_controller_widget.dart';
@@ -95,7 +96,14 @@ class _MusicListPageState extends State<MusicListPage> {
                             .setNowPlayMusic(index);
                       },
                       onLongPress: () {
-                        // TODO ITNING:长按复制？
+                        Clipboard.setData(ClipboardData(
+                                text:
+                                    "${value.musicList[index].name}-${value.musicList[index].singer}"))
+                            .then((_) => ScaffoldMessenger.of(context)
+                                    .showSnackBar(const SnackBar(
+                                  content: Text('复制成功'),
+                                  duration: Duration(seconds: 1),
+                                )));
                       },
                     );
                   }),
