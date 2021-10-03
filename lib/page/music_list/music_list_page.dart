@@ -8,14 +8,39 @@ import 'package:yunshu_music/page/music_play/music_play_page.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 
 /// 音乐列表
-class MusicListPage extends StatefulWidget {
+class MusicListPage extends StatelessWidget {
   const MusicListPage({Key? key}) : super(key: key);
 
   @override
-  _MusicListPageState createState() => _MusicListPageState();
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        MoveToBackground.moveTaskToBack();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('云舒音乐'),
+          actions: [
+            IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
+            IconButton(onPressed: () {}, icon: const Icon(Icons.menu)),
+          ],
+        ),
+        body: const ListPage(),
+        bottomNavigationBar: const MusicMiniPlayControllerWidget(),
+      ),
+    );
+  }
 }
 
-class _MusicListPageState extends State<MusicListPage> {
+class ListPage extends StatefulWidget {
+  const ListPage({Key? key}) : super(key: key);
+
+  @override
+  _ListPageState createState() => _ListPageState();
+}
+
+class _ListPageState extends State<ListPage> {
   /// SnackBar消息
   void message(String? message) {
     if (null == message) {
@@ -61,57 +86,47 @@ class _MusicListPageState extends State<MusicListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        MoveToBackground.moveTaskToBack();
-        return false;
-      },
-      child: Scaffold(
-        appBar: AppBar(title: const Text('云舒音乐')),
-        body: RefreshIndicator(
-          onRefresh: () => context
-              .read<MusicDataModel>()
-              .refreshMusicList()
-              .then(message)
-              .onError((error, stackTrace) {
-            message(error.toString());
-            print(error);
-            print(stackTrace);
-          }),
-          child: Consumer<MusicDataModel>(
-              builder: (BuildContext context, value, Widget? child) {
-            // TODO ITNING:性能优化
-            return Scrollbar(
-              child: ListView.builder(
-                  itemCount: value.musicList.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return _ListItem(
-                      serialNumber: index + 1,
-                      title: value.musicList[index].name,
-                      subTitle: value.musicList[index].singer,
-                      rightButtonIcon: Icons.more_vert,
-                      onTap: () {
-                        Navigator.push(context, _createRoute());
-                        Provider.of<MusicDataModel>(context, listen: false)
-                            .setNowPlayMusic(index);
-                      },
-                      onLongPress: () {
-                        Clipboard.setData(ClipboardData(
-                                text:
-                                    "${value.musicList[index].name}-${value.musicList[index].singer}"))
-                            .then((_) => ScaffoldMessenger.of(context)
-                                    .showSnackBar(const SnackBar(
-                                  content: Text('复制成功'),
-                                  duration: Duration(seconds: 1),
-                                )));
-                      },
-                    );
-                  }),
-            );
-          }),
-        ),
-        bottomNavigationBar: const MusicMiniPlayControllerWidget(),
-      ),
+    return RefreshIndicator(
+      onRefresh: () => context
+          .read<MusicDataModel>()
+          .refreshMusicList()
+          .then(message)
+          .onError((error, stackTrace) {
+        message(error.toString());
+        print(error);
+        print(stackTrace);
+      }),
+      child: Consumer<MusicDataModel>(
+          builder: (BuildContext context, value, Widget? child) {
+        // TODO ITNING:性能优化
+        return Scrollbar(
+          child: ListView.builder(
+              itemCount: value.musicList.length,
+              itemBuilder: (BuildContext context, int index) {
+                return _ListItem(
+                  serialNumber: index + 1,
+                  title: value.musicList[index].name,
+                  subTitle: value.musicList[index].singer,
+                  rightButtonIcon: Icons.more_vert,
+                  onTap: () {
+                    Navigator.push(context, _createRoute());
+                    Provider.of<MusicDataModel>(context, listen: false)
+                        .setNowPlayMusic(index);
+                  },
+                  onLongPress: () {
+                    Clipboard.setData(ClipboardData(
+                            text:
+                                "${value.musicList[index].name}-${value.musicList[index].singer}"))
+                        .then((_) => ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text('复制成功'),
+                              duration: Duration(seconds: 1),
+                            )));
+                  },
+                );
+              }),
+        );
+      }),
     );
   }
 }
