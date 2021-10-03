@@ -40,9 +40,8 @@ class AppSettingPage extends StatelessWidget {
                 builder: (BuildContext context, darkMode, _) {
                   return Switch(
                       value: darkMode,
-                      onChanged: (value) => context
-                          .read<ThemeModel>()
-                          .setDarkTheme(value));
+                      onChanged: (value) =>
+                          context.read<ThemeModel>().setDarkTheme(value));
                 },
               ),
             ],

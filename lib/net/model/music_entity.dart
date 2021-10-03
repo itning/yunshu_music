@@ -1,33 +1,33 @@
 import 'package:yunshu_music/generated/json/base/json_convert_content.dart';
 
 class MusicEntity with JsonConvert<MusicEntity> {
-	int? code;
-	String? msg;
-	MusicData? data;
+  int? code;
+  String? msg;
+  MusicData? data;
 }
 
 class MusicData with JsonConvert<MusicData> {
-	List<MusicDataContent>? content;
-	MusicDataPageable? pageable;
-	bool? last;
-	int? totalPages;
-	int? totalElements;
-	MusicDataSort? sort;
-	bool? first;
-	int? number;
-	int? numberOfElements;
-	int? size;
-	bool? empty;
+  List<MusicDataContent>? content;
+  MusicDataPageable? pageable;
+  bool? last;
+  int? totalPages;
+  int? totalElements;
+  MusicDataSort? sort;
+  bool? first;
+  int? number;
+  int? numberOfElements;
+  int? size;
+  bool? empty;
 }
 
 class MusicDataContent with JsonConvert<MusicDataContent> {
-	String? musicId;
-	String? name;
-	String? singer;
-	String? lyricId;
-	int? type;
+  String? musicId;
+  String? name;
+  String? singer;
+  String? lyricId;
+  int? type;
 
-	@override
+  @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is MusicDataContent &&
@@ -48,22 +48,22 @@ class MusicDataContent with JsonConvert<MusicDataContent> {
 }
 
 class MusicDataPageable with JsonConvert<MusicDataPageable> {
-	MusicDataPageableSort? sort;
-	int? pageNumber;
-	int? pageSize;
-	int? offset;
-	bool? paged;
-	bool? unpaged;
+  MusicDataPageableSort? sort;
+  int? pageNumber;
+  int? pageSize;
+  int? offset;
+  bool? paged;
+  bool? unpaged;
 }
 
 class MusicDataPageableSort with JsonConvert<MusicDataPageableSort> {
-	bool? unsorted;
-	bool? sorted;
-	bool? empty;
+  bool? unsorted;
+  bool? sorted;
+  bool? empty;
 }
 
 class MusicDataSort with JsonConvert<MusicDataSort> {
-	bool? unsorted;
-	bool? sorted;
-	bool? empty;
+  bool? unsorted;
+  bool? sorted;
+  bool? empty;
 }
