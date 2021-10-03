@@ -52,7 +52,7 @@ class _LyricPageState extends State<LyricPage>
                 child: Selector<MusicDataModel, List<Lyric>?>(
                     selector: (_, data) => data.lyricList,
                     builder: (_, value, __) {
-                      if (null == value) {
+                      if (null == value || value.isEmpty) {
                         return const Text(
                           '该歌曲暂无歌词',
                           style: TextStyle(color: Colors.white),
