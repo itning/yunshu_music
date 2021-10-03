@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:move_to_background/move_to_background.dart';
@@ -6,7 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/page/music_list/component/music_mini_play_controller_widget.dart';
 import 'package:yunshu_music/page/music_play/music_play_page.dart';
+import 'package:yunshu_music/page/setting/app_setting_page.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
+import 'package:yunshu_music/route/app_route_delegate.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 /// 音乐列表
@@ -31,7 +32,10 @@ class MusicListPage extends StatelessWidget {
               icon: const Icon(Icons.search),
             ),
             PopupMenuButton<String>(
-              onSelected: (value) {},
+              onSelected: (value) {
+                NavigatorHelper.get().push(const AppSettingPage());
+                //Navigator.push(context, createRoute(const AppSettingPage()));
+              },
               itemBuilder: (BuildContext context) {
                 return {'设置'}.map((String choice) {
                   return PopupMenuItem<String>(
