@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:move_to_background/move_to_background.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/page/music_list/component/music_mini_play_controller_widget.dart';
 import 'package:yunshu_music/page/music_play/music_play_page.dart';
@@ -17,6 +18,10 @@ class _MusicListPageState extends State<MusicListPage> {
   /// SnackBar消息
   void message(String? message) {
     if (null == message) {
+      return;
+    }
+    if (!mounted) {
+      print("message: $message");
       return;
     }
     final snackBar = SnackBar(content: Text(message));
@@ -55,44 +60,50 @@ class _MusicListPageState extends State<MusicListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('云舒音乐')),
-      body: RefreshIndicator(
-        onRefresh: () => context
-            .read<MusicDataModel>()
-            .refreshMusicList()
-            .then(message)
-            .onError((error, stackTrace) {
-          message(error.toString());
-          print(error);
-          print(stackTrace);
-        }),
-        child: Consumer<MusicDataModel>(
-            builder: (BuildContext context, value, Widget? child) {
-          // TODO ITNING:性能优化
-          return Scrollbar(
-            child: ListView.builder(
-                itemCount: value.musicList.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return _ListItem(
-                    serialNumber: index + 1,
-                    title: value.musicList[index].name,
-                    subTitle: value.musicList[index].singer,
-                    rightButtonIcon: Icons.more_vert,
-                    onTap: () {
-                      Navigator.push(context, _createRoute());
-                      Provider.of<MusicDataModel>(context, listen: false)
-                          .setNowPlayMusic(index);
-                    },
-                    onLongPress: () {
-                      // TODO ITNING:长按复制？
-                    },
-                  );
-                }),
-          );
-        }),
+    return WillPopScope(
+      onWillPop: () async {
+        MoveToBackground.moveTaskToBack();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('云舒音乐')),
+        body: RefreshIndicator(
+          onRefresh: () => context
+              .read<MusicDataModel>()
+              .refreshMusicList()
+              .then(message)
+              .onError((error, stackTrace) {
+            message(error.toString());
+            print(error);
+            print(stackTrace);
+          }),
+          child: Consumer<MusicDataModel>(
+              builder: (BuildContext context, value, Widget? child) {
+            // TODO ITNING:性能优化
+            return Scrollbar(
+              child: ListView.builder(
+                  itemCount: value.musicList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return _ListItem(
+                      serialNumber: index + 1,
+                      title: value.musicList[index].name,
+                      subTitle: value.musicList[index].singer,
+                      rightButtonIcon: Icons.more_vert,
+                      onTap: () {
+                        Navigator.push(context, _createRoute());
+                        Provider.of<MusicDataModel>(context, listen: false)
+                            .setNowPlayMusic(index);
+                      },
+                      onLongPress: () {
+                        // TODO ITNING:长按复制？
+                      },
+                    );
+                  }),
+            );
+          }),
+        ),
+        bottomNavigationBar: const MusicMiniPlayControllerWidget(),
       ),
-      bottomNavigationBar: const MusicMiniPlayControllerWidget(),
     );
   }
 }
