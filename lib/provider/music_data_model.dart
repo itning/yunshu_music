@@ -67,6 +67,25 @@ class MusicDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 搜索音乐和歌手
+  List<MusicDataContent> search(String keyword) {
+    if (keyword.trim() == '') {
+      return [];
+    }
+    List<MusicDataContent> searchResultList = _musicList.where((musicItem) {
+      bool containsName = false;
+      bool containsSinger = false;
+      if (musicItem.name != null) {
+        containsName = musicItem.name!.contains(keyword);
+      }
+      if (musicItem.singer != null) {
+        containsSinger = musicItem.singer!.contains(keyword);
+      }
+      return containsName || containsSinger;
+    }).toList();
+    return searchResultList;
+  }
+
   /// 获取现在正在播放的音乐信息
   MusicDataContent? getNowPlayMusic() {
     if (_playList.isEmpty) {
@@ -74,6 +93,18 @@ class MusicDataModel extends ChangeNotifier {
     } else {
       return _playList[_nowPlayIndex];
     }
+  }
+
+  /// 设置现在正在播放的音乐信息
+  Future<void> setNowPlayMusicUseMusicId(String? musicId) async {
+    if (null == musicId) {
+      return;
+    }
+    int index = _musicList.indexWhere((element) => musicId == element.musicId);
+    if (-1 == index) {
+      return;
+    }
+    await setNowPlayMusic(index);
   }
 
   /// 设置现在正在播放的音乐信息

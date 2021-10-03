@@ -7,6 +7,7 @@ import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/page/music_play/music_play_page.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 /// 小型音乐控制器Widget
 class MusicMiniPlayControllerWidget extends StatefulWidget {
@@ -38,23 +39,6 @@ class _MusicMiniPlayControllerWidgetState
     super.dispose();
   }
 
-  Route _createRoute() {
-    return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          const MusicPlayPage(),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return SlideTransition(
-          position: animation.drive(
-            Tween(begin: const Offset(0.0, 1.0), end: Offset.zero).chain(
-              CurveTween(curve: Curves.linear),
-            ),
-          ),
-          child: child,
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -72,7 +56,7 @@ class _MusicMiniPlayControllerWidgetState
       child: SizedBox(
         height: 54.0,
         child: InkWell(
-          onTap: () => Navigator.push(context, _createRoute()),
+          onTap: () => Navigator.push(context, createRoute(const MusicPlayPage())),
           child: Flex(
             direction: Axis.horizontal,
             children: [
