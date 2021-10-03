@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/rotate_cover_image_widget.dart';
@@ -77,15 +79,25 @@ class _MusicMiniPlayControllerWidgetState
               Expanded(
                 flex: 2,
                 child: Center(
-                  child: Selector<MusicDataModel, String>(
+                  child: Selector<MusicDataModel, String?>(
                     selector: (_, model) => model.coverBase64,
                     builder: (_, value, __) {
-                      return RotateCoverImageWidget(
-                        name: value,
-                        width: 52,
-                        height: 52,
-                        duration: const Duration(seconds: 20),
-                      );
+                      if (value == null) {
+                        return RotateCoverImageWidget(
+                          image: Image.asset('asserts/images/default_cover.jpg')
+                              .image,
+                          width: 52,
+                          height: 52,
+                          duration: const Duration(seconds: 20),
+                        );
+                      } else {
+                        return RotateCoverImageWidget(
+                          image: Image.memory(base64Decode(value)).image,
+                          width: 52,
+                          height: 52,
+                          duration: const Duration(seconds: 20),
+                        );
+                      }
                     },
                   ),
                 ),

@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,14 +8,14 @@ import 'package:yunshu_music/provider/play_status_model.dart';
 class RotateCoverImageWidget extends StatefulWidget {
   final double width;
   final double height;
-  final String name;
+  final ImageProvider image;
   final Duration duration;
 
   const RotateCoverImageWidget(
       {Key? key,
       required this.width,
       required this.height,
-      required this.name,
+      required this.image,
       required this.duration})
       : super(key: key);
 
@@ -58,7 +57,7 @@ class _RotateCoverImageWidgetState extends State<RotateCoverImageWidget>
             fit: BoxFit.cover,
             width: widget.width,
             height: widget.height,
-            image: Image.memory(base64Decode(widget.name)).image,
+            image: widget.image,
           ),
         ),
       ),

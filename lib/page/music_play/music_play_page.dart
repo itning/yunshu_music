@@ -56,11 +56,14 @@ class BackgroundPicture extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String? coverBase64 =
+        context.select<MusicDataModel, String?>((value) => value.coverBase64);
     return ImageFade(
       excludeFromSemantics: true,
       fit: BoxFit.cover,
-      image: Image.memory(base64Decode(context
-          .select<MusicDataModel, String>((value) => value.coverBase64))).image,
+      image: coverBase64 == null
+          ? Image.asset('asserts/images/default_cover.jpg').image
+          : Image.memory(base64Decode(coverBase64)).image,
     );
   }
 }
