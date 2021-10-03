@@ -188,7 +188,7 @@ class _ListPageState extends State<ListPage> {
                   itemCount: musicList.length,
                   itemBuilder: (BuildContext context, int index) {
                     return _ListItem(
-                      serialNumber: index + 1,
+                      index: index,
                       title: musicList[index].name,
                       subTitle: musicList[index].singer,
                       rightButtonIcon: Icons.more_vert,
@@ -218,7 +218,7 @@ class _ListPageState extends State<ListPage> {
 
 /// 列表项
 class _ListItem extends StatelessWidget {
-  final int? serialNumber;
+  final int index;
   final String? title;
   final String? subTitle;
   final IconData? rightButtonIcon;
@@ -227,7 +227,7 @@ class _ListItem extends StatelessWidget {
 
   const _ListItem(
       {Key? key,
-      this.serialNumber,
+      required this.index,
       this.title,
       this.subTitle,
       this.rightButtonIcon,
@@ -241,15 +241,12 @@ class _ListItem extends StatelessWidget {
       onLongPress: onLongPress,
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(bottom: 8.0, top: 8.0),
+        margin: const EdgeInsets.only(bottom: 8.0, top: 8.0),
         child: Flex(
           direction: Axis.horizontal,
           children: [
             Expanded(
-              child: Text(
-                '$serialNumber',
-                textAlign: TextAlign.center,
-              ),
+              child: _ListItemIndex(index: index),
             ),
             Expanded(
               flex: 8,
@@ -285,6 +282,29 @@ class _ListItem extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ListItemIndex extends StatelessWidget {
+  final int index;
+
+  const _ListItemIndex({Key? key, required this.index}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Selector<MusicDataModel, int>(
+      builder: (BuildContext context, i, Widget? child) {
+        if (i != index) {
+          return Text(
+            '${index + 1}',
+            textAlign: TextAlign.center,
+          );
+        } else {
+          return const Icon(Icons.music_note);
+        }
+      },
+      selector: (_, model) => model.nowMusicIndex,
     );
   }
 }
