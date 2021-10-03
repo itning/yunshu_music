@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:move_to_background/move_to_background.dart';
 import 'package:provider/provider.dart';
+import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/page/music_list/component/music_mini_play_controller_widget.dart';
 import 'package:yunshu_music/page/music_play/music_play_page.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
@@ -96,37 +97,38 @@ class _ListPageState extends State<ListPage> {
         print(error);
         print(stackTrace);
       }),
-      child: Consumer<MusicDataModel>(
-          builder: (BuildContext context, value, Widget? child) {
-        // TODO ITNING:性能优化
-        return Scrollbar(
-          child: ListView.builder(
-              itemCount: value.musicList.length,
-              itemBuilder: (BuildContext context, int index) {
-                return _ListItem(
-                  serialNumber: index + 1,
-                  title: value.musicList[index].name,
-                  subTitle: value.musicList[index].singer,
-                  rightButtonIcon: Icons.more_vert,
-                  onTap: () {
-                    Navigator.push(context, _createRoute());
-                    Provider.of<MusicDataModel>(context, listen: false)
-                        .setNowPlayMusic(index);
-                  },
-                  onLongPress: () {
-                    Clipboard.setData(ClipboardData(
-                            text:
-                                "${value.musicList[index].name}-${value.musicList[index].singer}"))
-                        .then((_) => ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(
-                              content: Text('复制成功'),
-                              duration: Duration(seconds: 1),
-                            )));
-                  },
-                );
-              }),
-        );
-      }),
+      child: Selector<MusicDataModel, List<MusicDataContent>>(
+          selector: (_, model) => model.musicList,
+          builder: (BuildContext context, musicList, Widget? child) {
+            // TODO ITNING:性能优化
+            return Scrollbar(
+              child: ListView.builder(
+                  itemCount: musicList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return _ListItem(
+                      serialNumber: index + 1,
+                      title: musicList[index].name,
+                      subTitle: musicList[index].singer,
+                      rightButtonIcon: Icons.more_vert,
+                      onTap: () {
+                        Navigator.push(context, _createRoute());
+                        Provider.of<MusicDataModel>(context, listen: false)
+                            .setNowPlayMusic(index);
+                      },
+                      onLongPress: () {
+                        Clipboard.setData(ClipboardData(
+                                text:
+                                    "${musicList[index].name}-${musicList[index].singer}"))
+                            .then((_) => ScaffoldMessenger.of(context)
+                                    .showSnackBar(const SnackBar(
+                                  content: Text('复制成功'),
+                                  duration: Duration(seconds: 1),
+                                )));
+                      },
+                    );
+                  }),
+            );
+          }),
     );
   }
 }
