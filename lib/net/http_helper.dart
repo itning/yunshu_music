@@ -38,9 +38,10 @@ class HttpHelper {
     }
   }
 
-  Future<ResponseEntity<MusicMetaInfoEntity>> getMetaInfo(String musicId) async{
-    ResponseEntity<Map<String, dynamic>> responseEntity =
-    await _restTemplate.getForMapEntry("$baseUrl/music/metaInfo?id=$musicId");
+  Future<ResponseEntity<MusicMetaInfoEntity>> getMetaInfo(
+      String musicId) async {
+    ResponseEntity<Map<String, dynamic>> responseEntity = await _restTemplate
+        .getForMapEntry("$baseUrl/music/metaInfo?id=$musicId");
     Map<String, dynamic>? body = responseEntity.body;
     if (null != body) {
       MusicMetaInfoEntity musicEntity = MusicMetaInfoEntity().fromJson(body);
