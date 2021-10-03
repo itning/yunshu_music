@@ -7,7 +7,6 @@ import 'package:yunshu_music/component/lyric/lyric_util.dart';
 import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/net/model/music_meta_info_entity.dart';
-import 'package:yunshu_music/provider/base64.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 
 /// 音乐数据模型
@@ -46,7 +45,7 @@ class MusicDataModel extends ChangeNotifier {
   List<Lyric>? get lyricList => _lyricList;
 
   /// 获取音乐封面
-  String get coverBase64 => _coverBase64 ?? defaultCoverBase64;
+  String? get coverBase64 => _coverBase64;
 
   /// 刷新音乐列表
   Future<String?> refreshMusicList({bool needInit = false}) async {
