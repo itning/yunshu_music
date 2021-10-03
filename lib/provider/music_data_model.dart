@@ -256,7 +256,7 @@ class MusicDataModel extends ChangeNotifier {
       return music;
     } else {
       // 播放列表不是空的，尝试索引位置-1
-      if (_nowPlayIndex - 1 <= 0) {
+      if (_nowPlayIndex - 1 < 0) {
         // 说明是上一首歌不存在了，获取一首
         MusicDataContent? music = _getSongsRandomly();
         if (null == music) {
