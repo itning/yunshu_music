@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/util/common_utils.dart';
@@ -183,5 +186,24 @@ class CacheModel {
     }
     return await _database
         .rawDelete('delete from cover_cache where musicId = ?', [musicId]);
+  }
+
+  Future<bool> deleteMusicCacheByMusicId(String musicId) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    String? path = sharedPreferences.getString(musicId);
+    await sharedPreferences.remove(musicId);
+    if (null != path) {
+      File cacheFile = File(path);
+      if (cacheFile.existsSync()) {
+        try {
+          cacheFile.deleteSync();
+          return true;
+        } catch (e) {
+          LogHelper.get().warn('删除音乐缓存文件失败', e);
+          return false;
+        }
+      }
+    }
+    return false;
   }
 }

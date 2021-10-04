@@ -201,6 +201,23 @@ class _InnerListItem extends StatelessWidget {
                       },
                     ),
                     ListTile(
+                      leading: const Icon(Icons.delete_forever),
+                      title: const Text('删除歌曲缓存'),
+                      onTap: () {
+                        showDeleteConfirmDialog(context).then((value) {
+                          if (value ?? false) {
+                            CacheModel.get().deleteMusicCacheByMusicId(musicId).then((value) {
+                              if (value) {
+                                Fluttertoast.showToast(msg: "删除歌曲缓存成功");
+                              } else {
+                                Fluttertoast.showToast(msg: "缓存不存在");
+                              }
+                            });
+                          }
+                        });
+                      },
+                    ),
+                    ListTile(
                       leading: const Icon(Icons.download),
                       title: const Text('下载歌曲到本地'),
                       onTap: () async {
