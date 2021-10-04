@@ -1,28 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:tuple/tuple.dart';
-import 'package:yunshu_music/util/logger_flutter.dart';
-
-class _LogTarget extends LogOutput {
-  final ConsoleOutput _consoleOutput = ConsoleOutput();
-
-  @override
-  void output(OutputEvent event) {
-    _consoleOutput.output(event);
-    LogConsole.add(event, bufferSize: 500);
-  }
-}
-
-class _LogFilter extends LogFilter {
-  @override
-  bool shouldLog(LogEvent event) {
-    return true;
-  }
-}
+import 'package:yunshu_music/util/log_console.dart';
 
 class LogHelper {
-  static final Logger _logger =
-      Logger(output: _LogTarget(), filter: _LogFilter());
+  static final Logger _logger = Logger(
+    output: LogConsole.wrap(),
+    filter: ProductionFilter(),
+    printer: PrettyPrinter(printTime: true),
+  );
   static LogHelper? _logHelper;
 
   static LogHelper get() {
