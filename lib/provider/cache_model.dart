@@ -133,6 +133,15 @@ class CacheModel {
     });
   }
 
+  Future<int> deleteLyric(String lyricId) async {
+    log('start delete cache lyric $lyricId');
+    if (lyricId == '') {
+      return 0;
+    }
+    return await _database
+        .rawDelete('delete from lyric_cache where lyricId = ?', [lyricId]);
+  }
+
   Future<String?> getLyric(String lyricId) async {
     log('get lyric from cache $lyricId');
     List<Map<String, Object?>> list = await _database
@@ -164,5 +173,14 @@ class CacheModel {
       return null;
     }
     return list[0]['base64']?.toString();
+  }
+
+  Future<int> deleteCover(String musicId) async {
+    log('start delete cache cover $musicId');
+    if (musicId == '') {
+      return 0;
+    }
+    return await _database
+        .rawDelete('delete from cover_cache where musicId = ?', [musicId]);
   }
 }

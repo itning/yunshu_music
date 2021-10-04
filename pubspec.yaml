@@ -45,6 +45,8 @@ dependencies:
   shimmer: ^2.0.0
   audio_video_progress_bar: ^0.9.0
   sqflite: ^2.0.0+4
+  url_launcher: ^6.0.12
+  fluttertoast: ^8.0.8
 
 dev_dependencies:
   flutter_test:
