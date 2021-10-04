@@ -230,10 +230,11 @@ class MusicDataModel extends ChangeNotifier {
       }
     }
 
-    MusicDataContent? music = _getNextMusic();
-    if (null == music) {
-      return;
-    }
+    _nowPlayIndex = 0;
+    _sharedPreferences.setInt(_nowPlayIndexKey, _nowPlayIndex);
+    MusicDataContent music = _musicList[_nowPlayIndex];
+    _playList.add(music);
+    CacheModel.get().cachePlayListAddOne(music);
     if (null != music.lyricId) {
       await _initLyric(music.lyricId!);
     }
