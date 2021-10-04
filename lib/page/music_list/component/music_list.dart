@@ -10,6 +10,7 @@ import 'package:yunshu_music/page/music_list/component/music_list_item.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/route/app_route_delegate.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 class MusicList extends StatefulWidget {
   const MusicList({Key? key}) : super(key: key);
@@ -41,8 +42,7 @@ class _MusicListState extends State<MusicList> {
         .then(message)
         .onError((error, stackTrace) {
       message(error.toString());
-      print(error);
-      print(stackTrace);
+      LogHelper.get().error('刷新歌曲列表失败', error, stackTrace);
     });
   }
 

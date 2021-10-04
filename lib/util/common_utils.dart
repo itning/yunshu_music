@@ -1,5 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:tuple/tuple.dart';
+import 'package:yunshu_music/util/log_console.dart';
+
+class LogHelper {
+  static final Logger _logger = Logger(
+    output: LogConsole.wrap(),
+    filter: ProductionFilter(),
+    printer: PrettyPrinter(printTime: true),
+  );
+  static LogHelper? _logHelper;
+
+  static LogHelper get() {
+    _logHelper ??= LogHelper();
+    return _logHelper!;
+  }
+
+  void debug(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    _logger.log(Level.debug, message, error, stackTrace);
+  }
+
+  void info(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    _logger.log(Level.info, message, error, stackTrace);
+  }
+
+  void warn(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    _logger.log(Level.warning, message, error, stackTrace);
+  }
+
+  void error(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    _logger.log(Level.error, message, error, stackTrace);
+  }
+}
 
 /// 路由带动画的
 Route createRoute(Widget page) {

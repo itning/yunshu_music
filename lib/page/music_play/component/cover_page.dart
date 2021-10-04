@@ -18,7 +18,6 @@ class _CoverPageState extends State<CoverPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    print('>>>CoverPage build');
     return Center(
       child: Selector<MusicDataModel, String?>(
         selector: (_, model) => model.coverBase64,

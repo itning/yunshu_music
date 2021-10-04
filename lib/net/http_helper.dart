@@ -4,6 +4,7 @@ import 'package:flutter_rest_template/impl/dio_client_http_request_factory.dart'
 import 'package:flutter_rest_template/response_entity.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/net/model/music_meta_info_entity.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 class HttpHelper {
   static HttpHelper? _instance;
@@ -56,7 +57,7 @@ class HttpHelper {
   Future<String?> getLyric(String lyricId) async {
     Response<String> response =
         await _dio.get<String>('$baseUrl/file/lyric?id=$lyricId');
-    print('获取歌词：$baseUrl/file/lyric?id=$lyricId');
+    LogHelper.get().info('获取歌词：$baseUrl/file/lyric?id=$lyricId');
     return response.data;
   }
 
