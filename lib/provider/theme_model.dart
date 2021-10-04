@@ -16,8 +16,7 @@ class ThemeModel extends ChangeNotifier {
 
   ThemeMode get themeMode => _themeMode;
 
-  Future<void> init() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+  Future<void> init(SharedPreferences sharedPreferences) async {
     String? themeMode = sharedPreferences.getString(_themeModeKey);
     _themeMode = _fromString(themeMode);
   }

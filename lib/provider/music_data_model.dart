@@ -64,11 +64,6 @@ class MusicDataModel extends ChangeNotifier {
 
   /// 刷新音乐列表
   Future<String?> refreshMusicList({bool needInit = false}) async {
-    if (needInit) {
-      SharedPreferences sharedPreferences =
-          await SharedPreferences.getInstance();
-      _playMode = sharedPreferences.getString(_playModeKey) ?? 'sequence';
-    }
     ResponseEntity<MusicEntity> responseEntity =
         await HttpHelper.get().getMusic();
     if (responseEntity.body == null) {
@@ -87,22 +82,31 @@ class MusicDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void nextPlayMode() {
+  Future<void> init(SharedPreferences sharedPreferences) async{
+    _playMode = sharedPreferences.getString(_playModeKey) ?? 'sequence';
+  }
+
+  Future<void> nextPlayMode() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     switch (_playMode) {
       case 'sequence':
         _playMode = 'randomly';
+        sharedPreferences.setString(_playModeKey, _playMode);
         notifyListeners();
         break;
       case 'randomly':
         _playMode = 'loop';
+        sharedPreferences.setString(_playModeKey, _playMode);
         notifyListeners();
         break;
       case 'loop':
         _playMode = 'sequence';
+        sharedPreferences.setString(_playModeKey, _playMode);
         notifyListeners();
         break;
       default:
         _playMode = 'sequence';
+        sharedPreferences.setString(_playModeKey, _playMode);
         notifyListeners();
         break;
     }
