@@ -30,12 +30,16 @@ class HttpHelper {
   Future<File?> download(String url, String savePath) async {
     LogHelper.get().debug('开始下载 $url $savePath');
     try {
+      int lastDownload = 0;
       Response<List<int>> response = await _dio.get(
         url,
         onReceiveProgress: (int received, int total) {
           if (total != -1) {
-            LogHelper.get().debug(
-                "$received/$total 下载进度: ${(received / total * 100).toStringAsFixed(0)}%");
+            if (received - lastDownload > 2097152) {
+              lastDownload = received;
+              LogHelper.get().debug(
+                  "$received/$total 下载进度: ${(received / total * 100).toStringAsFixed(0)}%");
+            }
           }
         },
         options: Options(
