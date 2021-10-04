@@ -104,6 +104,60 @@ class _InnerListItem extends StatelessWidget {
                   duration: Duration(seconds: 1),
                 )));
       },
+      rightButtonTap: () {
+        showModalBottomSheet(
+          context: context,
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+          isScrollControlled: true, // set this to true
+          builder: (_) {
+            return DraggableScrollableSheet(
+              maxChildSize: 0.5,
+              expand: false,
+              builder: (_, controller) {
+                return ListView(
+                  controller: controller,
+                  children: [
+                    Container(
+                      alignment: AlignmentDirectional.center,
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: const Text('更多操作'),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.music_note),
+                      title: SelectableText(name),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.person),
+                      title: SelectableText(singer),
+                    ),
+                    ListTile(
+                      onTap: () {},
+                      leading: const Icon(Icons.image),
+                      title: const Text('删除封面缓存'),
+                    ),
+                    ListTile(
+                      onTap: () {},
+                      leading: const Icon(Icons.delete),
+                      title: const Text('删除歌词缓存'),
+                    ),
+                    ListTile(
+                      onTap: () {},
+                      leading: const Icon(Icons.download),
+                      title: const Text('下载歌曲到本地'),
+                    ),
+                    ListTile(
+                      onTap: () {},
+                      leading: const Icon(Icons.share),
+                      title: const Text('分享这首歌给TA'),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }
