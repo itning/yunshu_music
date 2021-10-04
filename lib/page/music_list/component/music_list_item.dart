@@ -10,6 +10,7 @@ class MusicListItem extends StatelessWidget {
   final IconData? rightButtonIcon;
   final GestureTapCallback? onTap;
   final GestureLongPressCallback? onLongPress;
+  final VoidCallback? rightButtonTap;
 
   const MusicListItem(
       {Key? key,
@@ -18,7 +19,8 @@ class MusicListItem extends StatelessWidget {
       this.subTitle,
       this.rightButtonIcon,
       this.onTap,
-      this.onLongPress})
+      this.onLongPress,
+      this.rightButtonTap})
       : super(key: key);
 
   @override
@@ -56,7 +58,7 @@ class MusicListItem extends StatelessWidget {
             Expanded(
               flex: 2,
               child: IconButton(
-                onPressed: () {},
+                onPressed: rightButtonTap,
                 icon: Icon(rightButtonIcon, color: Colors.grey),
               ),
             ),
@@ -83,7 +85,7 @@ class _MusicListItemIndex extends StatelessWidget {
             style: const TextStyle(color: Colors.grey),
           );
         } else {
-          return Icon(Icons.equalizer, color: Theme.of(context).primaryColor);
+          return const Icon(Icons.equalizer, color: Colors.black);
         }
       },
       selector: (_, model) => model.nowMusicIndex,
