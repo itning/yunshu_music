@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_rest_template/flutter_rest_template.dart';
 import 'package:flutter_rest_template/impl/dio_client_http_request_factory.dart';
@@ -23,6 +25,41 @@ class HttpHelper {
   HttpHelper._() {
     _dio = Dio();
     _restTemplate = RestTemplate(DioClientHttpRequestFactory(_dio));
+  }
+
+  Future<File?> download(String url, String savePath) async {
+    LogHelper.get().debug('开始下载 $url $savePath');
+    try {
+      Response<List<int>> response = await _dio.get(
+        url,
+        onReceiveProgress: (int received, int total) {
+          if (total != -1) {
+            LogHelper.get().debug(
+                "$received/$total 下载进度: ${(received / total * 100).toStringAsFixed(0)}%");
+          }
+        },
+        options: Options(
+            responseType: ResponseType.bytes,
+            validateStatus: (status) {
+              if (status == 200) {
+                return true;
+              } else {
+                LogHelper.get().error('下载文件失败,服务器响应码非200 $status');
+                return false;
+              }
+            }),
+      );
+      if (response.data == null) {
+        LogHelper.get().error('下载文件失败,response.data == null');
+        return null;
+      }
+      File file = File(savePath);
+      return await file.writeAsBytes(response.data!);
+    } catch (e) {
+      LogHelper.get().error('下载文件失败 $url $savePath', e);
+    } finally {
+      LogHelper.get().debug('下载结束 $url $savePath');
+    }
   }
 
   Future<ResponseEntity<MusicEntity>> getMusic() async {
