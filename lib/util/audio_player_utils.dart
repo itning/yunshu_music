@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:just_audio/just_audio.dart';
@@ -15,7 +14,7 @@ extension AudioPlayerExtension on AudioPlayer {
   Future<String?> existedInLocal({required String url}) async {
     _sp ??= await SharedPreferences.getInstance();
 
-    return _sp!.getString(url);
+    return _sp!.getString(getCacheKey(url));
   }
 
   /// Get audio file cache path
@@ -60,7 +59,7 @@ extension AudioPlayerExtension on AudioPlayer {
 
     if (null != cachePath && !exist) {
       _sp ??= await SharedPreferences.getInstance();
-      await _sp!.remove(url);
+      await _sp!.remove(getCacheKey(url));
     }
 
     final duration = await setUrl(url, preload: preload);
@@ -108,12 +107,6 @@ extension AudioPlayerExtension on AudioPlayer {
     }
   }
 
-  /// Clear all the cache in the app dir
-  Future<void> clearCache({String? path}) async {
-    final dir = path != null ? Directory(path) : (await _openDir());
-    return dir.deleteSync();
-  }
-
   Future<void> playFromFile({required String filePath}) async {
     await setFilePath(filePath);
     return await play();
@@ -142,8 +135,9 @@ extension AudioPlayerExtension on AudioPlayer {
   }
 
   String getCacheKey(String url) {
-    var bytes = utf8.encode(url);
-    var base64Str = base64.encode(bytes);
-    return base64Str;
+    // var bytes = utf8.encode(url);
+    // var base64Str = base64.encode(bytes);
+    String musicId = Uri.parse(url).queryParameters['id']!;
+    return musicId;
   }
 }

@@ -53,9 +53,9 @@ class PlayStatusModel extends ChangeNotifier {
       LogHelper.get().debug('>>>音频持续时间 $event');
       _duration = event ?? const Duration();
     });
-    _player.playbackEventStream.listen((event) {
-      LogHelper.get().debug('>>>playbackEventStream $event');
-    });
+    // _player.playbackEventStream.listen((event) {
+    //   LogHelper.get().debug('>>>playbackEventStream $event');
+    // });
     _player.volumeStream.listen((event) {
       LogHelper.get().debug('>>>音量 $event');
     });

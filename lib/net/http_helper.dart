@@ -27,12 +27,22 @@ class HttpHelper {
     _restTemplate = RestTemplate(DioClientHttpRequestFactory(_dio));
   }
 
+  CancelToken? _cancelToken;
+  String? _lastUrl;
+
   Future<File?> download(String url, String savePath) async {
+    if (_cancelToken != null && !_cancelToken!.isCancelled) {
+      LogHelper.get().info('开始取消下载 $_lastUrl');
+      _cancelToken!.cancel();
+    }
+    _lastUrl = url;
+    _cancelToken = CancelToken();
     LogHelper.get().debug('开始下载 $url $savePath');
     try {
       int lastDownload = 0;
       Response<List<int>> response = await _dio.get(
         url,
+        cancelToken: _cancelToken,
         onReceiveProgress: (int received, int total) {
           if (total != -1) {
             if (received - lastDownload > 2097152) {
@@ -63,6 +73,8 @@ class HttpHelper {
       LogHelper.get().error('下载文件失败 $url $savePath', e);
     } finally {
       LogHelper.get().debug('下载结束 $url $savePath');
+      _cancelToken = null;
+      _lastUrl = null;
     }
   }
 
