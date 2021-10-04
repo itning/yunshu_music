@@ -9,38 +9,12 @@ import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/route/app_route_delegate.dart';
 
 /// 小型音乐控制器Widget
-class MusicMiniPlayControllerWidget extends StatefulWidget {
+class MusicMiniPlayControllerWidget extends StatelessWidget {
   const MusicMiniPlayControllerWidget({Key? key}) : super(key: key);
 
   @override
-  State<MusicMiniPlayControllerWidget> createState() =>
-      _MusicMiniPlayControllerWidgetState();
-}
-
-class _MusicMiniPlayControllerWidgetState
-    extends State<MusicMiniPlayControllerWidget> with TickerProviderStateMixin {
-  /// 播放暂停按钮动画控制器
-  late AnimationController _playPauseController;
-
-  bool lastPlayStatus = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _playPauseController = AnimationController(vsync: this)
-      ..drive(Tween(begin: 0, end: 1))
-      ..duration = const Duration(milliseconds: 500);
-  }
-
-  @override
-  void dispose() {
-    _playPauseController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Container(
+    return Ink(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         boxShadow: [
@@ -57,36 +31,35 @@ class _MusicMiniPlayControllerWidgetState
         child: InkWell(
           onTap: () => AppRouterDelegate.of(context).push('/musicPlay'),
           child: Flex(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             direction: Axis.horizontal,
             children: [
-              Expanded(
-                flex: 2,
-                child: Center(
-                  child: Selector<MusicDataModel, String?>(
-                    selector: (_, model) => model.coverBase64,
-                    builder: (_, value, __) {
-                      if (value == null) {
-                        return RotateCoverImageWidget(
-                          image: Image.asset('asserts/images/default_cover.jpg')
-                              .image,
-                          width: 52,
-                          height: 52,
-                          duration: const Duration(seconds: 20),
-                        );
-                      } else {
-                        return RotateCoverImageWidget(
-                          image: Image.memory(base64Decode(value)).image,
-                          width: 52,
-                          height: 52,
-                          duration: const Duration(seconds: 20),
-                        );
-                      }
-                    },
-                  ),
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                child: Selector<MusicDataModel, String?>(
+                  selector: (_, model) => model.coverBase64,
+                  builder: (_, value, __) {
+                    if (value == null) {
+                      return RotateCoverImageWidget(
+                        image: Image.asset('asserts/images/default_cover.jpg')
+                            .image,
+                        width: 52,
+                        height: 52,
+                        duration: const Duration(seconds: 20),
+                      );
+                    } else {
+                      return RotateCoverImageWidget(
+                        image: Image.memory(base64Decode(value)).image,
+                        width: 52,
+                        height: 52,
+                        duration: const Duration(seconds: 20),
+                      );
+                    }
+                  },
                 ),
               ),
               Expanded(
-                flex: 7,
+                flex: 6,
                 child: Selector<MusicDataModel, MusicDataContent?>(
                   selector: (_, data) => data.getNowPlayMusic(),
                   builder: (_, music, __) {
@@ -100,46 +73,62 @@ class _MusicMiniPlayControllerWidgetState
                 ),
               ),
               Expanded(
-                child: Column(
+                flex: 3,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    InkWell(
-                      child: Container(
-                        height: 54.0,
-                        alignment: AlignmentDirectional.center,
-                        child: Selector<PlayStatusModel, bool>(
-                          selector: (_, status) => status.isPlayNow,
-                          builder:
-                              (BuildContext context, value, Widget? child) {
-                            if (lastPlayStatus != value) {
-                              lastPlayStatus = value;
-                              value
-                                  ? _playPauseController.forward()
-                                  : _playPauseController.reverse();
-                            } else {
-                              value
-                                  ? _playPauseController.forward(from: 1)
-                                  : _playPauseController.reverse(from: 0);
-                            }
-                            return child!;
-                          },
-                          child: AnimatedIcon(
-                            icon: AnimatedIcons.play_pause,
-                            progress: _playPauseController,
-                            size: 35.0,
-                          ),
-                        ),
-                      ),
-                      onTap: () {
-                        PlayStatusModel status = Provider.of<PlayStatusModel>(
-                            context,
-                            listen: false);
-                        status.setPlay(!status.isPlayNow);
+                    Selector<PlayStatusModel, bool>(
+                      selector: (_, status) => status.isPlayNow,
+                      builder: (context, isPlayNow, __) {
+                        return isPlayNow
+                            ? IconButton(
+                                icon: const Icon(Icons.pause),
+                                onPressed: () {
+                                  PlayStatusModel playStatusModel =
+                                      context.read<PlayStatusModel>();
+                                  playStatusModel.setPlay(false);
+                                },
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.play_arrow),
+                                onPressed: () {
+                                  PlayStatusModel playStatusModel =
+                                      context.read<PlayStatusModel>();
+                                  playStatusModel.setPlay(true);
+                                },
+                              );
                       },
-                    )
+                    ),
+                    Selector<MusicDataModel, String>(
+                      selector: (_, model) => model.playMode,
+                      builder: (context, playMode, _) {
+                        if (playMode == 'sequence') {
+                          return IconButton(
+                            tooltip: '顺序播放',
+                            icon: const Icon(Icons.format_list_numbered),
+                            onPressed: () =>
+                                context.read<MusicDataModel>().nextPlayMode(),
+                          );
+                        } else if (playMode == 'randomly') {
+                          return IconButton(
+                            tooltip: '随机播放',
+                            icon: const Icon(Icons.shuffle),
+                            onPressed: () =>
+                                context.read<MusicDataModel>().nextPlayMode(),
+                          );
+                        } else {
+                          return IconButton(
+                            tooltip: '单曲循环',
+                            icon: const Icon(Icons.loop),
+                            onPressed: () =>
+                                context.read<MusicDataModel>().nextPlayMode(),
+                          );
+                        }
+                      },
+                    ),
                   ],
                 ),
-              ),
-              const Spacer(),
+              )
             ],
           ),
         ),
