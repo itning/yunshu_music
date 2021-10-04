@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 /// 播放状态
 class PlayStatusModel extends ChangeNotifier {
@@ -48,30 +49,30 @@ class PlayStatusModel extends ChangeNotifier {
       notifyListeners();
     });
     _player.durationStream.listen((event) {
-      print('>>>音频持续时间 $event');
+      LogHelper.get().debug('>>>音频持续时间 $event');
       _duration = event ?? const Duration();
     });
     _player.playbackEventStream.listen((event) {
-      print('>>>playbackEventStream $event');
+      LogHelper.get().debug('>>>playbackEventStream $event');
     });
     _player.volumeStream.listen((event) {
-      print('>>>音量 $event');
+      LogHelper.get().debug('>>>音量 $event');
     });
     _player.speedStream.listen((event) {
-      print('>>>速度 $event');
+      LogHelper.get().debug('>>>速度 $event');
     });
     _player.positionStream.listen((event) {
       _position = event;
       notifyListeners();
     });
     _player.playingStream.listen((event) {
-      print('>>>正在播放状态 $event');
+      LogHelper.get().debug('>>>正在播放状态 $event');
     });
     _player.playerStateStream.listen((event) {
-      print('>>>播放状态 $event');
+      LogHelper.get().debug('>>>播放状态 $event');
     });
     _player.processingStateStream.listen((event) {
-      print('>>>状态改变 $event');
+      LogHelper.get().debug('>>>状态改变 $event');
       notifyListeners();
       if (event == ProcessingState.completed) {
         MusicDataModel.get().toNext();
@@ -81,7 +82,7 @@ class PlayStatusModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    print('>>>PlayStatusModel dispose');
+    LogHelper.get().debug('>>>PlayStatusModel dispose');
     _player.dispose();
     super.dispose();
   }
@@ -95,24 +96,16 @@ class PlayStatusModel extends ChangeNotifier {
   Future<void> setSource(String url) async {
     try {
       Duration? duration = await _player.setUrl(url);
-      print('>>>播放时长：$duration');
+      LogHelper.get().debug('>>>播放时长：$duration');
     } on PlayerException catch (e) {
-      // iOS/macOS: maps to NSError.code
-      // Android: maps to ExoPlayerException.type
-      // Web: maps to MediaError.code
-      print("Error code: ${e.code}");
-      // iOS/macOS: maps to NSError.localizedDescription
-      // Android: maps to ExoPlaybackException.getMessage()
-      // Web: a generic message
-      print("Error message: ${e.message}");
+      LogHelper.get().error('设置音频源失败', e);
     } on PlayerInterruptedException catch (e) {
       // This call was interrupted since another audio source was loaded or the
       // player was stopped or disposed before this audio source could complete
       // loading.
-      print("Connection aborted: ${e.message}");
+      LogHelper.get().warn('设置音频源失败', e);
     } catch (e) {
-      // Fallback for all errors
-      print(e);
+      LogHelper.get().error('设置音频源失败', e);
     }
   }
 
