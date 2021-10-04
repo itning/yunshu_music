@@ -55,8 +55,7 @@ class _MusicListState extends State<MusicList> {
           .then(message)
           .onError((error, stackTrace) {
         message(error.toString());
-        print(error);
-        print(stackTrace);
+        LogHelper.get().error(error, stackTrace);
       }),
       child: Selector<MusicDataModel, List<MusicDataContent>>(
           selector: (_, model) => model.musicList,
