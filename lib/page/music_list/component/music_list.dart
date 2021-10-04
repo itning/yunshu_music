@@ -108,6 +108,7 @@ class _InnerListItem extends StatelessWidget {
   }
 }
 
+/// 加载时占位图
 class _InnerShimmer extends StatelessWidget {
   const _InnerShimmer({Key? key}) : super(key: key);
 
@@ -121,8 +122,8 @@ class _InnerShimmer extends StatelessWidget {
         children: <Widget>[
           Expanded(
             child: Shimmer.fromColors(
-              baseColor: const Color(0xFFE0E0E0),
-              highlightColor: const Color(0xFFF5F5F5),
+              baseColor: Theme.of(context).dialogBackgroundColor,
+              highlightColor: Theme.of(context).highlightColor,
               child: ListView.builder(
                 physics: const NeverScrollableScrollPhysics(),
                 itemBuilder: (_, __) => Container(

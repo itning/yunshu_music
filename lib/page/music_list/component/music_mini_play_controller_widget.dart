@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
+import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/component/rotate_cover_image_widget.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
@@ -77,10 +79,25 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Selector<PlayStatusModel, bool>(
-                      selector: (_, status) => status.isPlayNow,
-                      builder: (context, isPlayNow, __) {
-                        return isPlayNow
+                    Selector<PlayStatusModel, Tuple2<bool, ProcessingState>>(
+                      selector: (_, status) =>
+                          Tuple2(status.isPlayNow, status.processingState),
+                      builder: (context, status, __) {
+                        if (status.item2 == ProcessingState.loading) {
+                          return Container(
+                            margin: const EdgeInsets.all(16.0),
+                            child: const SizedBox(
+                              width: 15.0,
+                              height: 15.0,
+                              child: CircularProgressIndicator(
+                                backgroundColor: Colors.white,
+                                valueColor:
+                                    AlwaysStoppedAnimation(Colors.black),
+                              ),
+                            ),
+                          );
+                        }
+                        return status.item1
                             ? IconButton(
                                 icon: const Icon(Icons.pause),
                                 onPressed: () {
