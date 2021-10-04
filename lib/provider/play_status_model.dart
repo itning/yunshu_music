@@ -42,9 +42,8 @@ class PlayStatusModel extends ChangeNotifier {
 
   // TODO ITNING:https://pub.dev/packages/audio_session/install 增加占用监听
 
-  PlayStatusModel() : _player = AudioPlayer() {
+  PlayStatusModel() : _player = AudioPlayer(userAgent: 'YunShuMusic') {
     _player.bufferedPositionStream.listen((event) {
-      print('>>>缓冲 $event');
       _bufferedPosition = event;
       notifyListeners();
     });
@@ -62,7 +61,6 @@ class PlayStatusModel extends ChangeNotifier {
       print('>>>速度 $event');
     });
     _player.positionStream.listen((event) {
-      print('>>>播放进度 $event');
       _position = event;
       notifyListeners();
     });
