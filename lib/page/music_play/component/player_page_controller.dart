@@ -26,12 +26,15 @@ class PlayerPageController extends StatelessWidget {
               Tuple2(status.isPlayNow, status.processingState),
           builder: (BuildContext context, status, Widget? child) {
             if (status.item2 == ProcessingState.loading) {
-              return const SizedBox(
-                width: 25.0,
-                height: 25.0,
-                child: CircularProgressIndicator(
-                  backgroundColor: Colors.grey,
-                  valueColor: AlwaysStoppedAnimation(Colors.white),
+              return Container(
+                margin: const EdgeInsets.all(16.0),
+                child: const SizedBox(
+                  width: 19.0,
+                  height: 19.0,
+                  child: CircularProgressIndicator(
+                    backgroundColor: Colors.grey,
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                  ),
                 ),
               );
             }

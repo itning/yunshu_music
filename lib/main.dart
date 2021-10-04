@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
@@ -10,6 +11,7 @@ import 'package:yunshu_music/route/app_route_parser.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+  await CacheModel.get().init();
   await ThemeModel.get().init(sharedPreferences);
   await MusicDataModel.get().init(sharedPreferences);
   runApp(const YunShuMusicApp());
