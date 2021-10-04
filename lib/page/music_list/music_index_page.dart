@@ -4,7 +4,7 @@ import 'package:yunshu_music/page/music_list/component/music_list.dart';
 import 'package:yunshu_music/page/music_list/component/music_mini_play_controller_widget.dart';
 import 'package:yunshu_music/page/music_list/component/music_search_delegate.dart';
 import 'package:yunshu_music/route/app_route_delegate.dart';
-import 'package:yunshu_music/util/logger_flutter.dart';
+import 'package:yunshu_music/util/log_console.dart';
 
 /// 音乐列表
 class MusicIndexPage extends StatelessWidget {
@@ -32,7 +32,7 @@ class MusicIndexPage extends StatelessWidget {
                 if (value == '设置') {
                   AppRouterDelegate.of(context).push('/setting');
                 } else {
-                  LogConsole.open(context, dark: true);
+                  LogConsole.openLogConsole(context);
                 }
               },
               itemBuilder: (BuildContext context) {
