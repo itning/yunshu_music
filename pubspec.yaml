@@ -44,6 +44,7 @@ dependencies:
   shared_preferences: ^2.0.8
   shimmer: ^2.0.0
   audio_video_progress_bar: ^0.9.0
+  sqflite: ^2.0.0+4
 
 dev_dependencies:
   flutter_test:

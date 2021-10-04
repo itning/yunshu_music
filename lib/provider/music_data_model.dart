@@ -8,11 +8,13 @@ import 'package:yunshu_music/component/lyric/lyric_util.dart';
 import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/net/model/music_meta_info_entity.dart';
+import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 
 /// 音乐数据模型
 class MusicDataModel extends ChangeNotifier {
   static const String _playModeKey = "PLAY_MODE";
+  static const String _nowPlayIndexKey = "NOW_PLAY_INDEX";
 
   static MusicDataModel? _instance;
 
@@ -22,6 +24,8 @@ class MusicDataModel extends ChangeNotifier {
   }
 
   bool _isInit = false;
+
+  late SharedPreferences _sharedPreferences;
 
   /// 正在播放的列表
   final List<MusicDataContent> _playList = [];
@@ -64,6 +68,15 @@ class MusicDataModel extends ChangeNotifier {
 
   /// 刷新音乐列表
   Future<String?> refreshMusicList({bool needInit = false}) async {
+    if (needInit) {
+      List<MusicDataContent> list = await CacheModel.get().getMusicList();
+      if (list.isNotEmpty) {
+        _musicList = list;
+        await _initPlay();
+        notifyListeners();
+        return null;
+      }
+    }
     ResponseEntity<MusicEntity> responseEntity =
         await HttpHelper.get().getMusic();
     if (responseEntity.body == null) {
@@ -76,14 +89,17 @@ class MusicDataModel extends ChangeNotifier {
       return null;
     }
     _musicList = responseEntity.body!.data!.content!;
+    CacheModel.get().cacheMusicList(_musicList);
     if (needInit) {
       await _initPlay();
     }
     notifyListeners();
   }
 
-  Future<void> init(SharedPreferences sharedPreferences) async{
+  Future<void> init(SharedPreferences sharedPreferences) async {
+    _sharedPreferences = sharedPreferences;
     _playMode = sharedPreferences.getString(_playModeKey) ?? 'sequence';
+    _nowPlayIndex = sharedPreferences.getInt(_nowPlayIndexKey) ?? 0;
   }
 
   Future<void> nextPlayMode() async {
@@ -162,12 +178,15 @@ class MusicDataModel extends ChangeNotifier {
     for (int i = 0; i < _playList.length; i++) {
       if (music.musicId == _playList[i].musicId) {
         _nowPlayIndex = i;
+        _sharedPreferences.setInt(_nowPlayIndexKey, _nowPlayIndex);
         await doPlay();
         return;
       }
     }
     _playList.add(music);
+    CacheModel.get().cachePlayListAddOne(music);
     _nowPlayIndex = _playList.length - 1;
+    _sharedPreferences.setInt(_nowPlayIndexKey, _nowPlayIndex);
     await doPlay();
   }
 
@@ -177,8 +196,40 @@ class MusicDataModel extends ChangeNotifier {
       return;
     }
     _isInit = true;
-    // TODO ITNING:历史播放列表的读取
-    // 移除在所有音乐列表中不存在的历史播放歌曲，初始化完成后调用
+    List<MusicDataContent> playListFromCache =
+        await CacheModel.get().getPlayList();
+    if (playListFromCache.isNotEmpty &&
+        playListFromCache.length > _nowPlayIndex) {
+      // 移除在所有音乐列表中不存在的历史播放歌曲，初始化完成后调用
+      MusicDataContent music = playListFromCache[_nowPlayIndex];
+      Set<String> musicIdSet = _musicList
+          .map((element) => element.musicId ?? '')
+          .where((element) => element != '')
+          .toSet();
+      playListFromCache
+          .removeWhere((element) => !musicIdSet.contains(element.musicId));
+      if (playListFromCache.isNotEmpty) {
+        if (!playListFromCache.contains(music)) {
+          _nowPlayIndex = 0;
+          _sharedPreferences.setInt(_nowPlayIndexKey, _nowPlayIndex);
+          music = playListFromCache[_nowPlayIndex];
+        }
+        _playList.clear();
+        _playList.addAll(playListFromCache);
+        if (null != music.lyricId) {
+          await _initLyric(music.lyricId!);
+        }
+        if (null != music.musicId) {
+          _nowMusicIndex = _musicList
+              .indexWhere((element) => element.musicId == music.musicId);
+          await _initCover(music.musicId!);
+          await PlayStatusModel.get()
+              .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
+        }
+        return;
+      }
+    }
+
     MusicDataContent? music = _getNextMusic();
     if (null == music) {
       return;
@@ -245,13 +296,23 @@ class MusicDataModel extends ChangeNotifier {
   }
 
   Future<void> _initLyric(String lyricId) async {
-    String? lyric = await HttpHelper.get().getLyric(lyricId);
+    String? lyric = await CacheModel.get().getLyric(lyricId);
+    if (lyric == null) {
+      lyric = await HttpHelper.get().getLyric(lyricId);
+      CacheModel.get().cacheLyric(lyricId, lyric);
+    }
     List<Lyric>? list = LyricUtil.formatLyric(lyric);
     _lyricList = list;
     notifyListeners();
   }
 
   Future<void> _initCover(String musicId) async {
+    String? coverFromCache = await CacheModel.get().getCover(musicId);
+    if (null != coverFromCache) {
+      _coverBase64 = coverFromCache;
+      notifyListeners();
+      return;
+    }
     ResponseEntity<MusicMetaInfoEntity> responseEntity =
         await HttpHelper.get().getMetaInfo(musicId);
     if (responseEntity.status.value != 200) {
@@ -277,7 +338,7 @@ class MusicDataModel extends ChangeNotifier {
     MusicMetaInfoDataCoverPictures pictures =
         responseEntity.body!.data!.coverPictures![0];
     _coverBase64 = pictures.base64;
-    print(">>>初始化封面完成 有封面：${null != _coverBase64}");
+    CacheModel.get().cacheCover(musicId, _coverBase64);
     notifyListeners();
   }
 
@@ -285,13 +346,14 @@ class MusicDataModel extends ChangeNotifier {
   MusicDataContent? _getPreviousMusic() {
     // 如果播放列表为空则获取一首歌曲
     if (_playList.isEmpty) {
-      // TODO ITNING:歌曲模式
       MusicDataContent? music = _getSongs();
       if (null == music) {
         return null;
       }
       _playList.insert(0, music);
       _nowPlayIndex = 0;
+      _sharedPreferences.setInt(_nowPlayIndexKey, _nowPlayIndex);
+      CacheModel.get().cachePlayList(_playList);
       return music;
     } else {
       // 播放列表不是空的，尝试索引位置-1
@@ -303,9 +365,13 @@ class MusicDataModel extends ChangeNotifier {
         }
         _playList.insert(0, music);
         _nowPlayIndex = 0;
+        _sharedPreferences.setInt(_nowPlayIndexKey, _nowPlayIndex);
+        CacheModel.get().cachePlayList(_playList);
         return music;
       } else {
-        return _playList[--_nowPlayIndex];
+        _nowPlayIndex -= 1;
+        _sharedPreferences.setInt(_nowPlayIndexKey, _nowPlayIndex);
+        return _playList[_nowPlayIndex];
       }
     }
   }
@@ -320,6 +386,8 @@ class MusicDataModel extends ChangeNotifier {
       }
       _playList.add(music);
       _nowPlayIndex = 0;
+      _sharedPreferences.setInt(_nowPlayIndexKey, _nowPlayIndex);
+      CacheModel.get().cachePlayListAddOne(music);
       return music;
     } else {
       // 播放列表不是空的，尝试索引位置+1
@@ -331,10 +399,14 @@ class MusicDataModel extends ChangeNotifier {
         }
         _playList.add(music);
         _nowPlayIndex = _playList.length - 1;
+        _sharedPreferences.setInt(_nowPlayIndexKey, _nowPlayIndex);
+        CacheModel.get().cachePlayListAddOne(music);
         return music;
       } else {
         // 不是最后一首，索引+1返回
-        return _playList[++_nowPlayIndex];
+        _nowPlayIndex += 1;
+        _sharedPreferences.setInt(_nowPlayIndexKey, _nowPlayIndex);
+        return _playList[_nowPlayIndex];
       }
     }
   }
@@ -365,7 +437,9 @@ class MusicDataModel extends ChangeNotifier {
       canPlayList = _musicList;
     }
     int index = Random().nextInt(canPlayList.length);
-    return canPlayList[index];
+    MusicDataContent randomlyMusic = canPlayList[index];
+    _randomPlayedSet.add(randomlyMusic);
+    return randomlyMusic;
   }
 
   /// 顺序获取一首
