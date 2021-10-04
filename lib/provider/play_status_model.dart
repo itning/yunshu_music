@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
+import 'package:yunshu_music/util/audio_player_utils.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 /// 播放状态
@@ -95,7 +96,7 @@ class PlayStatusModel extends ChangeNotifier {
   /// 设置音频源
   Future<void> setSource(String url) async {
     try {
-      Duration? duration = await _player.setUrl(url);
+      Duration? duration = await _player.dynamicSet(url: url);
       LogHelper.get().debug('>>>播放时长：$duration');
     } on PlayerException catch (e) {
       LogHelper.get().error('设置音频源失败', e);
