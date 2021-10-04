@@ -19,6 +19,7 @@ limitations under the License.
 */
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 class LyricUtil {
   static var tags = ['ti', 'ar', 'al', 'offset', 'by'];
@@ -36,7 +37,7 @@ class LyricUtil {
       matches = reg.allMatches(lyricStr);
     } catch (e) {
       Fluttertoast.showToast(msg: "歌词解析失败", toastLength: Toast.LENGTH_LONG);
-      print(e.toString());
+      LogHelper.get().error('歌词解析失败', e);
     }
 
     List<Lyric> lyrics = [];

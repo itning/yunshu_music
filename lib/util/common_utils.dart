@@ -1,5 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:tuple/tuple.dart';
+import 'package:yunshu_music/util/logger_flutter.dart';
+
+class _LogTarget extends LogOutput {
+  final ConsoleOutput _consoleOutput = ConsoleOutput();
+
+  @override
+  void output(OutputEvent event) {
+    _consoleOutput.output(event);
+    LogConsole.add(event, bufferSize: 500);
+  }
+}
+
+class _LogFilter extends LogFilter {
+  @override
+  bool shouldLog(LogEvent event) {
+    return true;
+  }
+}
+
+class LogHelper {
+  static final Logger _logger =
+      Logger(output: _LogTarget(), filter: _LogFilter());
+  static LogHelper? _logHelper;
+
+  static LogHelper get() {
+    _logHelper ??= LogHelper();
+    return _logHelper!;
+  }
+
+  void debug(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    _logger.log(Level.debug, message, error, stackTrace);
+  }
+
+  void info(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    _logger.log(Level.info, message, error, stackTrace);
+  }
+
+  void warn(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    _logger.log(Level.warning, message, error, stackTrace);
+  }
+
+  void error(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    _logger.log(Level.error, message, error, stackTrace);
+  }
+}
 
 /// 路由带动画的
 Route createRoute(Widget page) {
