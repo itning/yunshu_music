@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_rest_template/response_entity.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_util.dart';
 import 'package:yunshu_music/net/http_helper.dart';
@@ -11,6 +12,8 @@ import 'package:yunshu_music/provider/play_status_model.dart';
 
 /// 音乐数据模型
 class MusicDataModel extends ChangeNotifier {
+  static const String _playModeKey = "PLAY_MODE";
+
   static MusicDataModel? _instance;
 
   static MusicDataModel get() {
@@ -41,6 +44,9 @@ class MusicDataModel extends ChangeNotifier {
   /// 音乐封面
   String? _coverBase64;
 
+  /// 播放模式
+  String _playMode = 'sequence';
+
   /// 获取音乐列表
   List<MusicDataContent> get musicList => _musicList;
 
@@ -53,8 +59,16 @@ class MusicDataModel extends ChangeNotifier {
   /// 获取正在播放的音乐在_musicList里的索引
   int get nowMusicIndex => _nowMusicIndex;
 
+  /// 获取播放模式
+  String get playMode => _playMode;
+
   /// 刷新音乐列表
   Future<String?> refreshMusicList({bool needInit = false}) async {
+    if (needInit) {
+      SharedPreferences sharedPreferences =
+          await SharedPreferences.getInstance();
+      _playMode = sharedPreferences.getString(_playModeKey) ?? 'sequence';
+    }
     ResponseEntity<MusicEntity> responseEntity =
         await HttpHelper.get().getMusic();
     if (responseEntity.body == null) {
@@ -71,6 +85,27 @@ class MusicDataModel extends ChangeNotifier {
       await _initPlay();
     }
     notifyListeners();
+  }
+
+  void nextPlayMode() {
+    switch (_playMode) {
+      case 'sequence':
+        _playMode = 'randomly';
+        notifyListeners();
+        break;
+      case 'randomly':
+        _playMode = 'loop';
+        notifyListeners();
+        break;
+      case 'loop':
+        _playMode = 'sequence';
+        notifyListeners();
+        break;
+      default:
+        _playMode = 'sequence';
+        notifyListeners();
+        break;
+    }
   }
 
   /// 搜索音乐和歌手
@@ -247,7 +282,7 @@ class MusicDataModel extends ChangeNotifier {
     // 如果播放列表为空则获取一首歌曲
     if (_playList.isEmpty) {
       // TODO ITNING:歌曲模式
-      MusicDataContent? music = _getSongsRandomly();
+      MusicDataContent? music = _getSongs();
       if (null == music) {
         return null;
       }
@@ -258,7 +293,7 @@ class MusicDataModel extends ChangeNotifier {
       // 播放列表不是空的，尝试索引位置-1
       if (_nowPlayIndex - 1 < 0) {
         // 说明是上一首歌不存在了，获取一首
-        MusicDataContent? music = _getSongsRandomly();
+        MusicDataContent? music = _getSongs();
         if (null == music) {
           return null;
         }
@@ -275,8 +310,7 @@ class MusicDataModel extends ChangeNotifier {
   MusicDataContent? _getNextMusic() {
     // 播放列表是空的：用户没播放过歌曲
     if (_playList.isEmpty) {
-      // TODO ITNING:歌曲模式
-      MusicDataContent? music = _getSongsRandomly();
+      MusicDataContent? music = _getSongs();
       if (null == music) {
         return null;
       }
@@ -287,7 +321,7 @@ class MusicDataModel extends ChangeNotifier {
       // 播放列表不是空的，尝试索引位置+1
       if (_playList.length <= _nowPlayIndex + 1) {
         // 说明播放到播放列表中最后一首歌了，需要获取下一首
-        MusicDataContent? music = _getSongsRandomly();
+        MusicDataContent? music = _getSongs();
         if (null == music) {
           return null;
         }
@@ -298,6 +332,20 @@ class MusicDataModel extends ChangeNotifier {
         // 不是最后一首，索引+1返回
         return _playList[++_nowPlayIndex];
       }
+    }
+  }
+
+  /// 获取一首
+  MusicDataContent? _getSongs({bool noLoop = false}) {
+    switch (_playMode) {
+      case 'sequence':
+        return _getSongsSequence();
+      case 'randomly':
+        return _getSongsRandomly();
+      case 'loop':
+        return noLoop ? _getSongsSequence() : _getSongsLoop();
+      default:
+        return _getSongsSequence();
     }
   }
 
@@ -314,5 +362,24 @@ class MusicDataModel extends ChangeNotifier {
     }
     int index = Random().nextInt(canPlayList.length);
     return canPlayList[index];
+  }
+
+  /// 顺序获取一首
+  MusicDataContent? _getSongsSequence() {
+    if (_musicList.isEmpty) {
+      return null;
+    }
+    if (musicList.length <= nowMusicIndex + 1) {
+      nowMusicIndex == -1;
+    }
+    return _musicList[++_nowMusicIndex];
+  }
+
+  /// 循环获取一首
+  MusicDataContent? _getSongsLoop() {
+    if (_musicList.isEmpty) {
+      return null;
+    }
+    return _musicList[_nowMusicIndex];
   }
 }
