@@ -19,11 +19,34 @@ class PlayStatusModel extends ChangeNotifier {
   /// 音频持续时间
   Duration _duration = const Duration();
 
+  /// 缓冲时间
+  Duration _bufferedPosition = const Duration();
+
+  /// 当前播放进度
+  Duration get position => _position;
+
+  /// 当前音频时长
+  Duration get duration => _duration;
+
+  /// 缓冲时间
+  Duration get bufferedPosition => _bufferedPosition;
+
+  /// 播放器状态
+  ProcessingState get processingState => _player.processingState;
+
+  /// 现在正在播放吗？
+  bool get isPlayNow =>
+      _player.playing &&
+      _player.processingState != ProcessingState.completed &&
+      _player.processingState != ProcessingState.loading;
+
   // TODO ITNING:https://pub.dev/packages/audio_session/install 增加占用监听
 
   PlayStatusModel() : _player = AudioPlayer() {
     _player.bufferedPositionStream.listen((event) {
       print('>>>缓冲 $event');
+      _bufferedPosition = event;
+      notifyListeners();
     });
     _player.durationStream.listen((event) {
       print('>>>音频持续时间 $event');
@@ -51,6 +74,7 @@ class PlayStatusModel extends ChangeNotifier {
     });
     _player.processingStateStream.listen((event) {
       print('>>>状态改变 $event');
+      notifyListeners();
       if (event == ProcessingState.completed) {
         MusicDataModel.get().toNext();
       }
@@ -63,19 +87,6 @@ class PlayStatusModel extends ChangeNotifier {
     _player.dispose();
     super.dispose();
   }
-
-  /// 当前播放进度
-  Duration get position => _position;
-
-  /// 当前音频时长
-  Duration get duration => _duration;
-
-  /// 播放器状态
-  ProcessingState get processingState => _player.processingState;
-
-  /// 现在正在播放吗？
-  bool get isPlayNow =>
-      _player.playing && _player.processingState != ProcessingState.completed;
 
   /// 手动更新播放进度
   Future<void> seek(Duration? position) async {
