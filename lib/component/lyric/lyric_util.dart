@@ -17,6 +17,7 @@ limitations under the License.
 1. 适配dart空安全
 2. 注释修改
 */
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 
 class LyricUtil {
@@ -34,7 +35,7 @@ class LyricUtil {
     try {
       matches = reg.allMatches(lyricStr);
     } catch (e) {
-      // TODO ITNING:歌词解析错误处理
+      Fluttertoast.showToast(msg: "歌词解析失败", toastLength: Toast.LENGTH_LONG);
       print(e.toString());
     }
 

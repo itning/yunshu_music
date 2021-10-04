@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/page/music_list/component/music_list_item.dart';
+import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/route/app_route_delegate.dart';
 
@@ -21,7 +25,8 @@ class _MusicListState extends State<MusicList> {
       return;
     }
     if (!mounted) {
-      print("message: $message");
+      Fluttertoast.showToast(
+          msg: "错误：$message", toastLength: Toast.LENGTH_LONG);
       return;
     }
     final snackBar = SnackBar(content: Text(message));
@@ -68,6 +73,8 @@ class _MusicListState extends State<MusicList> {
                       index: index,
                       name: music.name ?? '',
                       singer: music.singer ?? '',
+                      musicId: music.musicId ?? '',
+                      lyricId: music.lyricId ?? '',
                     );
                   }),
             );
@@ -80,10 +87,39 @@ class _InnerListItem extends StatelessWidget {
   final int index;
   final String name;
   final String singer;
+  final String musicId;
+  final String lyricId;
 
   const _InnerListItem(
-      {Key? key, required this.index, required this.name, required this.singer})
+      {Key? key,
+      required this.index,
+      required this.name,
+      required this.singer,
+      required this.musicId,
+      required this.lyricId})
       : super(key: key);
+
+  Future<bool?> showDeleteConfirmDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("提示"),
+          content: const Text("您确定要删除吗?"),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("取消"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text("删除"),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +139,87 @@ class _InnerListItem extends StatelessWidget {
                   content: Text('复制成功'),
                   duration: Duration(seconds: 1),
                 )));
+      },
+      rightButtonTap: () {
+        showModalBottomSheet(
+          context: context,
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+          isScrollControlled: true, // set this to true
+          builder: (_) {
+            return DraggableScrollableSheet(
+              maxChildSize: 0.5,
+              expand: false,
+              builder: (_, controller) {
+                return ListView(
+                  controller: controller,
+                  children: [
+                    Container(
+                      alignment: AlignmentDirectional.center,
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: const Text('更多操作'),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.music_note),
+                      title: SelectableText(name),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.person),
+                      title: SelectableText(singer),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.image),
+                      title: const Text('删除封面缓存'),
+                      onTap: () {
+                        showDeleteConfirmDialog(context).then((value) {
+                          if (value ?? false) {
+                            CacheModel.get().deleteCover(musicId).then((value) {
+                              if (value > 0) {
+                                Fluttertoast.showToast(msg: "删除封面缓存成功");
+                              } else {
+                                Fluttertoast.showToast(msg: "缓存不存在");
+                              }
+                            });
+                          }
+                        });
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.delete),
+                      title: const Text('删除歌词缓存'),
+                      onTap: () {
+                        showDeleteConfirmDialog(context).then((value) {
+                          if (value ?? false) {
+                            CacheModel.get().deleteLyric(lyricId).then((value) {
+                              if (value > 0) {
+                                Fluttertoast.showToast(msg: "删除歌词缓存成功");
+                              } else {
+                                Fluttertoast.showToast(msg: "缓存不存在");
+                              }
+                            });
+                          }
+                        });
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.download),
+                      title: const Text('下载歌曲到本地'),
+                      onTap: () async {
+                        String url = HttpHelper.get().getMusicUrl(musicId);
+                        bool can = await canLaunch(url);
+                        if (can) {
+                          await launch(url);
+                        } else {
+                          Fluttertoast.showToast(msg: "下载失败");
+                        }
+                      },
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
       },
     );
   }
