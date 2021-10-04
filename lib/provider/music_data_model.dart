@@ -10,6 +10,7 @@ import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/net/model/music_meta_info_entity.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 /// 音乐数据模型
 class MusicDataModel extends ChangeNotifier {
@@ -290,7 +291,7 @@ class MusicDataModel extends ChangeNotifier {
     }
     MusicDataContent? nextMusic = _getNextMusic();
     if (null == nextMusic) {
-      print('下一曲为空');
+      LogHelper.get().warn('下一曲为空');
       return;
     }
     await doPlay();

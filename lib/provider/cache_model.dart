@@ -1,7 +1,6 @@
-import 'dart:developer';
-
 import 'package:sqflite/sqflite.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 class CacheModel {
   static CacheModel? _instance;
@@ -35,7 +34,7 @@ class CacheModel {
   }
 
   Future<int> cachePlayListAddOne(MusicDataContent list) async {
-    log('start cache play add one');
+    LogHelper.get().info('start cache play add one');
     return await _database.transaction((txn) async {
       return await txn.rawInsert(
           'INSERT INTO play_cache (musicId,lyricId,name,singer,type) VALUES ("${list.musicId}","${list.lyricId}","${list.name}","${list.singer}",${list.type} );');
@@ -43,7 +42,7 @@ class CacheModel {
   }
 
   Future<int> cachePlayList(List<MusicDataContent> list) async {
-    log('start cache play list');
+    LogHelper.get().info('start cache play list');
     return await _database.transaction((txn) async {
       // int? count = Sqflite.firstIntValue(await txn.rawQuery('select count(*) from list_cache where '));
       StringBuffer stringBuffer = StringBuffer();
@@ -66,14 +65,15 @@ class CacheModel {
         }
       }
       await txn.rawDelete('DELETE FROM play_cache');
-      log('SQL>>>INSERT INTO play_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;');
+      LogHelper.get().info(
+          'SQL>>>INSERT INTO play_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;');
       return await txn.rawInsert(
           "INSERT INTO play_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;");
     });
   }
 
   Future<List<MusicDataContent>> getPlayList() async {
-    log('get play list from cache');
+    LogHelper.get().info('get play list from cache');
     List<Map<String, Object?>> list = await _database.query('play_cache');
     if (list.isEmpty) {
       return [];
@@ -82,7 +82,7 @@ class CacheModel {
   }
 
   Future<int> cacheMusicList(List<MusicDataContent> list) async {
-    log('start cache music list');
+    LogHelper.get().info('start cache music list');
     return await _database.transaction((txn) async {
       // int? count = Sqflite.firstIntValue(await txn.rawQuery('select count(*) from list_cache where '));
       StringBuffer stringBuffer = StringBuffer();
@@ -105,14 +105,15 @@ class CacheModel {
         }
       }
       await txn.rawDelete('DELETE FROM list_cache');
-      log('SQL>>>INSERT INTO list_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;');
+      LogHelper.get().info(
+          'SQL>>>INSERT INTO list_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;');
       return await txn.rawInsert(
           "INSERT INTO list_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;");
     });
   }
 
   Future<List<MusicDataContent>> getMusicList() async {
-    log('get music list from cache');
+    LogHelper.get().info('get music list from cache');
     List<Map<String, Object?>> list = await _database.query('list_cache');
     if (list.isEmpty) {
       return [];
@@ -121,7 +122,7 @@ class CacheModel {
   }
 
   Future<int> cacheLyric(String lyricId, String? content) async {
-    log('start cache lyric');
+    LogHelper.get().info('start cache lyric');
     if (content == null || content == '') {
       return 0;
     }
@@ -134,7 +135,7 @@ class CacheModel {
   }
 
   Future<int> deleteLyric(String lyricId) async {
-    log('start delete cache lyric $lyricId');
+    LogHelper.get().info('start delete cache lyric $lyricId');
     if (lyricId == '') {
       return 0;
     }
@@ -143,7 +144,7 @@ class CacheModel {
   }
 
   Future<String?> getLyric(String lyricId) async {
-    log('get lyric from cache $lyricId');
+    LogHelper.get().info('get lyric from cache $lyricId');
     List<Map<String, Object?>> list = await _database
         .rawQuery('select * from lyric_cache where lyricId = "$lyricId";');
     if (list.isEmpty) {
@@ -153,7 +154,7 @@ class CacheModel {
   }
 
   Future<int> cacheCover(String musicId, String? base64) async {
-    log('start cache cover');
+    LogHelper.get().info('start cache cover');
     if (base64 == null || base64 == '') {
       return 0;
     }
@@ -166,7 +167,7 @@ class CacheModel {
   }
 
   Future<String?> getCover(String musicId) async {
-    log('get cover from cache $musicId');
+    LogHelper.get().info('get cover from cache $musicId');
     List<Map<String, Object?>> list = await _database
         .rawQuery('select * from cover_cache where musicId = "$musicId";');
     if (list.isEmpty) {
@@ -176,7 +177,7 @@ class CacheModel {
   }
 
   Future<int> deleteCover(String musicId) async {
-    log('start delete cache cover $musicId');
+    LogHelper.get().info('start delete cache cover $musicId');
     if (musicId == '') {
       return 0;
     }

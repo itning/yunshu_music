@@ -5,6 +5,7 @@ import 'package:yunshu_music/component/lyric/lyric_controller.dart';
 import 'package:yunshu_music/component/lyric/lyric_widget.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 /// 歌词页
 class LyricPage extends StatefulWidget {
@@ -73,7 +74,7 @@ class _LyricPageState extends State<LyricPage>
                     //点击选择器后移动歌词到滑动位置;
                     controller.draggingComplete();
                     //当前进度
-                    print("进度:${controller.draggingProgress}");
+                    LogHelper.get().debug("进度:${controller.draggingProgress}");
                     context
                         .read<PlayStatusModel>()
                         .seek(controller.draggingProgress);
