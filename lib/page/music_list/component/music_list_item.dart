@@ -32,10 +32,11 @@ class MusicListItem extends StatelessWidget {
           direction: Axis.horizontal,
           children: [
             Expanded(
+              flex: 2,
               child: _MusicListItemIndex(index: index),
             ),
             Expanded(
-              flex: 8,
+              flex: 11,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -47,22 +48,16 @@ class MusicListItem extends StatelessWidget {
                   Text(
                     '$subTitle',
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12.0),
+                    style: const TextStyle(fontSize: 12.0, color: Colors.grey),
                   ),
                 ],
               ),
             ),
             Expanded(
-              child: InkWell(
-                onTap: () {
-                  // TODO ITNING:右按钮点击
-                  print('右按钮点击了');
-                },
-                child: Container(
-                  height: 46.0,
-                  alignment: AlignmentDirectional.center,
-                  child: Icon(rightButtonIcon),
-                ),
+              flex: 2,
+              child: IconButton(
+                onPressed: () {},
+                icon: Icon(rightButtonIcon, color: Colors.grey),
               ),
             ),
           ],
@@ -85,9 +80,10 @@ class _MusicListItemIndex extends StatelessWidget {
           return Text(
             '${index + 1}',
             textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.grey),
           );
         } else {
-          return const Icon(Icons.music_note);
+          return Icon(Icons.equalizer, color: Theme.of(context).primaryColor);
         }
       },
       selector: (_, model) => model.nowMusicIndex,
