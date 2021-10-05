@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yunshu_music/method_channel/play_status_channel.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
@@ -17,6 +18,7 @@ void main() async {
   await CacheModel.get().init(sharedPreferences);
   await ThemeModel.get().init(sharedPreferences);
   await MusicDataModel.get().init(sharedPreferences);
+  await PlayStatusChannel.get().init();
   runApp(const YunShuMusicApp());
   if (Platform.isAndroid) {
     // 沉浸式状态栏
