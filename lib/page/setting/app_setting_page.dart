@@ -103,6 +103,54 @@ class AppSettingPage extends StatelessWidget {
               ),
             ],
           ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  '开启封面缓存',
+                  style: TextStyle(fontSize: 17.0),
+                ),
+              ),
+              Selector<CacheModel, bool>(
+                selector: (_, cache) {
+                  return cache.enableCoverCache;
+                },
+                builder: (BuildContext context, enable, _) {
+                  return Switch(
+                      value: enable,
+                      onChanged: (value) => context
+                          .read<CacheModel>()
+                          .setEnableCoverCache(value));
+                },
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  '开启歌词缓存',
+                  style: TextStyle(fontSize: 17.0),
+                ),
+              ),
+              Selector<CacheModel, bool>(
+                selector: (_, cache) {
+                  return cache.enableLyricCache;
+                },
+                builder: (BuildContext context, enable, _) {
+                  return Switch(
+                      value: enable,
+                      onChanged: (value) => context
+                          .read<CacheModel>()
+                          .setEnableLyricCache(value));
+                },
+              ),
+            ],
+          ),
         ],
       ),
     );
