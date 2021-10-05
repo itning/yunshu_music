@@ -5,6 +5,7 @@ import 'package:flutter_rest_template/response_entity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_util.dart';
+import 'package:yunshu_music/method_channel/play_status_channel.dart';
 import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/net/model/music_meta_info_entity.dart';
@@ -139,8 +140,7 @@ class MusicDataModel extends ChangeNotifier {
       bool containsName = false;
       bool containsSinger = false;
       if (musicItem.name != null) {
-        containsName =
-            musicItem.name!.toLowerCase().contains(lowerCaseKeyword);
+        containsName = musicItem.name!.toLowerCase().contains(lowerCaseKeyword);
       }
       if (musicItem.singer != null) {
         containsSinger =
@@ -234,6 +234,8 @@ class MusicDataModel extends ChangeNotifier {
           _nowMusicIndex = _musicList
               .indexWhere((element) => element.musicId == music.musicId);
           await _initCover(music.musicId!);
+          await PlayStatusChannel.get().setNowPlayMusicInfo(
+              music.name ?? '', music.singer ?? '', _coverBase64);
           await PlayStatusModel.get()
               .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
         }
@@ -253,6 +255,8 @@ class MusicDataModel extends ChangeNotifier {
       _nowMusicIndex =
           _musicList.indexWhere((element) => element.musicId == music.musicId);
       await _initCover(music.musicId!);
+      await PlayStatusChannel.get().setNowPlayMusicInfo(
+          music.name ?? '', music.singer ?? '', _coverBase64);
       await PlayStatusModel.get()
           .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
     }
@@ -275,6 +279,8 @@ class MusicDataModel extends ChangeNotifier {
       if (null != music.lyricId) {
         await _initLyric(music.lyricId!);
       }
+      await PlayStatusChannel.get().setNowPlayMusicInfo(
+          music.name ?? '', music.singer ?? '', _coverBase64);
       await PlayStatusModel.get()
           .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
       await PlayStatusModel.get().setPlay(true);

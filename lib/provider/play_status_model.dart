@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:yunshu_music/method_channel/play_status_channel.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
@@ -66,6 +67,7 @@ class PlayStatusModel extends ChangeNotifier {
     });
     _player.playingStream.listen((event) {
       LogHelper.get().debug('正在播放状态 $event');
+      PlayStatusChannel.get().setNowPlayMusicStatus(event);
     });
     _player.playerStateStream.listen((event) {
       LogHelper.get().debug('播放状态 $event');
