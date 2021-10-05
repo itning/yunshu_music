@@ -174,6 +174,13 @@ class MusicDataModel extends ChangeNotifier {
     if (index > _musicList.length - 1) {
       return;
     }
+    if (_nowMusicIndex == index) {
+      if (!PlayStatusModel.get().isPlayNow) {
+        await PlayStatusModel.get().setPlay(true);
+        notifyListeners();
+      }
+      return;
+    }
     MusicDataContent music = _musicList[index];
     // 检查播放列表有没有这首歌，有的话直接将播放
     for (int i = 0; i < _playList.length; i++) {
