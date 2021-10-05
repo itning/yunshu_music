@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 
 /// 应用设置页面
@@ -71,6 +72,37 @@ class AppSettingPage extends StatelessWidget {
             ],
           ),
           const Divider(),
+          const Padding(
+            padding: EdgeInsets.only(left: 16.0, top: 16.0),
+            child: Text(
+              '缓存设置',
+              style: TextStyle(fontSize: 12.0),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  '开启歌曲缓存',
+                  style: TextStyle(fontSize: 17.0),
+                ),
+              ),
+              Selector<CacheModel, bool>(
+                selector: (_, cache) {
+                  return cache.enableMusicCache;
+                },
+                builder: (BuildContext context, enable, _) {
+                  return Switch(
+                      value: enable,
+                      onChanged: (value) => context
+                          .read<CacheModel>()
+                          .setEnableMusicCache(value));
+                },
+              ),
+            ],
+          ),
         ],
       ),
     );

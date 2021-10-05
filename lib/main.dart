@@ -11,7 +11,7 @@ import 'package:yunshu_music/route/app_route_parser.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-  await CacheModel.get().init();
+  await CacheModel.get().init(sharedPreferences);
   await ThemeModel.get().init(sharedPreferences);
   await MusicDataModel.get().init(sharedPreferences);
   runApp(const YunShuMusicApp());
@@ -33,6 +33,7 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeModel.get()),
+        ChangeNotifierProvider(create: (_) => CacheModel.get()),
         ChangeNotifierProvider(create: (_) => PlayStatusModel.get()),
         ChangeNotifierProvider(create: (_) => MusicDataModel.get()),
       ],
