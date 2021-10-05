@@ -20,7 +20,7 @@ class CacheModel extends ChangeNotifier {
 
   late Database _database;
 
-  bool _enableMusicCache = false;
+  bool _enableMusicCache = true;
 
   bool _enableCoverCache = true;
 
@@ -37,7 +37,7 @@ class CacheModel extends ChangeNotifier {
   Future<void> init(SharedPreferences sharedPreferences) async {
     _sharedPreferences = sharedPreferences;
     _enableMusicCache =
-        sharedPreferences.getBool(_enableMusicCacheKey) ?? false;
+        sharedPreferences.getBool(_enableMusicCacheKey) ?? true;
     _enableCoverCache = sharedPreferences.getBool(_enableCoverCacheKey) ?? true;
     _enableLyricCache = sharedPreferences.getBool(_enableLyricCacheKey) ?? true;
     _database = await openDatabase('cache.db', version: 1,
