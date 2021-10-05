@@ -55,7 +55,7 @@ Route createRoute(Widget page) {
 
 /// 根据[keyword]搜索[rawString]中存在的字符串索引，返回值item1指起始位置；item2指结束位置
 List<Tuple2<int, int>> search(String rawString, String keyword) {
-  Iterable<Match> matchIterable = keyword.allMatches(rawString);
+  Iterable<Match> matchIterable = keyword.toLowerCase().allMatches(rawString.toLowerCase());
   return List.generate(matchIterable.length, (index) {
     Match match = matchIterable.elementAt(index);
     return Tuple2(match.start, match.end);
