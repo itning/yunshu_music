@@ -1,11 +1,14 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
-class CacheModel {
+class CacheModel extends ChangeNotifier {
+  static const String _enableMusicCacheKey = "ENABLE_MUSIC_CACHE";
+
   static CacheModel? _instance;
 
   static CacheModel get() {
@@ -15,7 +18,16 @@ class CacheModel {
 
   late Database _database;
 
-  Future<void> init() async {
+  bool _enableMusicCache = false;
+
+  late SharedPreferences _sharedPreferences;
+
+  bool get enableMusicCache => _enableMusicCache;
+
+  Future<void> init(SharedPreferences sharedPreferences) async {
+    _sharedPreferences = sharedPreferences;
+    _enableMusicCache =
+        sharedPreferences.getBool(_enableMusicCacheKey) ?? false;
     _database = await openDatabase('cache.db', version: 1,
         onCreate: (Database db, int version) async {
       // 所有音乐列表 缓存
@@ -189,9 +201,8 @@ class CacheModel {
   }
 
   Future<bool> deleteMusicCacheByMusicId(String musicId) async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    String? path = sharedPreferences.getString(musicId);
-    await sharedPreferences.remove(musicId);
+    String? path = _sharedPreferences.getString(musicId);
+    await _sharedPreferences.remove(musicId);
     if (null != path) {
       File cacheFile = File(path);
       if (cacheFile.existsSync()) {
@@ -205,5 +216,11 @@ class CacheModel {
       }
     }
     return false;
+  }
+
+  Future<void> setEnableMusicCache(bool enable) async {
+    _enableMusicCache = enable;
+    _sharedPreferences.setBool(_enableMusicCacheKey, enable);
+    notifyListeners();
   }
 }

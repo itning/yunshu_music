@@ -48,7 +48,7 @@ class HttpHelper {
             if (received - lastDownload > 2097152) {
               lastDownload = received;
               LogHelper.get().debug(
-                  "$received/$total 下载进度: ${(received / total * 100).toStringAsFixed(0)}%");
+                  "下载进度: $url $received/$total ${(received / total * 100).toStringAsFixed(0)}%");
             }
           }
         },

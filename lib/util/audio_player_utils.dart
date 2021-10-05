@@ -4,6 +4,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yunshu_music/net/http_helper.dart';
+import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 /// https://github.com/lau1944/just_audio_cache
@@ -47,7 +48,11 @@ extension AudioPlayerExtension on AudioPlayer {
     // File check
     String? cachePath = await existedInLocal(url: url);
     bool exist = checkFileExist(cachePath);
-    if (null != cachePath && exist) {
+    bool enableMusicCache = CacheModel.get().enableMusicCache;
+    if (!enableMusicCache) {
+      LogHelper.get().debug('未开启歌曲缓存，跳过检查缓存信息');
+    }
+    if (enableMusicCache && null != cachePath && exist) {
       // existed, play from local file
       LogHelper.get().info('缓存中存在，从缓存中设置音频源 $url $cachePath');
       try {
@@ -65,7 +70,7 @@ extension AudioPlayerExtension on AudioPlayer {
     final duration = await setUrl(url, preload: preload);
 
     // download to cache after setUrl in order to show the audio buffer state
-    if (pushIfNotExisted) {
+    if (pushIfNotExisted && enableMusicCache) {
       final key = getCacheKey(url);
       HttpHelper.get()
           .download(url, dirPath + '/' + key)
