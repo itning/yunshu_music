@@ -93,7 +93,7 @@ class CacheModel extends ChangeNotifier {
       }
       await txn.rawDelete('DELETE FROM play_cache');
       LogHelper.get().info(
-          'SQL>>>INSERT INTO play_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;');
+          'SQL:INSERT INTO play_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;');
       return await txn.rawInsert(
           "INSERT INTO play_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;");
     });
@@ -133,7 +133,7 @@ class CacheModel extends ChangeNotifier {
       }
       await txn.rawDelete('DELETE FROM list_cache');
       LogHelper.get().info(
-          'SQL>>>INSERT INTO list_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;');
+          'SQL:INSERT INTO list_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;');
       return await txn.rawInsert(
           "INSERT INTO list_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;");
     });

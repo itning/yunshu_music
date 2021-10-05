@@ -48,30 +48,30 @@ class PlayStatusModel extends ChangeNotifier {
       notifyListeners();
     });
     _player.durationStream.listen((event) {
-      LogHelper.get().debug('>>>音频持续时间 $event');
+      LogHelper.get().debug('音频持续时间 $event');
       _duration = event ?? const Duration();
     });
     // _player.playbackEventStream.listen((event) {
-    //   LogHelper.get().debug('>>>playbackEventStream $event');
+    //   LogHelper.get().debug('playbackEventStream $event');
     // });
     _player.volumeStream.listen((event) {
-      LogHelper.get().debug('>>>音量 $event');
+      LogHelper.get().debug('音量 $event');
     });
     _player.speedStream.listen((event) {
-      LogHelper.get().debug('>>>速度 $event');
+      LogHelper.get().debug('速度 $event');
     });
     _player.positionStream.listen((event) {
       _position = event;
       notifyListeners();
     });
     _player.playingStream.listen((event) {
-      LogHelper.get().debug('>>>正在播放状态 $event');
+      LogHelper.get().debug('正在播放状态 $event');
     });
     _player.playerStateStream.listen((event) {
-      LogHelper.get().debug('>>>播放状态 $event');
+      LogHelper.get().debug('播放状态 $event');
     });
     _player.processingStateStream.listen((event) {
-      LogHelper.get().debug('>>>状态改变 $event');
+      LogHelper.get().debug('状态改变 $event');
       notifyListeners();
       if (event == ProcessingState.completed) {
         MusicDataModel.get().toNext();
@@ -81,7 +81,7 @@ class PlayStatusModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    LogHelper.get().debug('>>>PlayStatusModel dispose');
+    LogHelper.get().debug('PlayStatusModel dispose');
     _player.dispose();
     super.dispose();
   }
@@ -103,7 +103,7 @@ class PlayStatusModel extends ChangeNotifier {
       } else {
         duration = await _player.setUrl(url);
       }
-      LogHelper.get().debug('>>>播放时长：$duration');
+      LogHelper.get().debug('播放时长：$duration');
     } on PlayerException catch (e) {
       LogHelper.get().error('设置音频源失败', e);
     } on PlayerInterruptedException catch (e) {
