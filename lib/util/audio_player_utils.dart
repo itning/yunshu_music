@@ -67,9 +67,12 @@ extension AudioPlayerExtension on AudioPlayer {
     // download to cache after setUrl in order to show the audio buffer state
     if (pushIfNotExisted) {
       final key = getCacheKey(url);
-      HttpHelper.get().download(url, dirPath + '/' + key).then((storedPath) {
+      HttpHelper.get()
+          .download(url, dirPath + '/' + key)
+          .then((storedPath) async {
         if (storedPath != null) {
-          _sp!.setString(url, storedPath.path);
+          bool result = await _sp!.setString(key, storedPath.path);
+          LogHelper.get().info('添加歌曲缓存：$result $key $storedPath');
         }
       });
     }
@@ -103,7 +106,7 @@ extension AudioPlayerExtension on AudioPlayer {
     final dirPath = path ?? (await _openDir()).path;
     final storedPath = await HttpHelper.get().download(url, dirPath);
     if (storedPath != null) {
-      _sp!.setString(url, storedPath.path);
+      _sp!.setString(getCacheKey(url), storedPath.path);
     }
   }
 
