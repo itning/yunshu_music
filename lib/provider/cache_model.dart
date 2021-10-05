@@ -8,6 +8,8 @@ import 'package:yunshu_music/util/common_utils.dart';
 
 class CacheModel extends ChangeNotifier {
   static const String _enableMusicCacheKey = "ENABLE_MUSIC_CACHE";
+  static const String _enableCoverCacheKey = "ENABLE_COVER_CACHE";
+  static const String _enableLyricCacheKey = "ENABLE_LYRIC_CACHE";
 
   static CacheModel? _instance;
 
@@ -20,14 +22,24 @@ class CacheModel extends ChangeNotifier {
 
   bool _enableMusicCache = false;
 
+  bool _enableCoverCache = true;
+
+  bool _enableLyricCache = true;
+
   late SharedPreferences _sharedPreferences;
 
   bool get enableMusicCache => _enableMusicCache;
+
+  bool get enableCoverCache => _enableCoverCache;
+
+  bool get enableLyricCache => _enableLyricCache;
 
   Future<void> init(SharedPreferences sharedPreferences) async {
     _sharedPreferences = sharedPreferences;
     _enableMusicCache =
         sharedPreferences.getBool(_enableMusicCacheKey) ?? false;
+    _enableCoverCache = sharedPreferences.getBool(_enableCoverCacheKey) ?? true;
+    _enableLyricCache = sharedPreferences.getBool(_enableLyricCacheKey) ?? true;
     _database = await openDatabase('cache.db', version: 1,
         onCreate: (Database db, int version) async {
       // 所有音乐列表 缓存
@@ -137,6 +149,9 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<int> cacheLyric(String lyricId, String? content) async {
+    if (!_enableLyricCache) {
+      return 0;
+    }
     LogHelper.get().info('start cache lyric');
     if (content == null || content == '') {
       return 0;
@@ -159,6 +174,9 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<String?> getLyric(String lyricId) async {
+    if (!_enableLyricCache) {
+      return null;
+    }
     LogHelper.get().info('get lyric from cache $lyricId');
     List<Map<String, Object?>> list = await _database
         .rawQuery('select * from lyric_cache where lyricId = "$lyricId";');
@@ -169,6 +187,9 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<int> cacheCover(String musicId, String? base64) async {
+    if (!_enableCoverCache) {
+      return 0;
+    }
     LogHelper.get().info('start cache cover');
     if (base64 == null || base64 == '') {
       return 0;
@@ -182,6 +203,9 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<String?> getCover(String musicId) async {
+    if (!_enableCoverCache) {
+      return null;
+    }
     LogHelper.get().info('get cover from cache $musicId');
     List<Map<String, Object?>> list = await _database
         .rawQuery('select * from cover_cache where musicId = "$musicId";');
@@ -221,6 +245,18 @@ class CacheModel extends ChangeNotifier {
   Future<void> setEnableMusicCache(bool enable) async {
     _enableMusicCache = enable;
     _sharedPreferences.setBool(_enableMusicCacheKey, enable);
+    notifyListeners();
+  }
+
+  Future<void> setEnableCoverCache(bool enable) async {
+    _enableCoverCache = enable;
+    _sharedPreferences.setBool(_enableCoverCacheKey, enable);
+    notifyListeners();
+  }
+
+  Future<void> setEnableLyricCache(bool enable) async {
+    _enableLyricCache = enable;
+    _sharedPreferences.setBool(_enableLyricCacheKey, enable);
     notifyListeners();
   }
 }
