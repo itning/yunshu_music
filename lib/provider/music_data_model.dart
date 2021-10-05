@@ -134,14 +134,17 @@ class MusicDataModel extends ChangeNotifier {
     if (keyword.trim() == '') {
       return [];
     }
+    String lowerCaseKeyword = keyword.toLowerCase();
     List<MusicDataContent> searchResultList = _musicList.where((musicItem) {
       bool containsName = false;
       bool containsSinger = false;
       if (musicItem.name != null) {
-        containsName = musicItem.name!.contains(keyword);
+        containsName =
+            musicItem.name!.toLowerCase().contains(lowerCaseKeyword);
       }
       if (musicItem.singer != null) {
-        containsSinger = musicItem.singer!.contains(keyword);
+        containsSinger =
+            musicItem.singer!.toLowerCase().contains(lowerCaseKeyword);
       }
       return containsName || containsSinger;
     }).toList();
