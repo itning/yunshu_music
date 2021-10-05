@@ -39,6 +39,19 @@ class MusicSearchDelegate extends SearchDelegate {
     final String keyword = query;
     List<MusicDataContent> result =
         context.read<MusicDataModel>().search(keyword);
+    return _buildWidget(context, result, keyword);
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    final String keyword = query;
+    List<MusicDataContent> result =
+        context.read<MusicDataModel>().search(query);
+    return _buildWidget(context, result, keyword);
+  }
+
+  Widget _buildWidget(
+      BuildContext context, List<MusicDataContent> result, String keyword) {
     return Scrollbar(
       child: ListView.builder(
           itemCount: result.length,
@@ -56,26 +69,6 @@ class MusicSearchDelegate extends SearchDelegate {
                 icon: const Icon(Icons.play_arrow),
               ),
             );
-          }),
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    List<MusicDataContent> result =
-        context.read<MusicDataModel>().search(query);
-    return Scrollbar(
-      child: ListView.builder(
-          itemCount: result.length,
-          itemBuilder: (_, int index) {
-            MusicDataContent music = result[index];
-            return ListTile(
-                title: Text(music.name!),
-                subtitle: Text(music.singer!),
-                trailing: IconButton(
-                  onPressed: () => _play(context, music.musicId),
-                  icon: const Icon(Icons.play_arrow),
-                ));
           }),
     );
   }
