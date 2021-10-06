@@ -42,6 +42,7 @@ class PlayStatusModel extends ChangeNotifier {
   bool get isPlayNow =>
       _player.playing &&
       _player.processingState != ProcessingState.completed &&
+      _player.processingState != ProcessingState.idle &&
       _player.processingState != ProcessingState.loading;
 
   PlayStatusModel() : _player = AudioPlayer(userAgent: 'YunShuMusic') {
@@ -68,10 +69,19 @@ class PlayStatusModel extends ChangeNotifier {
     });
     _player.playingStream.listen((event) {
       LogHelper.get().debug('正在播放状态 $event');
-      PlayStatusChannel.get().setNowPlayMusicStatus(event);
+      notifyListeners();
     });
     _player.playerStateStream.listen((event) {
       LogHelper.get().debug('播放状态 $event');
+      if (_player.playing &&
+          event.processingState != ProcessingState.completed &&
+          event.processingState != ProcessingState.idle &&
+          event.processingState != ProcessingState.loading) {
+        PlayStatusChannel.get().setNowPlayMusicInfo(play: true);
+      } else {
+        PlayStatusChannel.get().setNowPlayMusicInfo(play: false);
+      }
+      notifyListeners();
     });
     _player.processingStateStream.listen((event) {
       LogHelper.get().debug('状态改变 $event');

@@ -41,7 +41,7 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "top.itning.yunshu.music.yunshu_music"
-        minSdkVersion 16
+        minSdkVersion 24
         targetSdkVersion 30
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -67,4 +67,8 @@ android {
 
 flutter {
     source '../..'
+}
+
+dependencies{
+    implementation 'org.greenrobot:eventbus:3.2.0'
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
@@ -32,15 +34,12 @@ class PlayStatusChannel {
   }
 
   Future<void> setNowPlayMusicInfo(
-      String name, String singer, String? cover) async {
+      {bool? play, String? name, String? singer, String? cover}) async {
     await _platform.invokeMethod('setNowPlayMusicInfo', <String, dynamic>{
+      'play': play,
       'name': name,
       'singer': singer,
       'cover': cover,
     });
-  }
-
-  Future<void> setNowPlayMusicStatus(bool play) async {
-    await _platform.invokeMethod('setNowPlayMusicStatus', play);
   }
 }

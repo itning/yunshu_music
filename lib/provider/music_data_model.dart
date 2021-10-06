@@ -235,7 +235,7 @@ class MusicDataModel extends ChangeNotifier {
               .indexWhere((element) => element.musicId == music.musicId);
           await _initCover(music.musicId!);
           await PlayStatusChannel.get().setNowPlayMusicInfo(
-              music.name ?? '', music.singer ?? '', _coverBase64);
+              name: music.name, singer: music.singer, cover: _coverBase64);
           await PlayStatusModel.get()
               .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
         }
@@ -256,7 +256,7 @@ class MusicDataModel extends ChangeNotifier {
           _musicList.indexWhere((element) => element.musicId == music.musicId);
       await _initCover(music.musicId!);
       await PlayStatusChannel.get().setNowPlayMusicInfo(
-          music.name ?? '', music.singer ?? '', _coverBase64);
+          name: music.name, singer: music.singer, cover: _coverBase64);
       await PlayStatusModel.get()
           .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
     }
@@ -280,7 +280,7 @@ class MusicDataModel extends ChangeNotifier {
         await _initLyric(music.lyricId!);
       }
       await PlayStatusChannel.get().setNowPlayMusicInfo(
-          music.name ?? '', music.singer ?? '', _coverBase64);
+          name: music.name, singer: music.singer, cover: _coverBase64);
       await PlayStatusModel.get()
           .setSource(HttpHelper.get().getMusicUrl(music.musicId!));
       await PlayStatusModel.get().setPlay(true);
