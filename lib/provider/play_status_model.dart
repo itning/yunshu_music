@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:yunshu_music/method_channel/play_status_channel.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
@@ -107,6 +108,7 @@ class PlayStatusModel extends ChangeNotifier {
       }
       LogHelper.get().debug('播放时长：$duration');
     } on PlayerException catch (e) {
+      Fluttertoast.showToast(msg: "播放失败", toastLength: Toast.LENGTH_LONG);
       LogHelper.get().error('设置音频源失败', e);
     } on PlayerInterruptedException catch (e) {
       // This call was interrupted since another audio source was loaded or the
@@ -114,6 +116,7 @@ class PlayStatusModel extends ChangeNotifier {
       // loading.
       LogHelper.get().warn('设置音频源失败', e);
     } catch (e) {
+      Fluttertoast.showToast(msg: "播放失败，未知错误", toastLength: Toast.LENGTH_LONG);
       LogHelper.get().error('设置音频源失败', e);
     }
   }

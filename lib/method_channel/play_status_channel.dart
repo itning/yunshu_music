@@ -15,7 +15,7 @@ class PlayStatusChannel {
 
   Future<void> init() async {
     _platform.setMethodCallHandler((call) async {
-      LogHelper.get().error('call: ${call.method}');
+      LogHelper.get().debug('call: ${call.method} ${call.arguments}');
       switch (call.method) {
         case 'toPrevious':
           await MusicDataModel.get().toPrevious();

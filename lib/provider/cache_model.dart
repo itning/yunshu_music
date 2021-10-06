@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
@@ -36,8 +37,7 @@ class CacheModel extends ChangeNotifier {
 
   Future<void> init(SharedPreferences sharedPreferences) async {
     _sharedPreferences = sharedPreferences;
-    _enableMusicCache =
-        sharedPreferences.getBool(_enableMusicCacheKey) ?? true;
+    _enableMusicCache = sharedPreferences.getBool(_enableMusicCacheKey) ?? true;
     _enableCoverCache = sharedPreferences.getBool(_enableCoverCacheKey) ?? true;
     _enableLyricCache = sharedPreferences.getBool(_enableLyricCacheKey) ?? true;
     _database = await openDatabase('cache.db', version: 1,
@@ -111,31 +111,27 @@ class CacheModel extends ChangeNotifier {
   Future<int> cacheMusicList(List<MusicDataContent> list) async {
     LogHelper.get().info('start cache music list');
     return await _database.transaction((txn) async {
-      // int? count = Sqflite.firstIntValue(await txn.rawQuery('select count(*) from list_cache where '));
-      StringBuffer stringBuffer = StringBuffer();
+      await txn.rawDelete('DELETE FROM list_cache');
+      int change = 0;
       for (int i = 0; i < list.length; i++) {
         MusicDataContent item = list[i];
-        stringBuffer.write('(');
-        stringBuffer.write('"${item.musicId}"');
-        stringBuffer.write(',');
-        stringBuffer.write('"${item.lyricId}"');
-        stringBuffer.write(',');
-        stringBuffer.write('"${item.name}"');
-        stringBuffer.write(',');
-        stringBuffer.write('"${item.singer}"');
-        stringBuffer.write(',');
-        stringBuffer.write("${item.type}");
-        if (i + 1 != list.length) {
-          stringBuffer.write('), ');
-        } else {
-          stringBuffer.write(')');
+        try {
+          change += await txn.insert('list_cache', {
+            'musicId': item.musicId,
+            'lyricId': item.lyricId,
+            'name': item.name,
+            'singer': item.singer,
+            'type': item.type
+          });
+        } catch (e) {
+          LogHelper.get().error("插入数据库出错", e);
+          Fluttertoast.showToast(
+              msg: '缓存音乐列表出错', toastLength: Toast.LENGTH_LONG);
+          await txn.rawDelete('DELETE FROM list_cache');
+          return 0;
         }
       }
-      await txn.rawDelete('DELETE FROM list_cache');
-      LogHelper.get().info(
-          'SQL:INSERT INTO list_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;');
-      return await txn.rawInsert(
-          "INSERT INTO list_cache (musicId,lyricId,name,singer,type) VALUES $stringBuffer;");
+      return change;
     });
   }
 
