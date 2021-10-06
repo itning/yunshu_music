@@ -69,9 +69,9 @@ class LyricWidget extends StatefulWidget {
       : assert(lyrics.isNotEmpty),
         super(key: key) {
     this.lyricStyle =
-        lyricStyle ??= const TextStyle(color: Colors.grey, fontSize: 16);
+        lyricStyle ??= const TextStyle(color: Colors.white70, fontSize: 16);
     this.remarkStyle =
-        remarkStyle ??= const TextStyle(color: Colors.grey, fontSize: 16);
+        remarkStyle ??= const TextStyle(color: Colors.white70, fontSize: 16);
     this.currLyricStyle =
         currLyricStyle ??= const TextStyle(color: Colors.white, fontSize: 16);
     this.currRemarkLyricStyle = currRemarkLyricStyle ??= this.currLyricStyle;
