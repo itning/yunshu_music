@@ -1,9 +1,14 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
@@ -221,21 +226,27 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<bool> deleteMusicCacheByMusicId(String musicId) async {
-    String? path = _sharedPreferences.getString(musicId);
-    await _sharedPreferences.remove(musicId);
-    if (null != path) {
-      File cacheFile = File(path);
-      if (cacheFile.existsSync()) {
-        try {
-          cacheFile.deleteSync();
-          return true;
-        } catch (e) {
-          LogHelper.get().warn('删除音乐缓存文件失败', e);
-          return false;
-        }
+    Uri uri = Uri.parse(HttpHelper.get().getMusicUrl(musicId));
+    File cacheFile = File(joinAll([
+      (Directory(
+              join((await getTemporaryDirectory()).path, 'just_audio_cache')))
+          .path,
+      'remote',
+      sha256.convert(utf8.encode(uri.toString())).toString() +
+          extension(uri.path),
+    ]));
+    LogHelper.get().debug('即将删除音乐缓存文件：$cacheFile');
+    if (cacheFile.existsSync()) {
+      try {
+        cacheFile.deleteSync();
+        return true;
+      } catch (e) {
+        LogHelper.get().warn('删除音乐缓存文件失败', e);
+        return false;
       }
+    } else {
+      return false;
     }
-    return false;
   }
 
   Future<void> setEnableMusicCache(bool enable) async {
