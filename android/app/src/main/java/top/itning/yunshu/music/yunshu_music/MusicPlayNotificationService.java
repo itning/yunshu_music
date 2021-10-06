@@ -191,14 +191,14 @@ public class MusicPlayNotificationService extends Service {
             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
             remoteViews.setImageViewBitmap(R.id.music_cover, decodedByte);
             lastEvent.setCoverBase64(event.getCoverBase64());
-            Log.e(TAG, "have " + decodedByte.toString());
+            Log.d(TAG, "have " + decodedByte.toString());
         } else if (null != lastEvent.getCoverBase64()) {
             byte[] decodedString = Base64.decode(lastEvent.getCoverBase64(), Base64.DEFAULT);
             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
             remoteViews.setImageViewBitmap(R.id.music_cover, decodedByte);
-            Log.e(TAG, "lastEvent " + decodedByte.toString());
+            Log.d(TAG, "lastEvent " + decodedByte.toString());
         } else {
-            Log.e(TAG, "else");
+            Log.d(TAG, "else");
             remoteViews.setImageViewResource(R.id.music_cover, R.drawable.default_cover);
         }
 
