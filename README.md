@@ -21,17 +21,7 @@
 </div>
 
 ---
-
-![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/a.jpg)
-
-![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/b.jpg)
-
-![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/c.jpg)
-
-![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/d.jpg)
-
-![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/e.jpg)
-
-![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/f.jpg)
-
-![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/g.jpg)
+<div  align="center">
+<img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/a.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/b.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/c.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/d.jpg"/>
+  
+<img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/e.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/f.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/g.jpg"/></div>
