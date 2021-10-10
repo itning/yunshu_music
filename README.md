@@ -1,16 +1,37 @@
-# 云舒音乐
+<h3 align="center">云舒音乐</h3>
+<div align="center">
 
-YunShu Music
+[![GitHub stars](https://img.shields.io/github/stars/itning/yunshu_music.svg?style=social&label=Stars)](https://github.com/itning/yunshu_music/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/itning/yunshu_music.svg?style=social&label=Fork)](https://github.com/itning/yunshu_music/network/members)
+[![GitHub watchers](https://img.shields.io/github/watchers/itning/yunshu_music.svg?style=social&label=Watch)](https://github.com/itning/yunshu_music/watchers)
+[![GitHub followers](https://img.shields.io/github/followers/itning.svg?style=social&label=Follow)](https://github.com/itning?tab=followers)
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
+</div>
 
-A few resources to get you started if this is your first Flutter project:
+<div align="center">
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+[![GitHub issues](https://img.shields.io/github/issues/itning/yunshu_music.svg)](https://github.com/itning/yunshu_music/issues)
+[![GitHub license](https://img.shields.io/github/license/itning/yunshu_music.svg)](https://github.com/itning/yunshu_music/blob/master/LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/itning/yunshu_music.svg)](https://github.com/itning/yunshu_music/commits)
+[![GitHub repo size in bytes](https://img.shields.io/github/repo-size/itning/yunshu_music.svg)](https://github.com/itning/yunshu_music)
+[![Hits](https://hitcount.itning.top?u=itning&r=yunshu_music)](https://github.com/itning/hit-count)
+[![language](https://img.shields.io/badge/language-Dart-green.svg)](https://github.com/itning/yunshu_music)
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+</div>
+
+---
+
+![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/a.jpg)
+
+![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/b.jpg)
+
+![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/c.jpg)
+
+![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/d.jpg)
+
+![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/e.jpg)
+
+![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/f.jpg)
+
+![](https://raw.githubusercontent.com/itning/yunshu_music/master/pic/g.jpg)
