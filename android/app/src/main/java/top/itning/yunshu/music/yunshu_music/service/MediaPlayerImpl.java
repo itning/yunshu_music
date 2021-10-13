@@ -160,7 +160,6 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
 
     @Override
     public void onBufferingUpdate(MediaPlayer mp, int percent) {
-        Log.d(TAG, "onBufferingUpdate " + percent);
         state = new PlaybackStateCompat.Builder()
                 .setState(state.getState(), mediaPlayer.getCurrentPosition(), 1.0f)
                 .setBufferedPosition(percent)

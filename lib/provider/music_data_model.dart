@@ -89,18 +89,22 @@ class MusicDataModel extends ChangeNotifier {
     switch (_playMode) {
       case 'sequence':
         _playMode = 'randomly';
+        await MusicChannel.get().setPlayMode(_playMode);
         notifyListeners();
         break;
       case 'randomly':
         _playMode = 'loop';
+        await MusicChannel.get().setPlayMode(_playMode);
         notifyListeners();
         break;
       case 'loop':
         _playMode = 'sequence';
+        await MusicChannel.get().setPlayMode(_playMode);
         notifyListeners();
         break;
       default:
         _playMode = 'sequence';
+        await MusicChannel.get().setPlayMode(_playMode);
         notifyListeners();
         break;
     }
@@ -148,6 +152,7 @@ class MusicDataModel extends ChangeNotifier {
     if (mediaId == lastMusicId) {
       return;
     }
+    lastMusicId = mediaId;
     _nowPlayMusic = MusicDataContent();
     _nowPlayMusic!.musicId = mediaId;
     _nowPlayMusic!.name = title;
