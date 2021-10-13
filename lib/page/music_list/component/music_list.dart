@@ -130,7 +130,7 @@ class _InnerListItem extends StatelessWidget {
       onTap: () {
         AppRouterDelegate.of(context).push('/musicPlay');
         Provider.of<MusicDataModel>(context, listen: false)
-            .setNowPlayMusic(index);
+            .setNowPlayMusicUseMusicId(musicId);
       },
       onLongPress: () {
         Clipboard.setData(ClipboardData(text: "$name-$singer")).then(

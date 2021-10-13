@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/component/rotate_cover_image_widget.dart';
@@ -81,11 +80,11 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Selector<PlayStatusModel, Tuple2<bool, ProcessingState>>(
+                        Selector<PlayStatusModel, Tuple2<bool, bool>>(
                           selector: (_, status) =>
                               Tuple2(status.isPlayNow, status.processingState),
                           builder: (context, status, __) {
-                            if (status.item2 == ProcessingState.loading) {
+                            if (status.item2) {
                               return Container(
                                 margin: const EdgeInsets.all(16.0),
                                 child: const SizedBox(
