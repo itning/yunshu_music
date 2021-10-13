@@ -51,7 +51,6 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                             .setActions(ACTIONS)
                             .build();
                     session.setPlaybackState(state);
-                    musicNotificationService.updateNotification();
                 }
             }
         }, 0, 500);
