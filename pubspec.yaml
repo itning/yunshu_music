@@ -37,7 +37,6 @@ dependencies:
   flutter_rest_template:
     path: ../flutter_rest_template
   provider: ^6.0.1
-  just_audio: ^0.9.12
   tuple: ^2.0.0
   dio: ^4.0.0
   move_to_background: ^1.0.2
@@ -49,6 +48,7 @@ dependencies:
   fluttertoast: ^8.0.8
   logger: ^1.1.0
   crypto: ^3.0.1
+  path_provider: ^2.0.5
 
 dev_dependencies:
   flutter_test:

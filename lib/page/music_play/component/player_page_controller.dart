@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
@@ -21,11 +20,11 @@ class PlayerPageController extends StatelessWidget {
             Provider.of<MusicDataModel>(context, listen: false).toPrevious();
           },
         ),
-        Selector<PlayStatusModel, Tuple2<bool, ProcessingState>>(
+        Selector<PlayStatusModel, Tuple2<bool, bool>>(
           selector: (_, status) =>
               Tuple2(status.isPlayNow, status.processingState),
           builder: (BuildContext context, status, Widget? child) {
-            if (status.item2 == ProcessingState.loading) {
+            if (status.item2) {
               return Container(
                 margin: const EdgeInsets.all(16.0),
                 child: const SizedBox(
