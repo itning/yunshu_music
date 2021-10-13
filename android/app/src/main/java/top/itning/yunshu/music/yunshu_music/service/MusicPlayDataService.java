@@ -31,9 +31,14 @@ public class MusicPlayDataService {
 
     public MusicPlayDataService() {
         this.nowPlayIndex = -1;
-        this.playMode = MusicPlayMode.SEQUENCE;
         kv = MMKV.defaultMMKV();
-        kv.decodeString(PLAY_MODE_KEY, MusicPlayMode.SEQUENCE.name());
+        try {
+            String mode = kv.decodeString(PLAY_MODE_KEY, MusicPlayMode.SEQUENCE.name());
+            this.playMode = MusicPlayMode.valueOf(mode);
+        } catch (Exception e) {
+            kv.encode(PLAY_MODE_KEY,MusicPlayMode.SEQUENCE.name());
+            this.playMode = MusicPlayMode.SEQUENCE;
+        }
     }
 
     public int getNowPlayIndex() {
