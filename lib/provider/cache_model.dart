@@ -134,8 +134,8 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<File?> cacheCover(
-      String musicId, String? encodedStr, String? mimeType) async {
-    if (null == encodedStr) {
+      String musicId, List<int>? by, String? mimeType) async {
+    if (null == by) {
       return null;
     }
     String ext =
@@ -153,7 +153,6 @@ class CacheModel extends ChangeNotifier {
           .path,
       musicId + "." + ext
     ]));
-    Uint8List bytes = base64.decode(encodedStr);
     if (!extFile.existsSync()) {
       extFile = await extFile.create(recursive: true);
     }
@@ -161,7 +160,7 @@ class CacheModel extends ChangeNotifier {
       cacheFile = await cacheFile.create(recursive: true);
     }
     await extFile.writeAsString(ext);
-    await cacheFile.writeAsBytes(bytes);
+    await cacheFile.writeAsBytes(by);
     return cacheFile;
   }
 
