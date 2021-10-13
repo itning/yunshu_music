@@ -44,7 +44,6 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
             @Override
             public void run() {
                 if (mediaPlayer.isPlaying()) {
-                    Log.d(TAG, "CurrentPosition " + mediaPlayer.getCurrentPosition());
                     state = new PlaybackStateCompat.Builder()
                             .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1.0f)
                             .setBufferedPosition(state.getBufferedPosition())
@@ -53,7 +52,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                     session.setPlaybackState(state);
                 }
             }
-        }, 0, 1000);
+        }, 0, 500);
     }
 
     @Override
@@ -70,7 +69,6 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     public void onPlay() {
         Log.d(TAG, "onPlay");
         mediaPlayer.start();
-        setMetaData();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1.0f)
                 .setBufferedPosition(state.getBufferedPosition())
@@ -84,7 +82,6 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     public void onPause() {
         Log.d(TAG, "onPause");
         mediaPlayer.pause();
-        setMetaData();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1.0f)
                 .setBufferedPosition(state.getBufferedPosition())
@@ -97,7 +94,6 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     public void onStop() {
         Log.d(TAG, "onStop");
         mediaPlayer.stop();
-        setMetaData();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_STOPPED, 0, 1.0f)
                 .setActions(ACTIONS)
@@ -111,7 +107,6 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
         int duration = mediaPlayer.getDuration();
         int msec = pos > duration ? duration : (int) pos;
         mediaPlayer.seekTo(msec);
-        setMetaData();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_PLAYING, msec, 1.0f)
                 .setBufferedPosition(state.getBufferedPosition())
@@ -124,7 +119,6 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     public void onSkipToPrevious() {
         Log.d(TAG, "onSkipToPrevious");
         mediaPlayer.reset();
-        setMetaData(0);
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS, 0, 1.0f)
                 .setActions(ACTIONS)
@@ -138,7 +132,6 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     public void onSkipToNext() {
         Log.d(TAG, "onSkipToNext");
         mediaPlayer.reset();
-        setMetaData(0);
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, 0, 1.0f)
                 .setActions(ACTIONS)
@@ -151,7 +144,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     @Override
     public void onPrepared(MediaPlayer mp) {
         Log.d(TAG, "onPrepared " + mp.getDuration());
-        setMetaData(0);
+        setMetaData();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_PAUSED, 0, 1.0f)
                 .setActions(ACTIONS)
@@ -200,11 +193,11 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     }
 
     private void initPlay() {
-        mediaPlayer.reset();
+        setMetaData(0);
         try {
+            mediaPlayer.reset();
             mediaPlayer.setDataSource(context, musicPlayDataService.getNowPlayMusic().getDescription().getMediaUri());
             mediaPlayer.prepareAsync();
-            setMetaData(0);
             state = new PlaybackStateCompat.Builder()
                     .setState(PlaybackStateCompat.STATE_CONNECTING, 0, 1.0f)
                     .setActions(ACTIONS)

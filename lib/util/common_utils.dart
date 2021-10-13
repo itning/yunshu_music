@@ -7,7 +7,7 @@ class LogHelper {
   static final Logger _logger = Logger(
     output: LogConsole.wrap(),
     filter: ProductionFilter(),
-    printer: PrettyPrinter(printTime: true),
+    printer: SimplePrinter(printTime: true),
   );
   static LogHelper? _logHelper;
 
