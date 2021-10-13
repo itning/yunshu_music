@@ -53,6 +53,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                 }
             }
         }, 0, 500);
+        new MusicNotificationService(session, context).generateNotification("云舒音乐", null, null, null);
     }
 
     @Override

@@ -77,7 +77,7 @@ public class MusicNotificationService {
                 .setLargeIcon(icon)
                 .setContentIntent(controller.getSessionActivity())
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.mipmap.launcher_icon)
                 .setDeleteIntent(MediaButtonReceiver.buildMediaButtonPendingIntent(context,
                         PlaybackStateCompat.ACTION_STOP))
                 .addAction(new NotificationCompat.Action(
@@ -117,7 +117,7 @@ public class MusicNotificationService {
                 .setLargeIcon(icon)
                 .setContentIntent(controller.getSessionActivity())
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.mipmap.launcher_icon)
                 .setDeleteIntent(MediaButtonReceiver.buildMediaButtonPendingIntent(context,
                         PlaybackStateCompat.ACTION_STOP))
                 .addAction(new NotificationCompat.Action(

@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -39,20 +39,21 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-                    child: Selector<MusicDataModel, String?>(
+                    child: Selector<MusicDataModel, Uint8List?>(
                       selector: (_, model) => model.coverBase64,
                       builder: (_, value, __) {
                         if (value == null) {
                           return RotateCoverImageWidget(
-                            image: Image.asset('asserts/images/default_cover.jpg')
-                                .image,
+                            image:
+                                Image.asset('asserts/images/default_cover.jpg')
+                                    .image,
                             width: 52,
                             height: 52,
                             duration: const Duration(seconds: 20),
                           );
                         } else {
                           return RotateCoverImageWidget(
-                            image: Image.memory(base64Decode(value)).image,
+                            image: Image.memory(value).image,
                             width: 52,
                             height: 52,
                             duration: const Duration(seconds: 20),
@@ -124,22 +125,25 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                               return IconButton(
                                 tooltip: '顺序播放',
                                 icon: const Icon(Icons.format_list_numbered),
-                                onPressed: () =>
-                                    context.read<MusicDataModel>().nextPlayMode(),
+                                onPressed: () => context
+                                    .read<MusicDataModel>()
+                                    .nextPlayMode(),
                               );
                             } else if (playMode == 'randomly') {
                               return IconButton(
                                 tooltip: '随机播放',
                                 icon: const Icon(Icons.shuffle),
-                                onPressed: () =>
-                                    context.read<MusicDataModel>().nextPlayMode(),
+                                onPressed: () => context
+                                    .read<MusicDataModel>()
+                                    .nextPlayMode(),
                               );
                             } else {
                               return IconButton(
                                 tooltip: '单曲循环',
                                 icon: const Icon(Icons.loop),
-                                onPressed: () =>
-                                    context.read<MusicDataModel>().nextPlayMode(),
+                                onPressed: () => context
+                                    .read<MusicDataModel>()
+                                    .nextPlayMode(),
                               );
                             }
                           },
