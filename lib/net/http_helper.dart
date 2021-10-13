@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_rest_template/flutter_rest_template.dart';
 import 'package:flutter_rest_template/impl/dio_client_http_request_factory.dart';
 import 'package:flutter_rest_template/response_entity.dart';
+import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/net/model/music_meta_info_entity.dart';
 import 'package:yunshu_music/util/common_utils.dart';
@@ -112,6 +113,19 @@ class HttpHelper {
         await _dio.get<String>('$baseUrl/file/lyric?id=$lyricId');
     LogHelper.get().info('获取歌词：$baseUrl/file/lyric?id=$lyricId');
     return response.data;
+  }
+
+  Future<Tuple2<String?, List<int>?>> getCover(String musicId) async {
+    Response<List<int>> response = await _dio.get<List<int>>(
+        '$baseUrl/file/cover?id=$musicId',
+        options: Options(responseType: ResponseType.bytes));
+    LogHelper.get().info('获取歌词：$baseUrl/file/cover?id=$musicId');
+    List<String>? contentTypes = response.headers[Headers.contentTypeHeader];
+    String? contentType;
+    if (contentTypes != null && contentTypes.isNotEmpty) {
+      contentType = contentTypes[0];
+    }
+    return Tuple2(contentType, response.data);
   }
 
   String getMusicUrl(String musicId) {

@@ -3,12 +3,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_rest_template/response_entity.dart';
+import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_util.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
-import 'package:yunshu_music/net/model/music_meta_info_entity.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 
 /// 音乐数据模型
@@ -204,44 +204,18 @@ class MusicDataModel extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    ResponseEntity<MusicMetaInfoEntity> responseEntity =
-        await HttpHelper.get().getMetaInfo(musicId);
-    if (responseEntity.status.value != 200) {
+    Tuple2<String?, List<int>?> coverBytes =
+        await HttpHelper.get().getCover(musicId);
+    if (coverBytes.item2 == null) {
       File defaultCoverFile = await CacheModel.get().getDefaultCover();
       _coverBase64 = await defaultCoverFile.readAsBytes();
       notifyListeners();
       return;
     }
-
-    if (responseEntity.body == null || responseEntity.body!.data == null) {
-      File defaultCoverFile = await CacheModel.get().getDefaultCover();
-      _coverBase64 = await defaultCoverFile.readAsBytes();
-      notifyListeners();
-      return;
+    if (CacheModel.get().enableCoverCache) {
+      CacheModel.get().cacheCover(musicId, coverBytes.item2, coverBytes.item1);
     }
-
-    if (responseEntity.body!.data!.coverPictures == null) {
-      File defaultCoverFile = await CacheModel.get().getDefaultCover();
-      _coverBase64 = await defaultCoverFile.readAsBytes();
-      notifyListeners();
-      return;
-    }
-
-    if (responseEntity.body!.data!.coverPictures!.isEmpty) {
-      File defaultCoverFile = await CacheModel.get().getDefaultCover();
-      _coverBase64 = await defaultCoverFile.readAsBytes();
-      notifyListeners();
-      return;
-    }
-
-    MusicMetaInfoDataCoverPictures pictures =
-        responseEntity.body!.data!.coverPictures![0];
-    File? coverFile = await CacheModel.get()
-        .cacheCover(musicId, pictures.base64, pictures.mimeType);
-    File defaultCoverFile = await CacheModel.get().getDefaultCover();
-    _coverBase64 = coverFile == null
-        ? await defaultCoverFile.readAsBytes()
-        : await coverFile.readAsBytes();
+    _coverBase64 = Uint8List.fromList(coverBytes.item2!);
     notifyListeners();
   }
 }
