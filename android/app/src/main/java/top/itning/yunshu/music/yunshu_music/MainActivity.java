@@ -20,8 +20,6 @@ import com.tencent.mmkv.MMKV;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
@@ -35,7 +33,6 @@ public class MainActivity extends FlutterActivity {
     private static final String TAG = "MainActivity";
     private MediaBrowserCompat browser;
     private MediaControllerCompat controller;
-    private Map<String, MediaBrowserCompat.MediaItem> children;
     private final SubscriptionCall subscriptionCall = new SubscriptionCall();
     private final PlaybackStateEvent playbackStateEvent = new PlaybackStateEvent();
     private final MetadataEvent metadataEvent = new MetadataEvent();
@@ -252,7 +249,6 @@ public class MainActivity extends FlutterActivity {
         public void onChildrenLoaded(@NonNull String parentId, @NonNull List<MediaBrowserCompat.MediaItem> children) {
             Log.d(TAG, "onChildrenLoaded " + parentId + " " + MainActivity.this.getPackageName() + " " + children.size());
             MusicChannel.musicPlayDataService.addMusic(children);
-            MainActivity.this.children = children.stream().collect(Collectors.toMap(MediaBrowserCompat.MediaItem::getMediaId, Function.identity()));
             controller.getTransportControls().playFromMediaId(MusicChannel.musicPlayDataService.getNowPlayMusic().getMediaId(), null);
         }
     }

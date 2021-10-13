@@ -29,6 +29,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     private final MediaSessionCompat session;
     private PlaybackStateCompat state;
     private boolean playNow = false;
+    private final MusicNotificationService musicNotificationService;
 
     public MediaPlayerImpl(@NonNull MusicBrowserService context, @NonNull MediaSessionCompat session) {
         Log.d(TAG, "MediaPlayerImpl Constructor");
@@ -50,10 +51,12 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                             .setActions(ACTIONS)
                             .build();
                     session.setPlaybackState(state);
+                    musicNotificationService.updateNotification();
                 }
             }
         }, 0, 500);
-        new MusicNotificationService(session, context).generateNotification("云舒音乐", null, null, null);
+        musicNotificationService = new MusicNotificationService(session, context);
+        musicNotificationService.generateNotification("云舒音乐", null, null, null);
     }
 
     @Override
@@ -77,6 +80,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                 .build();
         session.setPlaybackState(state);
         Log.i(TAG, "PlaySpeed：" + mediaPlayer.getPlaybackParams().getSpeed());
+        musicNotificationService.updateNotification();
     }
 
     @Override
@@ -89,6 +93,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                 .setActions(ACTIONS)
                 .build();
         session.setPlaybackState(state);
+        musicNotificationService.updateNotification();
     }
 
     @Override
@@ -194,6 +199,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
 
     private void initPlay() {
         setMetaData(0);
+        musicNotificationService.updateNotification();
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(context, musicPlayDataService.getNowPlayMusic().getDescription().getMediaUri());
