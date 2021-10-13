@@ -151,11 +151,15 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     @Override
     public void onPrepared(MediaPlayer mp) {
         Log.d(TAG, "onPrepared " + mp.getDuration());
+        setMetaData(0);
+        state = new PlaybackStateCompat.Builder()
+                .setState(PlaybackStateCompat.STATE_PAUSED, 0, 1.0f)
+                .setActions(ACTIONS)
+                .build();
         mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed(1.0f));
         mediaPlayer.pause();
-        this.onPlay();
         if (playNow) {
-
+            this.onPlay();
         } else {
             playNow = true;
         }
