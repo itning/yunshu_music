@@ -49,6 +49,7 @@ dependencies:
   logger: ^1.1.0
   crypto: ^3.0.1
   path_provider: ^2.0.5
+  mime_type: ^1.0.0
 
 dev_dependencies:
   flutter_test:

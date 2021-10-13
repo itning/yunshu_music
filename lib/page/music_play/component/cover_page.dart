@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,7 +19,7 @@ class _CoverPageState extends State<CoverPage>
   Widget build(BuildContext context) {
     super.build(context);
     return Center(
-      child: Selector<MusicDataModel, String?>(
+      child: Selector<MusicDataModel, Uint8List?>(
         selector: (_, model) => model.coverBase64,
         builder: (_, value, __) {
           if (value == null) {
@@ -34,7 +34,7 @@ class _CoverPageState extends State<CoverPage>
               width: 225,
               height: 225,
               duration: const Duration(seconds: 20),
-              image: Image.memory(base64Decode(value)).image,
+              image: Image.memory(value).image,
             );
           }
         },
