@@ -6,6 +6,7 @@ import static top.itning.yunshu.music.yunshu_music.service.MusicBrowserService.A
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -36,6 +37,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
         this.context = context;
         this.session = session;
         mediaPlayer = new MediaPlayer();
+        mediaPlayer.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
         mediaPlayer.setOnErrorListener(this);
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnCompletionListener(this);
