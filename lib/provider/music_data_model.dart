@@ -32,7 +32,11 @@ class MusicDataModel extends ChangeNotifier {
   /// 播放模式
   String _playMode = 'sequence';
 
+  /// 现在播放的音乐
   MusicDataContent? _nowPlayMusic;
+
+  /// 上一首歌曲ID
+  String? lastMusicId;
 
   /// 获取音乐列表
   List<MusicDataContent> get musicList => _musicList;
@@ -141,11 +145,16 @@ class MusicDataModel extends ChangeNotifier {
     String subTitle = event['subTitle'];
     String mediaId = event['mediaId'];
     String iconUri = event['iconUri'];
+    if (mediaId == lastMusicId) {
+      return;
+    }
     _nowPlayMusic = MusicDataContent();
     _nowPlayMusic!.musicId = mediaId;
     _nowPlayMusic!.name = title;
     _nowPlayMusic!.singer = subTitle;
     _nowPlayMusic!.lyricId = mediaId;
+    _nowMusicIndex =
+        musicList.indexWhere((element) => element.musicId == mediaId);
     notifyListeners();
     await _initCover(mediaId);
     await _initLyric(mediaId);
