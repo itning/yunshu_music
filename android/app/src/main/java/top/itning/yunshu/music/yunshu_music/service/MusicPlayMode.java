@@ -8,7 +8,7 @@ import android.support.v4.media.session.PlaybackStateCompat;
  */
 public enum MusicPlayMode {
     SEQUENCE,
-    RANDOM,
+    RANDOMLY,
     LOOP,
     ;
 
@@ -29,7 +29,7 @@ public enum MusicPlayMode {
         switch (shuffleMode) {
             case PlaybackStateCompat.SHUFFLE_MODE_ALL:
             case PlaybackStateCompat.SHUFFLE_MODE_GROUP:
-                return MusicPlayMode.RANDOM;
+                return MusicPlayMode.RANDOMLY;
             case PlaybackStateCompat.SHUFFLE_MODE_INVALID:
             case PlaybackStateCompat.SHUFFLE_MODE_NONE:
             default:
@@ -40,8 +40,8 @@ public enum MusicPlayMode {
     public static MusicPlayMode getNext(MusicPlayMode nowMode) {
         switch (nowMode) {
             case SEQUENCE:
-                return MusicPlayMode.RANDOM;
-            case RANDOM:
+                return MusicPlayMode.RANDOMLY;
+            case RANDOMLY:
                 return MusicPlayMode.LOOP;
             case LOOP:
             default:

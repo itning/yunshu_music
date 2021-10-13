@@ -119,7 +119,7 @@ public class MusicPlayDataService {
         if (nowPlayIndex - 1 < 0) {
             // 需要新增
             switch (playMode) {
-                case RANDOM:
+                case RANDOMLY:
                     int randomMusicListIndex = getRandom();
                     nowPlayMusic = MUSIC_LIST.get(randomMusicListIndex);
                     PLAY_LIST.remove(nowPlayMusic);
@@ -150,7 +150,7 @@ public class MusicPlayDataService {
         if (nowPlayIndex + 1 >= PLAY_LIST.size()) {
             // 需要新增
             switch (playMode) {
-                case RANDOM:
+                case RANDOMLY:
                     int randomMusicListIndex = getRandom();
                     nowPlayMusic = MUSIC_LIST.get(randomMusicListIndex);
                     PLAY_LIST.remove(nowPlayMusic);

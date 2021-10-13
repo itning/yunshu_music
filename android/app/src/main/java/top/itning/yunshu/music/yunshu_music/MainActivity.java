@@ -29,6 +29,7 @@ import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
 import top.itning.yunshu.music.yunshu_music.channel.MusicChannel;
 import top.itning.yunshu.music.yunshu_music.service.MusicBrowserService;
+import top.itning.yunshu.music.yunshu_music.service.MusicPlayMode;
 
 public class MainActivity extends FlutterActivity {
     private static final String TAG = "MainActivity";
@@ -128,6 +129,22 @@ public class MainActivity extends FlutterActivity {
                         result.success(null);
                     } catch (Exception e) {
                         Log.e(TAG, "skipToNext error", e);
+                        result.error("-1", null, null);
+                    }
+                    break;
+                case "setPlayMode":
+                    if (!call.hasArgument("mode")) {
+                        result.error("-1", null, null);
+                        break;
+                    }
+                    try {
+                        String mode = call.argument("mode");
+                        @SuppressWarnings("ConstantConditions")
+                        MusicPlayMode musicPlayMode = MusicPlayMode.valueOf(mode.toUpperCase());
+                        MusicChannel.musicPlayDataService.setPlayMode(musicPlayMode);
+                        result.success(null);
+                    } catch (Exception e) {
+                        Log.e(TAG, "playMode error", e);
                         result.error("-1", null, null);
                     }
                     break;
@@ -233,7 +250,7 @@ public class MainActivity extends FlutterActivity {
     private class SubscriptionCall extends MediaBrowserCompat.SubscriptionCallback {
         @Override
         public void onChildrenLoaded(@NonNull String parentId, @NonNull List<MediaBrowserCompat.MediaItem> children) {
-            Log.d(TAG, "onChildrenLoaded " + children.size());
+            Log.d(TAG, "onChildrenLoaded " + parentId + " " + MainActivity.this.getPackageName() + " " + children.size());
             MusicChannel.musicPlayDataService.addMusic(children);
             MainActivity.this.children = children.stream().collect(Collectors.toMap(MediaBrowserCompat.MediaItem::getMediaId, Function.identity()));
             controller.getTransportControls().playFromMediaId(MusicChannel.musicPlayDataService.getNowPlayMusic().getMediaId(), null);

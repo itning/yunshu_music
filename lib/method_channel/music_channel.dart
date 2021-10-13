@@ -62,6 +62,10 @@ class MusicChannel {
         .invokeMethod('seekTo', {'position': position.inMilliseconds});
   }
 
+  Future<void> setPlayMode(String mode) async {
+    await _methodChannel.invokeMethod('setPlayMode', {'mode': mode});
+  }
+
   Future<void> setNowPlayMusicInfo(
       {bool? play, String? name, String? singer, String? cover}) async {}
 }
