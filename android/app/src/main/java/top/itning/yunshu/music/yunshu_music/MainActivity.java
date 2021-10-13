@@ -145,6 +145,9 @@ public class MainActivity extends FlutterActivity {
                         result.error("-1", null, null);
                     }
                     break;
+                case "getPlayMode":
+                    result.success(MusicChannel.musicPlayDataService.getPlayMode().name().toLowerCase());
+                    break;
                 default:
             }
         });

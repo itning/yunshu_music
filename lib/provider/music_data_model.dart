@@ -86,7 +86,9 @@ class MusicDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> init() async {}
+  Future<void> init() async {
+    _playMode = await MusicChannel.get().getPlayMode();
+  }
 
   Future<void> nextPlayMode() async {
     switch (_playMode) {
@@ -203,7 +205,7 @@ class MusicDataModel extends ChangeNotifier {
       return;
     }
     ResponseEntity<MusicMetaInfoEntity> responseEntity =
-    await HttpHelper.get().getMetaInfo(musicId);
+        await HttpHelper.get().getMetaInfo(musicId);
     if (responseEntity.status.value != 200) {
       File defaultCoverFile = await CacheModel.get().getDefaultCover();
       _coverBase64 = await defaultCoverFile.readAsBytes();
@@ -233,7 +235,7 @@ class MusicDataModel extends ChangeNotifier {
     }
 
     MusicMetaInfoDataCoverPictures pictures =
-    responseEntity.body!.data!.coverPictures![0];
+        responseEntity.body!.data!.coverPictures![0];
     File? coverFile = await CacheModel.get()
         .cacheCover(musicId, pictures.base64, pictures.mimeType);
     File defaultCoverFile = await CacheModel.get().getDefaultCover();
