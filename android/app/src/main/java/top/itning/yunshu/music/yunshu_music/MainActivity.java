@@ -236,6 +236,7 @@ public class MainActivity extends FlutterActivity {
             Log.d(TAG, "onChildrenLoaded " + children.size());
             MusicChannel.musicPlayDataService.addMusic(children);
             MainActivity.this.children = children.stream().collect(Collectors.toMap(MediaBrowserCompat.MediaItem::getMediaId, Function.identity()));
+            controller.getTransportControls().playFromMediaId(MusicChannel.musicPlayDataService.getNowPlayMusic().getMediaId(), null);
         }
     }
 }
