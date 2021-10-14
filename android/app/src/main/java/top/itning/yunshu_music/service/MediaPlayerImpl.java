@@ -7,6 +7,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -27,7 +29,7 @@ import java.util.TimerTask;
  * @author itning
  * @since 2021/10/11 10:20
  */
-public class MediaPlayerImpl extends MediaSessionCompat.Callback implements MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnBufferingUpdateListener {
+public class MediaPlayerImpl extends MediaSessionCompat.Callback implements MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnBufferingUpdateListener, AudioManager.OnAudioFocusChangeListener {
 
     private static final String TAG = "MediaPlayerImpl";
     private final MediaPlayer mediaPlayer;
@@ -38,6 +40,8 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     private final BecomingNoisyReceiver noisyAudioStreamReceiver;
     private PlaybackStateCompat state;
     private boolean playNow = false;
+    private final AudioFocusRequest focusRequest;
+    private final AudioManager audioManager;
 
     public MediaPlayerImpl(@NonNull MusicBrowserService context, @NonNull MediaSessionCompat session) {
         Log.d(TAG, "MediaPlayerImpl Constructor");
@@ -67,6 +71,20 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
         }, 0, 500);
         musicNotificationService = new MusicNotificationService(session, context);
         musicNotificationService.generateNotification("云舒音乐", null, null, null);
+
+        // 在 Android 8.0（API 级别 26）中，
+        // 当其他应用使用 AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK 请求焦点时，
+        // 系统可以在不调用应用的 onAudioFocusChange() 回调的情况下降低和恢复音量。
+        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+        focusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(audioAttributes)
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener(this)
+                .build();
     }
 
     @Override
@@ -83,6 +101,16 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     public void onPlay() {
         Log.d(TAG, "onPlay");
         context.registerReceiver(noisyAudioStreamReceiver, intentFilter);
+        int res = audioManager.requestAudioFocus(focusRequest);
+        if (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            Log.d(TAG, "request audio focus：AUDIOFOCUS_REQUEST_GRANTED");
+        } else if (res == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+            Log.w(TAG, "request audio focus：AUDIOFOCUS_REQUEST_FAILED");
+            return;
+        } else if (res == AudioManager.AUDIOFOCUS_REQUEST_DELAYED) {
+            Log.i(TAG, "request audio focus：AUDIOFOCUS_REQUEST_DELAYED");
+            return;
+        }
         mediaPlayer.start();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1.0f)
@@ -97,7 +125,14 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     @Override
     public void onPause() {
         Log.d(TAG, "onPause");
+        context.unregisterReceiver(noisyAudioStreamReceiver);
         mediaPlayer.pause();
+        int resp = audioManager.abandonAudioFocusRequest(focusRequest);
+        if (resp == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            Log.d(TAG, "on pause abandon audio focus request granted");
+        } else if (resp == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+            Log.w(TAG, "on pause abandon audio focus request failed");
+        }
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1.0f)
                 .setBufferedPosition(state.getBufferedPosition())
@@ -112,6 +147,12 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
         Log.d(TAG, "onStop");
         context.unregisterReceiver(noisyAudioStreamReceiver);
         mediaPlayer.stop();
+        int resp = audioManager.abandonAudioFocusRequest(focusRequest);
+        if (resp == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            Log.d(TAG, "on stop abandon audio focus request granted");
+        } else if (resp == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+            Log.w(TAG, "on stop abandon audio focus request failed");
+        }
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_STOPPED, 0, 1.0f)
                 .setActions(ACTIONS)
@@ -241,6 +282,62 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                 .putString("android.media.metadata.LYRIC_URI", musicPlayDataService.getNowPlayLyricUri())
                 .putText(MediaMetadataCompat.METADATA_KEY_ART_URI, artUri)
                 .build());
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        switch (focusChange) {
+            // 短暂性丢失焦点，当其他应用申请AUDIOFOCUS_GAIN_TRANSIENT或AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE时，会触发此回调事件
+            // 例如播放短视频，拨打电话等。
+            // 通常需要暂停音乐播放
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                Log.d(TAG, "onAudioFocusChange AUDIOFOCUS_LOSS_TRANSIENT");
+                context.unregisterReceiver(noisyAudioStreamReceiver);
+                mediaPlayer.pause();
+                state = new PlaybackStateCompat.Builder()
+                        .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1.0f)
+                        .setBufferedPosition(state.getBufferedPosition())
+                        .setActions(ACTIONS)
+                        .build();
+                session.setPlaybackState(state);
+                musicNotificationService.updateNotification();
+                break;
+            // 当其他应用申请焦点之后又释放焦点会触发此回调
+            // 可重新播放音乐
+            case AudioManager.AUDIOFOCUS_GAIN:
+                Log.d(TAG, "onAudioFocusChange AUDIOFOCUS_GAIN");
+                context.registerReceiver(noisyAudioStreamReceiver, intentFilter);
+                mediaPlayer.start();
+                state = new PlaybackStateCompat.Builder()
+                        .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1.0f)
+                        .setBufferedPosition(state.getBufferedPosition())
+                        .setActions(ACTIONS)
+                        .build();
+                session.setPlaybackState(state);
+                Log.i(TAG, "PlaySpeed：" + mediaPlayer.getPlaybackParams().getSpeed());
+                musicNotificationService.updateNotification();
+                break;
+            // 长时间丢失焦点,当其他应用申请的焦点为AUDIOFOCUS_GAIN时，会触发此回调事件
+            // 例如播放QQ音乐，网易云音乐等
+            // 此时应当暂停音频并释放音频相关的资源。
+            case AudioManager.AUDIOFOCUS_LOSS:
+                Log.d(TAG, "onAudioFocusChange AUDIOFOCUS_LOSS");
+                context.unregisterReceiver(noisyAudioStreamReceiver);
+                mediaPlayer.pause();
+                state = new PlaybackStateCompat.Builder()
+                        .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1.0f)
+                        .setBufferedPosition(state.getBufferedPosition())
+                        .setActions(ACTIONS)
+                        .build();
+                session.setPlaybackState(state);
+                musicNotificationService.updateNotification();
+                break;
+            // 短暂性丢失焦点并作降音处理，当其他应用申请AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK时，会触发此回调事件
+            // 通常需要降低音量
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                Log.d(TAG, "onAudioFocusChange AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
+                break;
+        }
     }
 
     private class BecomingNoisyReceiver extends BroadcastReceiver {
