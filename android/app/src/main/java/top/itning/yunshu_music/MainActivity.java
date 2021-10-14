@@ -3,6 +3,7 @@ package top.itning.yunshu_music;
 import static top.itning.yunshu_music.channel.MusicChannel.methodChannel;
 
 import android.content.ComponentName;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
@@ -170,6 +171,13 @@ public class MainActivity extends FlutterActivity {
             }
         }, null);
         super.configureFlutterEngine(flutterEngine);
+    }
+
+    @Override
+    protected void onResume() {
+        Log.d(TAG, "onResume");
+        super.onResume();
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
     }
 
     @Override
