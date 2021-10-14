@@ -118,7 +118,7 @@ void showPlayList(BuildContext context) {
               maxChildSize: 0.5,
               expand: false,
               builder: (_, controller) {
-                return PlayList(
+                return _PlayList(
                   scrollController: controller,
                   data: snapshot.data!,
                 );
@@ -140,11 +140,11 @@ void showPlayList(BuildContext context) {
   );
 }
 
-class PlayList extends StatelessWidget {
+class _PlayList extends StatelessWidget {
   final ScrollController? scrollController;
   final List<dynamic> data;
 
-  const PlayList({Key? key, this.scrollController, required this.data})
+  const _PlayList({Key? key, this.scrollController, required this.data})
       : super(key: key);
 
   @override
