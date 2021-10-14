@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:yunshu_music/method_channel/play_status_channel.dart';
-import 'package:yunshu_music/provider/cache_model.dart';
+import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
-import 'package:yunshu_music/util/common_utils.dart';
 
 /// 播放状态
 class PlayStatusModel extends ChangeNotifier {
@@ -15,8 +11,6 @@ class PlayStatusModel extends ChangeNotifier {
     return _instance!;
   }
 
-  final AudioPlayer _player;
-
   /// 播放进度，实时
   Duration _position = const Duration();
 
@@ -25,6 +19,8 @@ class PlayStatusModel extends ChangeNotifier {
 
   /// 缓冲时间
   Duration _bufferedPosition = const Duration();
+
+  int _state = 0;
 
   /// 当前播放进度
   Duration get position => _position;
@@ -36,108 +32,44 @@ class PlayStatusModel extends ChangeNotifier {
   Duration get bufferedPosition => _bufferedPosition;
 
   /// 播放器状态
-  ProcessingState get processingState => _player.processingState;
+  bool get processingState => _state == 8;
 
   /// 现在正在播放吗？
-  bool get isPlayNow =>
-      _player.playing &&
-      _player.processingState != ProcessingState.completed &&
-      _player.processingState != ProcessingState.idle &&
-      _player.processingState != ProcessingState.loading;
+  bool get isPlayNow => _state == 3;
 
-  PlayStatusModel() : _player = AudioPlayer(userAgent: 'YunShuMusic') {
-    _player.bufferedPositionStream.listen((event) {
-      _bufferedPosition = event;
+  PlayStatusModel() {
+    MusicChannel.get().metadataEvent.listen((event) {
+      _duration = Duration(milliseconds: event['duration']);
+      MusicDataModel.get().onMetadataChange(event);
       notifyListeners();
     });
-    _player.durationStream.listen((event) {
-      LogHelper.get().debug('音频持续时间 $event');
-      _duration = event ?? const Duration();
-    });
-    // _player.playbackEventStream.listen((event) {
-    //   LogHelper.get().debug('playbackEventStream $event');
-    // });
-    _player.volumeStream.listen((event) {
-      LogHelper.get().debug('音量 $event');
-    });
-    _player.speedStream.listen((event) {
-      LogHelper.get().debug('速度 $event');
-    });
-    _player.positionStream.listen((event) {
-      _position = event;
+    MusicChannel.get().playbackStateEvent.listen((event) {
+      double bufferedPosition =
+          event['bufferedPosition'] / 100 * _duration.inMilliseconds;
+      _bufferedPosition = Duration(milliseconds: bufferedPosition.toInt());
+      _position = Duration(milliseconds: event['position']);
+      _state = event['state'];
       notifyListeners();
     });
-    _player.playingStream.listen((event) {
-      LogHelper.get().debug('正在播放状态 $event');
-      notifyListeners();
-    });
-    _player.playerStateStream.listen((event) {
-      LogHelper.get().debug('播放状态 $event');
-      if (_player.playing &&
-          event.processingState != ProcessingState.completed &&
-          event.processingState != ProcessingState.idle &&
-          event.processingState != ProcessingState.loading) {
-        PlayStatusChannel.get().setNowPlayMusicInfo(play: true);
-      } else {
-        PlayStatusChannel.get().setNowPlayMusicInfo(play: false);
-      }
-      notifyListeners();
-    });
-    _player.processingStateStream.listen((event) {
-      LogHelper.get().debug('状态改变 $event');
-      notifyListeners();
-      if (event == ProcessingState.completed) {
-        MusicDataModel.get().toNext();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    LogHelper.get().debug('PlayStatusModel dispose');
-    _player.dispose();
-    super.dispose();
   }
 
   /// 手动更新播放进度
   Future<void> seek(Duration? position) async {
-    await _player.seek(position);
+    if (null == position) {
+      return;
+    }
+    await MusicChannel.get().seekTo(position);
   }
 
   /// 设置音频源
-  Future<void> setSource(String url) async {
-    try {
-      Duration? duration;
-      if (CacheModel.get().enableMusicCache) {
-        LogHelper.get().debug('使用缓存源：$url');
-        LockCachingAudioSource lockCachingAudioSource =
-            LockCachingAudioSource(Uri.parse(url));
-        duration = await _player.setAudioSource(lockCachingAudioSource);
-      } else {
-        duration = await _player.setUrl(url);
-      }
-      LogHelper.get().debug('播放时长：$duration');
-    } on PlayerException catch (e) {
-      Fluttertoast.showToast(msg: "播放失败", toastLength: Toast.LENGTH_LONG);
-      LogHelper.get().error('设置音频源失败', e);
-    } on PlayerInterruptedException catch (e) {
-      // This call was interrupted since another audio source was loaded or the
-      // player was stopped or disposed before this audio source could complete
-      // loading.
-      LogHelper.get().warn('设置音频源失败', e);
-    } catch (e) {
-      Fluttertoast.showToast(msg: "播放失败，未知错误", toastLength: Toast.LENGTH_LONG);
-      LogHelper.get().error('设置音频源失败', e);
-    }
+  Future<void> setSource(String musicId) async {
+    await MusicChannel.get().playFromId(musicId);
   }
 
   /// 设置播放状态
   Future<void> setPlay(bool needPlay) async {
-    needPlay ? await _player.play() : await _player.pause();
-  }
-
-  /// 停止播放
-  Future<void> stopPlay() async {
-    _player.stop();
+    needPlay
+        ? await MusicChannel.get().play()
+        : await MusicChannel.get().pause();
   }
 }

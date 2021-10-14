@@ -1,0 +1,11 @@
+AcousticEchoCanceler 回音消除
+AutomaticGainControl 自动增益控制（AGC）。 自动增益控制（AGC）是一种音频预处理，通过升高或降低麦克风输入以匹配预设电平来自动标准化捕捉信号的输出，以便输出信号电平几乎恒定。
+BassBoost 低音增强
+DynamicsProcessing 动态处理？
+EnvironmentalReverb 境混响控制器
+Equalizer 均衡器
+HapticGenerator 触觉生成，音频转震动？
+LoudnessEnhancer 响度增强器
+NoiseSuppressor 噪声抑制器
+PresetReverb 输出混合辅助效果
+Virtualizer 音频虚拟化

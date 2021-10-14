@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -56,14 +56,14 @@ class BackgroundPicture extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String? coverBase64 =
-        context.select<MusicDataModel, String?>((value) => value.coverBase64);
+    Uint8List? coverBase64 =
+    context.select<MusicDataModel, Uint8List?>((value) => value.coverBase64);
     return ImageFade(
       excludeFromSemantics: true,
       fit: BoxFit.cover,
       image: coverBase64 == null
           ? Image.asset('asserts/images/default_cover.jpg').image
-          : Image.memory(base64Decode(coverBase64)).image,
+          : Image.memory(coverBase64).image,
     );
   }
 }

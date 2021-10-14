@@ -130,7 +130,7 @@ class _InnerListItem extends StatelessWidget {
       onTap: () {
         AppRouterDelegate.of(context).push('/musicPlay');
         Provider.of<MusicDataModel>(context, listen: false)
-            .setNowPlayMusic(index);
+            .setNowPlayMusicUseMusicId(musicId);
       },
       onLongPress: () {
         Clipboard.setData(ClipboardData(text: "$name-$singer")).then(
@@ -173,8 +173,8 @@ class _InnerListItem extends StatelessWidget {
                         showDeleteConfirmDialog(context).then((value) {
                           if (value ?? false) {
                             CacheModel.get().deleteCover(musicId).then((value) {
-                              if (value > 0) {
-                                Fluttertoast.showToast(msg: "删除封面缓存成功");
+                              if (value) {
+                                Fluttertoast.showToast(msg: "删除歌词缓存成功");
                               } else {
                                 Fluttertoast.showToast(msg: "缓存不存在");
                               }
@@ -190,7 +190,7 @@ class _InnerListItem extends StatelessWidget {
                         showDeleteConfirmDialog(context).then((value) {
                           if (value ?? false) {
                             CacheModel.get().deleteLyric(lyricId).then((value) {
-                              if (value > 0) {
+                              if (value) {
                                 Fluttertoast.showToast(msg: "删除歌词缓存成功");
                               } else {
                                 Fluttertoast.showToast(msg: "缓存不存在");
