@@ -57,6 +57,7 @@ class CacheModel extends ChangeNotifier {
       await db.execute(
           'CREATE TABLE lyric_cache (lyricId TEXT PRIMARY KEY, data TEXT)');
     });
+    getDefaultCover();
   }
 
   Future<int> cacheMusicList(List<MusicDataContent> list) async {
