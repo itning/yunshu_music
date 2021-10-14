@@ -1,4 +1,4 @@
-package top.itning.yunshu.music.yunshu_music.util;
+package top.itning.yunshu_music.util;
 
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;

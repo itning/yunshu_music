@@ -1,4 +1,4 @@
-package top.itning.yunshu.music.yunshu_music.service;
+package top.itning.yunshu_music.service;
 
 import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
@@ -15,8 +15,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.flutter.plugin.common.MethodChannel;
-import top.itning.yunshu.music.yunshu_music.channel.MusicChannel;
-import top.itning.yunshu.music.yunshu_music.util.MusicUtils;
+import top.itning.yunshu_music.channel.MusicChannel;
+import top.itning.yunshu_music.util.MusicUtils;
 
 
 /**

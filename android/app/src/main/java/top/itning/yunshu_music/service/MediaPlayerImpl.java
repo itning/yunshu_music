@@ -1,7 +1,7 @@
-package top.itning.yunshu.music.yunshu_music.service;
+package top.itning.yunshu_music.service;
 
-import static top.itning.yunshu.music.yunshu_music.channel.MusicChannel.musicPlayDataService;
-import static top.itning.yunshu.music.yunshu_music.service.MusicBrowserService.ACTIONS;
+import static top.itning.yunshu_music.channel.MusicChannel.musicPlayDataService;
+import static top.itning.yunshu_music.service.MusicBrowserService.ACTIONS;
 
 import android.media.MediaPlayer;
 import android.net.Uri;

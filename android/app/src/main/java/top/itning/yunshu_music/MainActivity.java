@@ -1,6 +1,6 @@
-package top.itning.yunshu.music.yunshu_music;
+package top.itning.yunshu_music;
 
-import static top.itning.yunshu.music.yunshu_music.channel.MusicChannel.methodChannel;
+import static top.itning.yunshu_music.channel.MusicChannel.methodChannel;
 
 import android.content.ComponentName;
 import android.net.Uri;
@@ -25,9 +25,9 @@ import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
-import top.itning.yunshu.music.yunshu_music.channel.MusicChannel;
-import top.itning.yunshu.music.yunshu_music.service.MusicBrowserService;
-import top.itning.yunshu.music.yunshu_music.service.MusicPlayMode;
+import top.itning.yunshu_music.channel.MusicChannel;
+import top.itning.yunshu_music.service.MusicBrowserService;
+import top.itning.yunshu_music.service.MusicPlayMode;
 
 public class MainActivity extends FlutterActivity {
     private static final String TAG = "MainActivity";

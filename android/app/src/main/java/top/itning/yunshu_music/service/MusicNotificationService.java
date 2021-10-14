@@ -1,4 +1,4 @@
-package top.itning.yunshu.music.yunshu_music.service;
+package top.itning.yunshu_music.service;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -24,7 +24,7 @@ import com.bumptech.glide.request.transition.Transition;
 import java.io.File;
 
 import io.flutter.util.PathUtils;
-import top.itning.yunshu.music.yunshu_music.R;
+import top.itning.yunshu_music.R;
 
 
 /**
