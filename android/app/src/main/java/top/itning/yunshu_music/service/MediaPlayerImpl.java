@@ -3,6 +3,11 @@ package top.itning.yunshu_music.service;
 import static top.itning.yunshu_music.channel.MusicChannel.musicPlayDataService;
 import static top.itning.yunshu_music.service.MusicBrowserService.ACTIONS;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -28,9 +33,11 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     private final MediaPlayer mediaPlayer;
     private final MusicBrowserService context;
     private final MediaSessionCompat session;
+    private final MusicNotificationService musicNotificationService;
+    private final IntentFilter intentFilter;
+    private final BecomingNoisyReceiver noisyAudioStreamReceiver;
     private PlaybackStateCompat state;
     private boolean playNow = false;
-    private final MusicNotificationService musicNotificationService;
 
     public MediaPlayerImpl(@NonNull MusicBrowserService context, @NonNull MediaSessionCompat session) {
         Log.d(TAG, "MediaPlayerImpl Constructor");
@@ -42,6 +49,8 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.setOnBufferingUpdateListener(this);
+        noisyAudioStreamReceiver = new BecomingNoisyReceiver();
+        intentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -73,6 +82,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     @Override
     public void onPlay() {
         Log.d(TAG, "onPlay");
+        context.registerReceiver(noisyAudioStreamReceiver, intentFilter);
         mediaPlayer.start();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1.0f)
@@ -100,6 +110,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     @Override
     public void onStop() {
         Log.d(TAG, "onStop");
+        context.unregisterReceiver(noisyAudioStreamReceiver);
         mediaPlayer.stop();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_STOPPED, 0, 1.0f)
@@ -230,5 +241,17 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                 .putString("android.media.metadata.LYRIC_URI", musicPlayDataService.getNowPlayLyricUri())
                 .putText(MediaMetadataCompat.METADATA_KEY_ART_URI, artUri)
                 .build());
+    }
+
+    private class BecomingNoisyReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
+                Log.d(TAG, "receive audio becoming noisy");
+                if (mediaPlayer.isPlaying()) {
+                    MediaPlayerImpl.this.onPause();
+                }
+            }
+        }
     }
 }
