@@ -99,15 +99,15 @@ public class MusicPlayDataService {
     }
 
     public Uri getNowPlayMusicUri() {
-        return Uri.parse("http://49.235.109.242:8888/file?id=" + getNowPlayMusic().getMediaId());
+        return Uri.parse("https://music.itning.top/file?id=" + getNowPlayMusic().getMediaId());
     }
 
     public String getNowPlayLyricUri() {
-        return "http://49.235.109.242:8888/file/lyric?id=" + getNowPlayMusic().getMediaId();
+        return "https://music.itning.top/file/lyric?id=" + getNowPlayMusic().getMediaId();
     }
 
     public String getNowPlayArtUri() {
-        return "http://49.235.109.242:8888/file/cover?id=" + getNowPlayMusic().getMediaId();
+        return "https://music.itning.top/file/cover?id=" + getNowPlayMusic().getMediaId();
     }
 
     public void playFromMediaId(String mediaId) {
