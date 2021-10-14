@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_rest_template/flutter_rest_template.dart';
 import 'package:flutter_rest_template/impl/dio_client_http_request_factory.dart';
 import 'package:flutter_rest_template/response_entity.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/net/model/music_meta_info_entity.dart';
 import 'package:yunshu_music/util/common_utils.dart';
@@ -20,7 +22,7 @@ class HttpHelper {
 
   late final Dio _dio;
 
-  final String baseUrl = "http://49.235.109.242:8888";
+  final String baseUrl = "https://music.itning.top";
 
   HttpHelper._() {
     _dio = Dio();
@@ -108,10 +110,41 @@ class HttpHelper {
   }
 
   Future<String?> getLyric(String lyricId) async {
-    Response<String> response =
-        await _dio.get<String>('$baseUrl/file/lyric?id=$lyricId');
     LogHelper.get().info('获取歌词：$baseUrl/file/lyric?id=$lyricId');
-    return response.data;
+    try {
+      Response<String> response =
+          await _dio.get<String>('$baseUrl/file/lyric?id=$lyricId');
+      return response.data;
+    } on DioError catch (e) {
+      Fluttertoast.showToast(msg: '获取歌词网络异常');
+      LogHelper.get().warn('获取歌词网络异常', e);
+    } catch (e) {
+      Fluttertoast.showToast(msg: '获取歌词失败');
+      LogHelper.get().error('获取歌词失败', e);
+    }
+    return null;
+  }
+
+  Future<Tuple2<String?, List<int>?>> getCover(String musicId) async {
+    LogHelper.get().info('获取歌词：$baseUrl/file/cover?id=$musicId');
+    try {
+      Response<List<int>> response = await _dio.get<List<int>>(
+          '$baseUrl/file/cover?id=$musicId',
+          options: Options(responseType: ResponseType.bytes));
+      List<String>? contentTypes = response.headers[Headers.contentTypeHeader];
+      String? contentType;
+      if (contentTypes != null && contentTypes.isNotEmpty) {
+        contentType = contentTypes[0];
+      }
+      return Tuple2(contentType, response.data);
+    } on DioError catch (e) {
+      Fluttertoast.showToast(msg: '获取封面网络异常');
+      LogHelper.get().warn('获取封面网络异常', e);
+    } catch (e) {
+      Fluttertoast.showToast(msg: '获取封面失败');
+      LogHelper.get().error('获取封面失败', e);
+    }
+    return const Tuple2(null, null);
   }
 
   String getMusicUrl(String musicId) {

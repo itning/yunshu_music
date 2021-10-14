@@ -31,7 +31,7 @@ apply plugin: 'com.android.application'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -39,10 +39,9 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "top.itning.yunshu.music.yunshu_music"
-        minSdkVersion 24
-        targetSdkVersion 30
+        applicationId "top.itning.yunshu_music"
+        minSdkVersion 28
+        targetSdkVersion 31
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
@@ -58,9 +57,13 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig signingConfigs.release
+            // 混淆
+            minifyEnabled true
+            // Zipalign优化
+            zipAlignEnabled true
+            // 移除无用的resource文件
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -71,5 +74,7 @@ flutter {
 }
 
 dependencies{
-    implementation 'org.greenrobot:eventbus:3.2.0'
+    implementation 'androidx.media2:media2-session:1.2.0'
+    implementation 'com.tencent:mmkv-static:1.2.10'
+    implementation 'com.github.bumptech.glide:glide:4.12.0'
 }

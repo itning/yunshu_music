@@ -1,7 +1,6 @@
-import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/component/rotate_cover_image_widget.dart';
@@ -9,6 +8,7 @@ import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/route/app_route_delegate.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 /// 小型音乐控制器Widget
 class MusicMiniPlayControllerWidget extends StatelessWidget {
@@ -40,20 +40,21 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-                    child: Selector<MusicDataModel, String?>(
+                    child: Selector<MusicDataModel, Uint8List?>(
                       selector: (_, model) => model.coverBase64,
                       builder: (_, value, __) {
                         if (value == null) {
                           return RotateCoverImageWidget(
-                            image: Image.asset('asserts/images/default_cover.jpg')
-                                .image,
+                            image:
+                                Image.asset('asserts/images/default_cover.jpg')
+                                    .image,
                             width: 52,
                             height: 52,
                             duration: const Duration(seconds: 20),
                           );
                         } else {
                           return RotateCoverImageWidget(
-                            image: Image.memory(base64Decode(value)).image,
+                            image: Image.memory(value).image,
                             width: 52,
                             height: 52,
                             duration: const Duration(seconds: 20),
@@ -81,11 +82,11 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Selector<PlayStatusModel, Tuple2<bool, ProcessingState>>(
+                        Selector<PlayStatusModel, Tuple2<bool, bool>>(
                           selector: (_, status) =>
                               Tuple2(status.isPlayNow, status.processingState),
                           builder: (context, status, __) {
-                            if (status.item2 == ProcessingState.loading) {
+                            if (status.item2) {
                               return Container(
                                 margin: const EdgeInsets.all(16.0),
                                 child: const SizedBox(
@@ -118,32 +119,10 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                                   );
                           },
                         ),
-                        Selector<MusicDataModel, String>(
-                          selector: (_, model) => model.playMode,
-                          builder: (context, playMode, _) {
-                            if (playMode == 'sequence') {
-                              return IconButton(
-                                tooltip: '顺序播放',
-                                icon: const Icon(Icons.format_list_numbered),
-                                onPressed: () =>
-                                    context.read<MusicDataModel>().nextPlayMode(),
-                              );
-                            } else if (playMode == 'randomly') {
-                              return IconButton(
-                                tooltip: '随机播放',
-                                icon: const Icon(Icons.shuffle),
-                                onPressed: () =>
-                                    context.read<MusicDataModel>().nextPlayMode(),
-                              );
-                            } else {
-                              return IconButton(
-                                tooltip: '单曲循环',
-                                icon: const Icon(Icons.loop),
-                                onPressed: () =>
-                                    context.read<MusicDataModel>().nextPlayMode(),
-                              );
-                            }
-                          },
+                        IconButton(
+                          icon: const Icon(Icons.playlist_play),
+                          tooltip: '播放列表',
+                          onPressed: () => showPlayList(context),
                         ),
                       ],
                     ),
