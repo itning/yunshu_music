@@ -182,10 +182,22 @@ class _PlayList extends StatelessWidget {
                   children: [
                     Expanded(
                         flex: 2,
-                        child: Text(
-                          '${reversed.length - index}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.grey),
+                        child: Selector<MusicDataModel, String?>(
+                          builder:
+                              (BuildContext context, musicId, Widget? child) {
+                            if (musicId != reversed[index]['mediaId']) {
+                              return Text(
+                                '${reversed.length - index}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.grey),
+                              );
+                            } else {
+                              return const Icon(Icons.equalizer,
+                                  color: Colors.black);
+                            }
+                          },
+                          selector: (_, model) =>
+                              model.getNowPlayMusic()?.musicId,
                         )),
                     Expanded(
                       flex: 13,
