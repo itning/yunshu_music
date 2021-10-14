@@ -1,7 +1,7 @@
-package top.itning.yunshu.music.yunshu_music.channel;
+package top.itning.yunshu_music.channel;
 
 import io.flutter.plugin.common.MethodChannel;
-import top.itning.yunshu.music.yunshu_music.service.MusicPlayDataService;
+import top.itning.yunshu_music.service.MusicPlayDataService;
 
 /**
  * @author itning

@@ -1,4 +1,4 @@
-package top.itning.yunshu.music.yunshu_music.service;
+package top.itning.yunshu_music.service;
 
 import android.net.Uri;
 import android.support.v4.media.MediaBrowserCompat;

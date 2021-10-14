@@ -40,7 +40,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "top.itning.yunshu.music.yunshu_music"
+        applicationId "top.itning.yunshu_music"
         minSdkVersion 28
         targetSdkVersion 31
         versionCode flutterVersionCode.toInteger()
