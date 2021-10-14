@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
+import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
+import 'package:yunshu_music/method_channel/music_channel.dart';
+import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/util/log_console.dart';
 
 class LogHelper {
@@ -55,7 +58,8 @@ Route createRoute(Widget page) {
 
 /// 根据[keyword]搜索[rawString]中存在的字符串索引，返回值item1指起始位置；item2指结束位置
 List<Tuple2<int, int>> search(String rawString, String keyword) {
-  Iterable<Match> matchIterable = keyword.toLowerCase().allMatches(rawString.toLowerCase());
+  Iterable<Match> matchIterable =
+      keyword.toLowerCase().allMatches(rawString.toLowerCase());
   return List.generate(matchIterable.length, (index) {
     Match match = matchIterable.elementAt(index);
     return Tuple2(match.start, match.end);
@@ -85,4 +89,128 @@ List<TextSpan> highlight(
     }
   }
   return result;
+}
+
+/// 显示播放列表
+void showPlayList(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+    isScrollControlled: true, // set this to true
+    builder: (_) {
+      return FutureBuilder(
+        future: MusicChannel.get().getPlayList(),
+        builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.data == null) {
+              return DraggableScrollableSheet(
+                maxChildSize: 0.5,
+                expand: false,
+                builder: (_, controller) {
+                  return const Center(
+                    child: Text('播放列表为空'),
+                  );
+                },
+              );
+            }
+            return DraggableScrollableSheet(
+              maxChildSize: 0.5,
+              expand: false,
+              builder: (_, controller) {
+                return PlayList(
+                  scrollController: controller,
+                  data: snapshot.data!,
+                );
+              },
+            );
+          }
+          return DraggableScrollableSheet(
+            maxChildSize: 0.5,
+            expand: false,
+            builder: (_, controller) {
+              return const Center(
+                child: Text('加载中...'),
+              );
+            },
+          );
+        },
+      );
+    },
+  );
+}
+
+class PlayList extends StatelessWidget {
+  final ScrollController? scrollController;
+  final List<dynamic> data;
+
+  const PlayList({Key? key, this.scrollController, required this.data})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    List<dynamic> reversed = data.reversed.toList();
+    return ListView.builder(
+        controller: scrollController,
+        itemCount: reversed.length + 1,
+        itemBuilder: (BuildContext context, int index) {
+          if (index == 0) {
+            return Container(
+              alignment: AlignmentDirectional.center,
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: const Text('播放列表'),
+            );
+          }
+          index -= 1;
+          return Dismissible(
+            key: Key(reversed[index]['mediaId']),
+            onDismissed: (DismissDirection direction) {
+              MusicChannel.get()
+                  .delPlayListByMediaId(reversed[index]['mediaId']);
+            },
+            child: InkWell(
+              onTap: () {
+                context
+                    .read<MusicDataModel>()
+                    .setNowPlayMusicUseMusicId(reversed[index]['mediaId']);
+                Navigator.pop(context);
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                child: Flex(
+                  direction: Axis.horizontal,
+                  children: [
+                    Expanded(
+                        flex: 2,
+                        child: Text(
+                          '${reversed.length - index}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.grey),
+                        )),
+                    Expanded(
+                      flex: 13,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${reversed[index]['title']}',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 16.0),
+                          ),
+                          Text(
+                            '${reversed[index]['subTitle']}',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 12.0, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+  }
 }

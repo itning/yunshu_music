@@ -8,6 +8,7 @@ import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/route/app_route_delegate.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 /// 小型音乐控制器Widget
 class MusicMiniPlayControllerWidget extends StatelessWidget {
@@ -118,35 +119,10 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                                   );
                           },
                         ),
-                        Selector<MusicDataModel, String>(
-                          selector: (_, model) => model.playMode,
-                          builder: (context, playMode, _) {
-                            if (playMode == 'sequence') {
-                              return IconButton(
-                                tooltip: '顺序播放',
-                                icon: const Icon(Icons.format_list_numbered),
-                                onPressed: () => context
-                                    .read<MusicDataModel>()
-                                    .nextPlayMode(),
-                              );
-                            } else if (playMode == 'randomly') {
-                              return IconButton(
-                                tooltip: '随机播放',
-                                icon: const Icon(Icons.shuffle),
-                                onPressed: () => context
-                                    .read<MusicDataModel>()
-                                    .nextPlayMode(),
-                              );
-                            } else {
-                              return IconButton(
-                                tooltip: '单曲循环',
-                                icon: const Icon(Icons.loop),
-                                onPressed: () => context
-                                    .read<MusicDataModel>()
-                                    .nextPlayMode(),
-                              );
-                            }
-                          },
+                        IconButton(
+                          icon: const Icon(Icons.playlist_play),
+                          tooltip: '播放列表',
+                          onPressed: () => showPlayList(context),
                         ),
                       ],
                     ),
