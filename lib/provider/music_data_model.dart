@@ -58,7 +58,7 @@ class MusicDataModel extends ChangeNotifier {
 
   /// 刷新音乐列表
   Future<String?> refreshMusicList({bool needInit = false}) async {
-    if (needInit && CacheModel.get().enableMusicCache) {
+    if (needInit) {
       List<MusicDataContent> list = await CacheModel.get().getMusicList();
       if (list.isNotEmpty) {
         _musicList = list;
@@ -79,9 +79,7 @@ class MusicDataModel extends ChangeNotifier {
       return null;
     }
     _musicList = responseEntity.body!.data!.content!;
-    if (CacheModel.get().enableMusicCache) {
-      CacheModel.get().cacheMusicList(_musicList);
-    }
+    CacheModel.get().cacheMusicList(_musicList);
     if (needInit) {
       await MusicChannel.get().initMethod();
     }
