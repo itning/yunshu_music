@@ -146,6 +146,9 @@ class MusicDataModel extends ChangeNotifier {
     if (null == musicId) {
       return;
     }
+    if (_nowPlayMusic != null && _nowPlayMusic!.musicId == musicId) {
+      return;
+    }
     MusicChannel.get().playFromId(musicId);
   }
 

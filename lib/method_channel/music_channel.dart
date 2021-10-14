@@ -70,6 +70,13 @@ class MusicChannel {
     return await _methodChannel.invokeMethod('getPlayMode');
   }
 
-  Future<void> setNowPlayMusicInfo(
-      {bool? play, String? name, String? singer, String? cover}) async {}
+  Future<List<dynamic>> getPlayList() async {
+    // List<Map<String,String>>
+    return await _methodChannel.invokeMethod('getPlayList');
+  }
+
+  Future<void> delPlayListByMediaId(String mediaId) async {
+    await _methodChannel
+        .invokeMethod('delPlayListByMediaId', {'mediaId': mediaId});
+  }
 }

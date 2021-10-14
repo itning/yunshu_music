@@ -21,6 +21,7 @@ import com.tencent.mmkv.MMKV;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
@@ -58,7 +59,9 @@ public class MainActivity extends FlutterActivity {
             switch (call.method) {
                 case "init":
                     try {
-                        browser.connect();
+                        if (!browser.isConnected()) {
+                            browser.connect();
+                        }
                         result.success(null);
                     } catch (Exception e) {
                         Log.e(TAG, "connect error", e);
@@ -149,7 +152,33 @@ public class MainActivity extends FlutterActivity {
                 case "getPlayMode":
                     result.success(MusicChannel.musicPlayDataService.getPlayMode().name().toLowerCase());
                     break;
+                case "getPlayList":
+                    result.success(MusicChannel.musicPlayDataService.getPlayList().stream()
+                            .map(item -> {
+                                Map<String, String> map = new HashMap<>((int) (3 / 0.75F + 1.0F));
+                                map.put("mediaId", item.getMediaId());
+                                map.put("title", item.getDescription().getTitle() == null ? null : item.getDescription().getTitle().toString());
+                                map.put("subTitle", item.getDescription().getSubtitle() == null ? null : item.getDescription().getSubtitle().toString());
+                                return map;
+                            })
+                            .collect(Collectors.toList()));
+                    break;
+                case "delPlayListByMediaId":
+                    if (!call.hasArgument("mediaId")) {
+                        result.error("-1", null, null);
+                        break;
+                    }
+                    try {
+                        String mediaId = call.argument("mediaId");
+                        MusicChannel.musicPlayDataService.delPlayListByMediaId(mediaId);
+                        result.success(null);
+                    } catch (Exception e) {
+                        Log.e(TAG, "playMode error", e);
+                        result.error("-1", null, null);
+                    }
+                    break;
                 default:
+                    result.notImplemented();
             }
         });
         browser = new MediaBrowserCompat(this, new ComponentName(this, MusicBrowserService.class), new MediaBrowserCompat.ConnectionCallback() {
