@@ -36,7 +36,7 @@ public class MusicPlayDataService {
             String mode = kv.decodeString(PLAY_MODE_KEY, MusicPlayMode.SEQUENCE.name());
             this.playMode = MusicPlayMode.valueOf(mode);
         } catch (Exception e) {
-            kv.encode(PLAY_MODE_KEY,MusicPlayMode.SEQUENCE.name());
+            kv.encode(PLAY_MODE_KEY, MusicPlayMode.SEQUENCE.name());
             this.playMode = MusicPlayMode.SEQUENCE;
         }
     }
@@ -53,6 +53,16 @@ public class MusicPlayDataService {
         return playMode;
     }
 
+    public List<MediaBrowserCompat.MediaItem> getPlayList() {
+        return PLAY_LIST;
+    }
+
+    public void delPlayListByMediaId(String mediaId) {
+        PLAY_LIST.removeIf(it -> mediaId.equals(it.getMediaId()));
+        String playListString = PLAY_LIST.stream().map(MediaBrowserCompat.MediaItem::getMediaId).collect(Collectors.joining("@"));
+        kv.encode(PLAY_LIST_KEY, playListString);
+    }
+
     public void setPlayMode(MusicPlayMode playMode) {
         this.playMode = playMode;
         kv.encode(PLAY_MODE_KEY, playMode.name());
@@ -61,8 +71,13 @@ public class MusicPlayDataService {
     public void addMusic(List<MediaBrowserCompat.MediaItem> musicList) {
         MUSIC_LIST.addAll(musicList);
         String playListString = kv.decodeString(PLAY_LIST_KEY, "");
-        Set<String> mediaIdSet = new HashSet<>(Arrays.asList(playListString.split("@")));
-        PLAY_LIST.addAll(MUSIC_LIST.stream().filter(it -> mediaIdSet.contains(it.getMediaId())).collect(Collectors.toList()));
+
+        List<String> playListMusicIdList = Arrays.asList(playListString.split("@"));
+        List<MediaBrowserCompat.MediaItem> playList = new ArrayList<>(playListMusicIdList.size());
+        for (String mediaId : playListMusicIdList) {
+            MUSIC_LIST.stream().filter(it -> mediaId.equals(it.getMediaId())).findFirst().ifPresent(playList::add);
+        }
+        PLAY_LIST.addAll(playList);
 
         String nowPlayMediaId = kv.decodeString(NOW_PLAY_MEDIA_ID_KEY);
         if (null != nowPlayMediaId) {
