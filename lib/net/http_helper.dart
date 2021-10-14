@@ -22,7 +22,7 @@ class HttpHelper {
 
   late final Dio _dio;
 
-  final String baseUrl = "http://49.235.109.242:8888";
+  final String baseUrl = "https://music.itning.top";
 
   HttpHelper._() {
     _dio = Dio();

@@ -14,10 +14,10 @@ public class MusicUtils {
     public static MediaBrowserCompat.MediaItem to(Map<String, String> music) {
         MediaMetadataCompat metadata = new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, music.get("musicId"))
-                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, "http://49.235.109.242:8888/file?id=" + music.get("musicId"))
+                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, "https://music.itning.top/file?id=" + music.get("musicId"))
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, music.get("name"))
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, music.get("singer"))
-                .putString(MediaMetadataCompat.METADATA_KEY_ART_URI, "http://49.235.109.242:8888/file/cover?id=" + music.get("musicId"))
+                .putString(MediaMetadataCompat.METADATA_KEY_ART_URI, "https://music.itning.top/file/cover?id=" + music.get("musicId"))
                 .build();
         return createMediaItem(metadata);
     }
