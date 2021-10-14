@@ -21,6 +21,9 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 
+import java.io.File;
+
+import io.flutter.util.PathUtils;
 import top.itning.yunshu.music.yunshu_music.R;
 
 
@@ -51,6 +54,27 @@ public class MusicNotificationService {
             @Override
             public void onLoadCleared(@Nullable Drawable placeholder) {
 
+            }
+
+            @Override
+            public void onLoadFailed(@Nullable Drawable errorDrawable) {
+                Log.w(TAG, "load cover failed, use default cover");
+                File file = new File(PathUtils.getDataDirectory(context) + "/cover/default_cover.jpg");
+                if (!file.exists()) {
+                    Log.w(TAG, "unused default cover because file not exist. path: " + file.getPath());
+                    return;
+                }
+                Glide.with(context).asBitmap().load(file).into(new CustomTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                        updateNotification(description.getTitle(), description.getSubtitle(), description.getDescription(), resource);
+                    }
+
+                    @Override
+                    public void onLoadCleared(@Nullable Drawable placeholder) {
+
+                    }
+                });
             }
         });
     }
