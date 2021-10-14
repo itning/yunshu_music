@@ -53,9 +53,6 @@ class CacheModel extends ChangeNotifier {
       // 所有音乐列表 缓存
       await db.execute(
           'CREATE TABLE list_cache (musicId TEXT PRIMARY KEY, lyricId TEXT, name TEXT, singer TEXT, type INTEGER)');
-      // 歌词 缓存
-      await db.execute(
-          'CREATE TABLE lyric_cache (lyricId TEXT PRIMARY KEY, data TEXT)');
     });
     getDefaultCover();
   }
@@ -96,42 +93,52 @@ class CacheModel extends ChangeNotifier {
     return list.map((e) => MusicDataContent().fromJson(e)).toList();
   }
 
-  Future<int> cacheLyric(String lyricId, String? content) async {
-    if (!_enableLyricCache) {
-      return 0;
-    }
+  Future<File?> cacheLyric(String lyricId, String? content) async {
     LogHelper.get().info('start cache lyric');
     if (content == null || content == '') {
-      return 0;
+      return null;
     }
-    return await _database.transaction((txn) async {
-      await txn
-          .rawDelete('DELETE FROM lyric_cache where lyricId = ?', [lyricId]);
-      return await txn.rawInsert(
-          'INSERT INTO lyric_cache (lyricId,data) VALUES ("$lyricId","$content");');
-    });
+    File cacheFile = File(joinAll([
+      (Directory(join((await getTemporaryDirectory()).path, 'lyric_cache')))
+          .path,
+      lyricId
+    ]));
+    if (!cacheFile.existsSync()) {
+      cacheFile = await cacheFile.create(recursive: true);
+    }
+    await cacheFile.writeAsString(content);
+    return cacheFile;
   }
 
-  Future<int> deleteLyric(String lyricId) async {
+  Future<bool> deleteLyric(String lyricId) async {
     LogHelper.get().info('start delete cache lyric $lyricId');
     if (lyricId == '') {
-      return 0;
+      return false;
     }
-    return await _database
-        .rawDelete('delete from lyric_cache where lyricId = ?', [lyricId]);
+    File cacheFile = File(joinAll([
+      (Directory(join((await getTemporaryDirectory()).path, 'lyric_cache')))
+          .path,
+      lyricId
+    ]));
+    if (cacheFile.existsSync()) {
+      await cacheFile.delete();
+      return true;
+    }
+    return false;
   }
 
   Future<String?> getLyric(String lyricId) async {
-    if (!_enableLyricCache) {
-      return null;
-    }
     LogHelper.get().info('get lyric from cache $lyricId');
-    List<Map<String, Object?>> list = await _database
-        .rawQuery('select * from lyric_cache where lyricId = "$lyricId";');
-    if (list.isEmpty) {
+    File cacheFile = File(joinAll([
+      (Directory(join((await getTemporaryDirectory()).path, 'lyric_cache')))
+          .path,
+      lyricId
+    ]));
+    if (cacheFile.existsSync()) {
+      return await cacheFile.readAsString();
+    } else {
       return null;
     }
-    return list[0]['data']?.toString();
   }
 
   Future<File?> cacheCover(
@@ -140,7 +147,7 @@ class CacheModel extends ChangeNotifier {
       return null;
     }
     String ext =
-    mimeType == null ? 'png' : extensionFromMime(mimeType) ?? 'png';
+        mimeType == null ? 'png' : extensionFromMime(mimeType) ?? 'png';
     if (ext == 'jpe') {
       ext = 'jpg';
     }
@@ -189,7 +196,7 @@ class CacheModel extends ChangeNotifier {
   Future<File> getDefaultCover() async {
     File defaultCoverFile = File(joinAll([
       (Directory(
-          join((await getApplicationDocumentsDirectory()).path, 'cover')))
+              join((await getApplicationDocumentsDirectory()).path, 'cover')))
           .path,
       "default_cover.jpg"
     ]));
@@ -197,7 +204,7 @@ class CacheModel extends ChangeNotifier {
       defaultCoverFile = await defaultCoverFile.create(recursive: true);
       ByteData data = await rootBundle.load("asserts/images/default_cover.jpg");
       List<int> bytes =
-      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
       await defaultCoverFile.writeAsBytes(bytes);
     }
     return defaultCoverFile;

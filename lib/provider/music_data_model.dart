@@ -58,7 +58,7 @@ class MusicDataModel extends ChangeNotifier {
 
   /// 刷新音乐列表
   Future<String?> refreshMusicList({bool needInit = false}) async {
-    if (needInit) {
+    if (needInit && CacheModel.get().enableMusicCache) {
       List<MusicDataContent> list = await CacheModel.get().getMusicList();
       if (list.isNotEmpty) {
         _musicList = list;
@@ -79,7 +79,9 @@ class MusicDataModel extends ChangeNotifier {
       return null;
     }
     _musicList = responseEntity.body!.data!.content!;
-    CacheModel.get().cacheMusicList(_musicList);
+    if (CacheModel.get().enableMusicCache) {
+      CacheModel.get().cacheMusicList(_musicList);
+    }
     if (needInit) {
       await MusicChannel.get().initMethod();
     }
@@ -187,9 +189,17 @@ class MusicDataModel extends ChangeNotifier {
   }
 
   Future<void> _initLyric(String lyricId) async {
-    String? lyric = await CacheModel.get().getLyric(lyricId);
-    if (lyric == null) {
-      lyric = await HttpHelper.get().getLyric(lyricId);
+    if (CacheModel.get().enableLyricCache) {
+      String? lyric = await CacheModel.get().getLyric(lyricId);
+      if (null != lyric) {
+        List<Lyric>? list = LyricUtil.formatLyric(lyric);
+        _lyricList = list;
+        notifyListeners();
+        return;
+      }
+    }
+    String? lyric = await HttpHelper.get().getLyric(lyricId);
+    if (CacheModel.get().enableLyricCache) {
       CacheModel.get().cacheLyric(lyricId, lyric);
     }
     List<Lyric>? list = LyricUtil.formatLyric(lyric);
@@ -198,11 +208,13 @@ class MusicDataModel extends ChangeNotifier {
   }
 
   Future<void> _initCover(String musicId) async {
-    File coverFromCache = await CacheModel.get().getCover(musicId);
-    if (coverFromCache.existsSync()) {
-      _coverBase64 = await coverFromCache.readAsBytes();
-      notifyListeners();
-      return;
+    if (CacheModel.get().enableCoverCache) {
+      File coverFromCache = await CacheModel.get().getCover(musicId);
+      if (coverFromCache.existsSync()) {
+        _coverBase64 = await coverFromCache.readAsBytes();
+        notifyListeners();
+        return;
+      }
     }
     Tuple2<String?, List<int>?> coverBytes =
         await HttpHelper.get().getCover(musicId);
