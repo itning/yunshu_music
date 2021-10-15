@@ -1,11 +1,11 @@
 {
-    "name": "yunshu_music",
-    "short_name": "yunshu_music",
+    "name": "云舒音乐",
+    "short_name": "云舒音乐",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "云舒音乐",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
