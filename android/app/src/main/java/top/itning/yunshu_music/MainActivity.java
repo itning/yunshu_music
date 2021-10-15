@@ -2,7 +2,10 @@ package top.itning.yunshu_music;
 
 import static top.itning.yunshu_music.channel.MusicChannel.methodChannel;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -45,6 +48,9 @@ public class MainActivity extends FlutterActivity {
         Log.d(TAG, "onCreate" + this.toString());
         MMKV.initialize(this);
         super.onCreate(savedInstanceState);
+        NotificationChannel channel = new NotificationChannel("1", "播放通知", NotificationManager.IMPORTANCE_LOW);
+        NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.createNotificationChannel(channel);
     }
 
     @Override
