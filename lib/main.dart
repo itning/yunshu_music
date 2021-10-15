@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -20,7 +21,7 @@ void main() async {
   await MusicDataModel.get().init();
   await MusicChannel.get().init();
   runApp(const YunShuMusicApp());
-  if (Platform.isAndroid) {
+  if (!kIsWeb && Platform.isAndroid) {
     // 沉浸式状态栏
     // 写在组件渲染之后，是为了在渲染后进行设置赋值，覆盖状态栏，写在渲染之前对MaterialApp组件会覆盖这个值。
     SystemUiOverlayStyle systemUiOverlayStyle =
