@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -48,16 +49,21 @@ class CacheModel extends ChangeNotifier {
     _enableMusicCache = sharedPreferences.getBool(_enableMusicCacheKey) ?? true;
     _enableCoverCache = sharedPreferences.getBool(_enableCoverCacheKey) ?? true;
     _enableLyricCache = sharedPreferences.getBool(_enableLyricCacheKey) ?? true;
-    _database = await openDatabase('cache.db', version: 1,
-        onCreate: (Database db, int version) async {
-      // 所有音乐列表 缓存
-      await db.execute(
-          'CREATE TABLE list_cache (musicId TEXT PRIMARY KEY, lyricId TEXT, name TEXT, singer TEXT, type INTEGER)');
-    });
-    getDefaultCover();
+    if (!kIsWeb) {
+      _database = await openDatabase('cache.db', version: 1,
+          onCreate: (Database db, int version) async {
+        // 所有音乐列表 缓存
+        await db.execute(
+            'CREATE TABLE list_cache (musicId TEXT PRIMARY KEY, lyricId TEXT, name TEXT, singer TEXT, type INTEGER)');
+      });
+      getDefaultCover();
+    }
   }
 
   Future<int> cacheMusicList(List<MusicDataContent> list) async {
+    if (kIsWeb) {
+      return 0;
+    }
     LogHelper.get().info('start cache music list');
     return await _database.transaction((txn) async {
       await txn.rawDelete('DELETE FROM list_cache');
@@ -85,6 +91,9 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<List<MusicDataContent>> getMusicList() async {
+    if (kIsWeb) {
+      return [];
+    }
     LogHelper.get().info('get music list from cache');
     List<Map<String, Object?>> list = await _database.query('list_cache');
     if (list.isEmpty) {
@@ -94,6 +103,9 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<File?> cacheLyric(String lyricId, String? content) async {
+    if (kIsWeb) {
+      return null;
+    }
     LogHelper.get().info('start cache lyric');
     if (content == null || content == '') {
       return null;
@@ -111,6 +123,9 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<bool> deleteLyric(String lyricId) async {
+    if (kIsWeb) {
+      return false;
+    }
     LogHelper.get().info('start delete cache lyric $lyricId');
     if (lyricId == '') {
       return false;
@@ -128,6 +143,9 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<String?> getLyric(String lyricId) async {
+    if (kIsWeb) {
+      return null;
+    }
     LogHelper.get().info('get lyric from cache $lyricId');
     File cacheFile = File(joinAll([
       (Directory(join((await getTemporaryDirectory()).path, 'lyric_cache')))
@@ -143,6 +161,9 @@ class CacheModel extends ChangeNotifier {
 
   Future<File?> cacheCover(
       String musicId, List<int>? by, String? mimeType) async {
+    if (kIsWeb) {
+      return null;
+    }
     if (null == by) {
       return null;
     }
@@ -172,7 +193,10 @@ class CacheModel extends ChangeNotifier {
     return cacheFile;
   }
 
-  Future<File> getCover(String musicId) async {
+  Future<File?> getCover(String musicId) async {
+    if (kIsWeb) {
+      return null;
+    }
     File extFile = File(joinAll([
       (Directory(join((await getTemporaryDirectory()).path, 'cover_ext_cache')))
           .path,
@@ -193,24 +217,32 @@ class CacheModel extends ChangeNotifier {
     return cacheFile;
   }
 
-  Future<File> getDefaultCover() async {
+  Future<Uint8List> getDefaultCover() async {
+    if (kIsWeb) {
+      ByteData data = await rootBundle.load("asserts/images/default_cover.jpg");
+      return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    }
     File defaultCoverFile = File(joinAll([
       (Directory(
               join((await getApplicationDocumentsDirectory()).path, 'cover')))
           .path,
       "default_cover.jpg"
     ]));
+    Uint8List? bytes;
     if (!defaultCoverFile.existsSync()) {
       defaultCoverFile = await defaultCoverFile.create(recursive: true);
       ByteData data = await rootBundle.load("asserts/images/default_cover.jpg");
-      List<int> bytes =
-          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
       await defaultCoverFile.writeAsBytes(bytes);
     }
-    return defaultCoverFile;
+    bytes ??= await defaultCoverFile.readAsBytes();
+    return bytes;
   }
 
   Future<bool> deleteCover(String musicId) async {
+    if (kIsWeb) {
+      return false;
+    }
     LogHelper.get().info('start delete cache cover $musicId');
     if (musicId == '') {
       return false;
@@ -242,6 +274,9 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<bool> deleteMusicCacheByMusicId(String musicId) async {
+    if (kIsWeb) {
+      return false;
+    }
     Uri uri = Uri.parse(HttpHelper.get().getMusicUrl(musicId));
     File cacheFile = File(joinAll([
       (Directory(

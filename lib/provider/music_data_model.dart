@@ -210,8 +210,8 @@ class MusicDataModel extends ChangeNotifier {
 
   Future<void> _initCover(String musicId) async {
     if (CacheModel.get().enableCoverCache) {
-      File coverFromCache = await CacheModel.get().getCover(musicId);
-      if (coverFromCache.existsSync()) {
+      File? coverFromCache = await CacheModel.get().getCover(musicId);
+      if (null != coverFromCache && coverFromCache.existsSync()) {
         _coverBase64 = await coverFromCache.readAsBytes();
         notifyListeners();
         return;
@@ -220,8 +220,7 @@ class MusicDataModel extends ChangeNotifier {
     Tuple2<String?, List<int>?> coverBytes =
         await HttpHelper.get().getCover(musicId);
     if (coverBytes.item2 == null) {
-      File defaultCoverFile = await CacheModel.get().getDefaultCover();
-      _coverBase64 = await defaultCoverFile.readAsBytes();
+      _coverBase64 = await CacheModel.get().getDefaultCover();
       notifyListeners();
       return;
     }
