@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 
@@ -12,14 +13,10 @@ class MusicChannel {
   }
 
   static const _methodChannel = MethodChannel('yunshu.music/method_channel');
-  static const _playbackStateEventChannel =
-      EventChannel('yunshu.music/playback_state_event_channel');
-  static const _metadataEventChannel =
-      EventChannel('yunshu.music/metadata_event_channel');
 
-  late Stream playbackStateEvent;
+  late Stream<dynamic> playbackStateEvent;
 
-  late Stream metadataEvent;
+  late Stream<dynamic> metadataEvent;
 
   Future<void> init() async {
     _methodChannel.setMethodCallHandler((call) async {
@@ -29,8 +26,28 @@ class MusicChannel {
         default:
       }
     });
-    playbackStateEvent = _playbackStateEventChannel.receiveBroadcastStream();
-    metadataEvent = _metadataEventChannel.receiveBroadcastStream();
+    if (kIsWeb) {
+      StreamController<dynamic> playbackStateController = StreamController<dynamic>();
+      playbackStateEvent = playbackStateController.stream;
+      const MethodChannel('yunshu.music/playback_state_event_channel')
+          .setMethodCallHandler((call) async {
+        playbackStateController.sink.add(call.arguments);
+      });
+
+      StreamController<dynamic> metadataEventController = StreamController<dynamic>();
+      metadataEvent = metadataEventController.stream;
+      const MethodChannel('yunshu.music/metadata_event_channel')
+          .setMethodCallHandler((call) async {
+        metadataEventController.sink.add(call.arguments);
+      });
+    } else {
+      EventChannel _playbackStateEventChannel =
+          const EventChannel('yunshu.music/playback_state_event_channel');
+      playbackStateEvent = _playbackStateEventChannel.receiveBroadcastStream();
+      EventChannel _metadataEventChannel =
+          const EventChannel('yunshu.music/metadata_event_channel');
+      metadataEvent = _metadataEventChannel.receiveBroadcastStream();
+    }
   }
 
   Future<void> initMethod() async {

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:move_to_background/move_to_background.dart';
 import 'package:yunshu_music/page/music_list/component/music_list.dart';
@@ -14,7 +15,9 @@ class MusicIndexPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        MoveToBackground.moveTaskToBack();
+        if (!kIsWeb) {
+          MoveToBackground.moveTaskToBack();
+        }
         return false;
       },
       child: Scaffold(
