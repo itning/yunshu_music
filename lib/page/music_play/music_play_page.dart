@@ -35,6 +35,11 @@ class MusicPlayPage extends StatelessWidget {
             backgroundColor: Colors.transparent,
           ),
           body: PageView.builder(
+            scrollBehavior:
+                ScrollConfiguration.of(context).copyWith(dragDevices: {
+              PointerDeviceKind.touch,
+              PointerDeviceKind.mouse,
+            }),
             itemCount: 2,
             itemBuilder: (BuildContext context, int index) {
               if (index == 0) {
@@ -56,8 +61,8 @@ class BackgroundPicture extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Uint8List? coverBase64 =
-    context.select<MusicDataModel, Uint8List?>((value) => value.coverBase64);
+    Uint8List? coverBase64 = context
+        .select<MusicDataModel, Uint8List?>((value) => value.coverBase64);
     return ImageFade(
       excludeFromSemantics: true,
       fit: BoxFit.cover,

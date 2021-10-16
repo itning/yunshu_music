@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -63,19 +64,25 @@ class _MusicListState extends State<MusicList> {
             if (musicList.isEmpty) {
               return const _InnerShimmer();
             }
-            return Scrollbar(
-              child: ListView.builder(
-                  itemCount: musicList.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    MusicDataContent music = musicList[index];
-                    return _InnerListItem(
-                      index: index,
-                      name: music.name ?? '',
-                      singer: music.singer ?? '',
-                      musicId: music.musicId ?? '',
-                      lyricId: music.lyricId ?? '',
-                    );
-                  }),
+            return ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+              }),
+              child: Scrollbar(
+                child: ListView.builder(
+                    itemCount: musicList.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      MusicDataContent music = musicList[index];
+                      return _InnerListItem(
+                        index: index,
+                        name: music.name ?? '',
+                        singer: music.singer ?? '',
+                        musicId: music.musicId ?? '',
+                        lyricId: music.lyricId ?? '',
+                      );
+                    }),
+              ),
             );
           }),
     );
@@ -206,7 +213,9 @@ class _InnerListItem extends StatelessWidget {
                       onTap: () {
                         showDeleteConfirmDialog(context).then((value) {
                           if (value ?? false) {
-                            CacheModel.get().deleteMusicCacheByMusicId(musicId).then((value) {
+                            CacheModel.get()
+                                .deleteMusicCacheByMusicId(musicId)
+                                .then((value) {
                               if (value) {
                                 Fluttertoast.showToast(msg: "删除歌曲缓存成功");
                               } else {
