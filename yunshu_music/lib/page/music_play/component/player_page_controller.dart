@@ -19,6 +19,7 @@ class PlayerPageController extends StatelessWidget {
             if (playMode == 'sequence') {
               return IconButton(
                 color: Colors.white,
+                tooltip: '列表循环',
                 iconSize: 30,
                 icon: const Icon(Icons.format_list_numbered),
                 onPressed: () => context.read<MusicDataModel>().nextPlayMode(),
@@ -26,6 +27,7 @@ class PlayerPageController extends StatelessWidget {
             } else if (playMode == 'randomly') {
               return IconButton(
                 color: Colors.white,
+                tooltip: '随机播放',
                 iconSize: 30,
                 icon: const Icon(Icons.shuffle),
                 onPressed: () => context.read<MusicDataModel>().nextPlayMode(),
@@ -33,6 +35,7 @@ class PlayerPageController extends StatelessWidget {
             } else {
               return IconButton(
                 color: Colors.white,
+                tooltip: '单曲循环',
                 iconSize: 30,
                 icon: const Icon(Icons.loop),
                 onPressed: () => context.read<MusicDataModel>().nextPlayMode(),
@@ -42,6 +45,7 @@ class PlayerPageController extends StatelessWidget {
         ),
         IconButton(
           color: Colors.white,
+          tooltip: '上一曲',
           iconSize: 35,
           icon: const Icon(Icons.skip_previous_outlined),
           onPressed: () {
@@ -68,6 +72,7 @@ class PlayerPageController extends StatelessWidget {
             return status.item1
                 ? IconButton(
                     color: Colors.white,
+                    tooltip: '暂停',
                     iconSize: 35,
                     icon: const Icon(Icons.pause),
                     onPressed: () {
@@ -78,6 +83,7 @@ class PlayerPageController extends StatelessWidget {
                   )
                 : IconButton(
                     color: Colors.white,
+                    tooltip: '播放',
                     iconSize: 35,
                     icon: const Icon(Icons.play_arrow),
                     onPressed: () {
@@ -90,6 +96,7 @@ class PlayerPageController extends StatelessWidget {
         ),
         IconButton(
           icon: const Icon(Icons.skip_next_outlined),
+          tooltip: '下一曲',
           color: Colors.white,
           iconSize: 35,
           onPressed: () {
@@ -98,6 +105,7 @@ class PlayerPageController extends StatelessWidget {
         ),
         IconButton(
           icon: const Icon(Icons.playlist_play),
+          tooltip: '播放列表',
           color: Colors.white,
           iconSize: 35,
           onPressed: () => showPlayList(context),

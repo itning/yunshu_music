@@ -103,6 +103,7 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                             return status.item1
                                 ? IconButton(
                                     icon: const Icon(Icons.pause),
+                                    tooltip: '暂停',
                                     onPressed: () {
                                       PlayStatusModel playStatusModel =
                                           context.read<PlayStatusModel>();
@@ -111,6 +112,7 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                                   )
                                 : IconButton(
                                     icon: const Icon(Icons.play_arrow),
+                                    tooltip: '播放',
                                     onPressed: () {
                                       PlayStatusModel playStatusModel =
                                           context.read<PlayStatusModel>();
