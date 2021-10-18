@@ -128,7 +128,7 @@ packages:
   flutter_rest_template:
     dependency: "direct main"
     description:
-      path: "../flutter_rest_template"
+      path: "../../flutter_rest_template"
       relative: true
     source: path
     version: "0.0.1"
