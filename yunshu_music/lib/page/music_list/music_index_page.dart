@@ -25,12 +25,14 @@ class MusicIndexPage extends StatelessWidget {
           title: const Text('云舒音乐'),
           actions: [
             IconButton(
+              tooltip: '搜索',
               onPressed: () {
                 showSearch(context: context, delegate: MusicSearchDelegate());
               },
               icon: const Icon(Icons.search),
             ),
             PopupMenuButton<String>(
+              tooltip: '菜单',
               onSelected: (value) {
                 if (value == '设置') {
                   AppRouterDelegate.of(context).push('/setting');
