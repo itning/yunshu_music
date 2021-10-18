@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
@@ -53,6 +54,12 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
       child: Consumer<ThemeModel>(
         builder: (_, theme, __) {
           return MaterialApp.router(
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale.fromSubtags(languageCode: 'zh')],
             darkTheme: ThemeData.dark(),
             themeMode: theme.themeMode,
             title: '云舒音乐',
