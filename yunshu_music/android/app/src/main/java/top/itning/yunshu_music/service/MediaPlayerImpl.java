@@ -12,6 +12,7 @@ import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.v4.media.MediaMetadataCompat;
@@ -42,6 +43,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     private boolean playNow = false;
     private final AudioFocusRequest focusRequest;
     private final AudioManager audioManager;
+    private final WifiManager.WifiLock wifiLock;
 
     public MediaPlayerImpl(@NonNull MusicBrowserService context, @NonNull MediaSessionCompat session) {
         Log.d(TAG, "MediaPlayerImpl Constructor");
@@ -85,6 +87,8 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                 .setAcceptsDelayedFocusGain(true)
                 .setOnAudioFocusChangeListener(this)
                 .build();
+        wifiLock = ((WifiManager) context.getSystemService(Context.WIFI_SERVICE))
+                .createWifiLock(WifiManager.WIFI_MODE_FULL, "YunShuMusic");
     }
 
     @Override
@@ -111,6 +115,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
             Log.i(TAG, "request audio focus：AUDIOFOCUS_REQUEST_DELAYED");
             return;
         }
+        wifiLock.acquire();
         mediaPlayer.start();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1.0f)
@@ -127,6 +132,9 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
         Log.d(TAG, "onPause");
         context.unregisterReceiver(noisyAudioStreamReceiver);
         mediaPlayer.pause();
+        if (wifiLock.isHeld()) {
+            wifiLock.release();
+        }
         int resp = audioManager.abandonAudioFocusRequest(focusRequest);
         if (resp == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             Log.d(TAG, "on pause abandon audio focus request granted");
@@ -147,6 +155,9 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
         Log.d(TAG, "onStop");
         context.unregisterReceiver(noisyAudioStreamReceiver);
         mediaPlayer.stop();
+        if (wifiLock.isHeld()) {
+            wifiLock.release();
+        }
         int resp = audioManager.abandonAudioFocusRequest(focusRequest);
         if (resp == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             Log.d(TAG, "on stop abandon audio focus request granted");
@@ -294,6 +305,9 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                 Log.d(TAG, "onAudioFocusChange AUDIOFOCUS_LOSS_TRANSIENT");
                 context.unregisterReceiver(noisyAudioStreamReceiver);
                 mediaPlayer.pause();
+                if (wifiLock.isHeld()) {
+                    wifiLock.release();
+                }
                 state = new PlaybackStateCompat.Builder()
                         .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1.0f)
                         .setBufferedPosition(state.getBufferedPosition())
@@ -307,6 +321,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
             case AudioManager.AUDIOFOCUS_GAIN:
                 Log.d(TAG, "onAudioFocusChange AUDIOFOCUS_GAIN");
                 context.registerReceiver(noisyAudioStreamReceiver, intentFilter);
+                wifiLock.acquire();
                 mediaPlayer.start();
                 state = new PlaybackStateCompat.Builder()
                         .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1.0f)
@@ -324,6 +339,9 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                 Log.d(TAG, "onAudioFocusChange AUDIOFOCUS_LOSS");
                 context.unregisterReceiver(noisyAudioStreamReceiver);
                 mediaPlayer.pause();
+                if (wifiLock.isHeld()) {
+                    wifiLock.release();
+                }
                 state = new PlaybackStateCompat.Builder()
                         .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1.0f)
                         .setBufferedPosition(state.getBufferedPosition())
