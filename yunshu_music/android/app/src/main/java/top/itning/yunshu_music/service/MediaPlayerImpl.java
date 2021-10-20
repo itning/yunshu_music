@@ -20,6 +20,10 @@ import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.audio.AudioAttributes;
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource;
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
+
+import top.itning.yunshu_music.util.HttpClient;
 
 /**
  * @author itning
@@ -63,6 +67,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
                 .setAudioAttributes(audioAttributes, true)
                 .setHandleAudioBecomingNoisy(true)
                 //.setMediaSourceFactory(new DefaultMediaSourceFactory(cacheDataSourceFactory))
+                .setMediaSourceFactory(new DefaultMediaSourceFactory(new OkHttpDataSource.Factory(HttpClient.OK_HTTP_CLIENT)))
                 .build();
         player.addListener(this);
         updatePositionHandler = new Handler(player.getApplicationLooper());
