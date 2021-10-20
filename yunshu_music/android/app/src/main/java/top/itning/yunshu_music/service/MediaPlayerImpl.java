@@ -41,6 +41,17 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
         Log.d(TAG, "MediaPlayerImpl Constructor");
         this.context = context;
         this.session = session;
+//        HttpDataSource.Factory httpDataSourceFactory =
+//                new DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true);
+//        SimpleCache simpleCache = new SimpleCache(
+//                new File(context.getCacheDir() + "/music_cache"),
+//                new NoOpCacheEvictor(),
+//                new DefaultDatabaseProvider(new ExoDatabaseProvider(context))
+//        );
+//        DataSource.Factory cacheDataSourceFactory =
+//                new CacheDataSource.Factory()
+//                        .setCache(simpleCache)
+//                        .setUpstreamDataSourceFactory(httpDataSourceFactory);
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setContentType(C.CONTENT_TYPE_MUSIC)
                 //.setFlags()
@@ -51,6 +62,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
                 .setWakeMode(C.WAKE_MODE_NETWORK)
                 .setAudioAttributes(audioAttributes, true)
                 .setHandleAudioBecomingNoisy(true)
+                //.setMediaSourceFactory(new DefaultMediaSourceFactory(cacheDataSourceFactory))
                 .build();
         player.addListener(this);
         updatePositionHandler = new Handler(player.getApplicationLooper());
@@ -209,7 +221,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
     @Override
     public void onPlayerError(@NonNull PlaybackException error) {
         Log.w(TAG, "onPlayerError ", error);
-        Toast.makeText(context,  error.getErrorCodeName(), Toast.LENGTH_LONG).show();
+        Toast.makeText(context, error.getErrorCodeName(), Toast.LENGTH_LONG).show();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_ERROR, 0, 1.0f)
                 .build();
