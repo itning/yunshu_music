@@ -3,92 +3,83 @@ package top.itning.yunshu_music.service;
 import static top.itning.yunshu_music.channel.MusicChannel.musicPlayDataService;
 import static top.itning.yunshu_music.service.MusicBrowserService.ACTIONS;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.media.AudioAttributes;
-import android.media.AudioFocusRequest;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.net.Uri;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.os.PowerManager;
+import android.os.Handler;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
+import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.PlaybackException;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.audio.AudioAttributes;
 
 /**
  * @author itning
  * @since 2021/10/11 10:20
  */
-public class MediaPlayerImpl extends MediaSessionCompat.Callback implements MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnBufferingUpdateListener, AudioManager.OnAudioFocusChangeListener {
+public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Player.Listener {
 
     private static final String TAG = "MediaPlayerImpl";
-    private final MediaPlayer mediaPlayer;
     private final MusicBrowserService context;
     private final MediaSessionCompat session;
     private final MusicNotificationService musicNotificationService;
-    private final IntentFilter intentFilter;
-    private final BecomingNoisyReceiver noisyAudioStreamReceiver;
     private PlaybackStateCompat state;
     private boolean playNow = false;
-    private final AudioFocusRequest focusRequest;
-    private final AudioManager audioManager;
-    private final WifiManager.WifiLock wifiLock;
+    private final SimpleExoPlayer player;
+    private final Handler updatePositionHandler;
+    private final Runnable updatePositionRunnable;
 
     public MediaPlayerImpl(@NonNull MusicBrowserService context, @NonNull MediaSessionCompat session) {
         Log.d(TAG, "MediaPlayerImpl Constructor");
         this.context = context;
         this.session = session;
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
-        mediaPlayer.setOnErrorListener(this);
-        mediaPlayer.setOnPreparedListener(this);
-        mediaPlayer.setOnCompletionListener(this);
-        mediaPlayer.setOnBufferingUpdateListener(this);
-        noisyAudioStreamReceiver = new BecomingNoisyReceiver();
-        intentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (mediaPlayer.isPlaying()) {
-                    state = new PlaybackStateCompat.Builder()
-                            .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1.0f)
-                            .setBufferedPosition(state.getBufferedPosition())
-                            .setActions(ACTIONS)
-                            .build();
-                    session.setPlaybackState(state);
-                }
-            }
-        }, 0, 500);
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setContentType(C.CONTENT_TYPE_MUSIC)
+                //.setFlags()
+                .setAllowedCapturePolicy(C.ALLOW_CAPTURE_BY_ALL)
+                .setUsage(C.USAGE_MEDIA)
+                .build();
+        player = new SimpleExoPlayer.Builder(context)
+                .setWakeMode(C.WAKE_MODE_NETWORK)
+                .setAudioAttributes(audioAttributes, true)
+                .setHandleAudioBecomingNoisy(true)
+                .build();
+        player.addListener(this);
+        updatePositionHandler = new Handler(player.getApplicationLooper());
+        updatePositionRunnable = this::updatePosition;
         musicNotificationService = new MusicNotificationService(session, context);
         musicNotificationService.generateNotification("云舒音乐", null, null, null);
+    }
 
-        // 在 Android 8.0（API 级别 26）中，
-        // 当其他应用使用 AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK 请求焦点时，
-        // 系统可以在不调用应用的 onAudioFocusChange() 回调的情况下降低和恢复音量。
-        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                .build();
-        focusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                .setAudioAttributes(audioAttributes)
-                .setAcceptsDelayedFocusGain(true)
-                .setOnAudioFocusChangeListener(this)
-                .build();
-        wifiLock = ((WifiManager) context.getSystemService(Context.WIFI_SERVICE))
-                .createWifiLock(WifiManager.WIFI_MODE_FULL, "YunShuMusic");
+    private void updatePosition() {
+        updatePositionHandler.removeCallbacks(updatePositionRunnable);
+        if (player.isPlaying()) {
+            state = new PlaybackStateCompat.Builder()
+                    .setState(PlaybackStateCompat.STATE_PLAYING, player.getCurrentPosition(), 1.0f)
+                    .setBufferedPosition(player.getBufferedPosition())
+                    .setActions(ACTIONS)
+                    .build();
+            session.setPlaybackState(state);
+        } else if (null != state) {
+            state = new PlaybackStateCompat.Builder()
+                    .setState(state.getState(), player.getCurrentPosition(), 1.0f)
+                    .setBufferedPosition(player.getBufferedPosition())
+                    .setActions(ACTIONS)
+                    .build();
+            session.setPlaybackState(state);
+        }
+        int playbackState = player.getPlaybackState();
+        if (playbackState != Player.STATE_IDLE && playbackState != Player.STATE_ENDED) {
+            updatePositionHandler.postDelayed(updatePositionRunnable, 500);
+        }
     }
 
     @Override
@@ -104,45 +95,22 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     @Override
     public void onPlay() {
         Log.d(TAG, "onPlay");
-        context.registerReceiver(noisyAudioStreamReceiver, intentFilter);
-        int res = audioManager.requestAudioFocus(focusRequest);
-        if (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            Log.d(TAG, "request audio focus：AUDIOFOCUS_REQUEST_GRANTED");
-        } else if (res == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-            Log.w(TAG, "request audio focus：AUDIOFOCUS_REQUEST_FAILED");
-            return;
-        } else if (res == AudioManager.AUDIOFOCUS_REQUEST_DELAYED) {
-            Log.i(TAG, "request audio focus：AUDIOFOCUS_REQUEST_DELAYED");
-            return;
-        }
-        wifiLock.acquire();
-        mediaPlayer.start();
+        player.play();
         state = new PlaybackStateCompat.Builder()
-                .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1.0f)
+                .setState(PlaybackStateCompat.STATE_PLAYING, player.getCurrentPosition(), 1.0f)
                 .setBufferedPosition(state.getBufferedPosition())
                 .setActions(ACTIONS)
                 .build();
         session.setPlaybackState(state);
-        Log.i(TAG, "PlaySpeed：" + mediaPlayer.getPlaybackParams().getSpeed());
         musicNotificationService.updateNotification();
     }
 
     @Override
     public void onPause() {
         Log.d(TAG, "onPause");
-        context.unregisterReceiver(noisyAudioStreamReceiver);
-        mediaPlayer.pause();
-        if (wifiLock.isHeld()) {
-            wifiLock.release();
-        }
-        int resp = audioManager.abandonAudioFocusRequest(focusRequest);
-        if (resp == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            Log.d(TAG, "on pause abandon audio focus request granted");
-        } else if (resp == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-            Log.w(TAG, "on pause abandon audio focus request failed");
-        }
+        player.pause();
         state = new PlaybackStateCompat.Builder()
-                .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1.0f)
+                .setState(PlaybackStateCompat.STATE_PAUSED, player.getCurrentPosition(), 1.0f)
                 .setBufferedPosition(state.getBufferedPosition())
                 .setActions(ACTIONS)
                 .build();
@@ -153,17 +121,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     @Override
     public void onStop() {
         Log.d(TAG, "onStop");
-        context.unregisterReceiver(noisyAudioStreamReceiver);
-        mediaPlayer.stop();
-        if (wifiLock.isHeld()) {
-            wifiLock.release();
-        }
-        int resp = audioManager.abandonAudioFocusRequest(focusRequest);
-        if (resp == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            Log.d(TAG, "on stop abandon audio focus request granted");
-        } else if (resp == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-            Log.w(TAG, "on stop abandon audio focus request failed");
-        }
+        player.stop();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_STOPPED, 0, 1.0f)
                 .setActions(ACTIONS)
@@ -174,9 +132,9 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     @Override
     public void onSeekTo(long pos) {
         Log.d(TAG, "onSeekTo " + pos);
-        int duration = mediaPlayer.getDuration();
-        int msec = pos > duration ? duration : (int) pos;
-        mediaPlayer.seekTo(msec);
+        long duration = player.getDuration();
+        long msec = Math.min(pos, duration);
+        player.seekTo(msec);
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_PLAYING, msec, 1.0f)
                 .setBufferedPosition(state.getBufferedPosition())
@@ -188,7 +146,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     @Override
     public void onSkipToPrevious() {
         Log.d(TAG, "onSkipToPrevious");
-        mediaPlayer.reset();
+        player.stop();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS, 0, 1.0f)
                 .setActions(ACTIONS)
@@ -201,7 +159,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     @Override
     public void onSkipToNext() {
         Log.d(TAG, "onSkipToNext");
-        mediaPlayer.reset();
+        player.stop();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, 0, 1.0f)
                 .setActions(ACTIONS)
@@ -212,77 +170,76 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
     }
 
     @Override
-    public void onPrepared(MediaPlayer mp) {
-        Log.d(TAG, "onPrepared " + mp.getDuration());
-        setMetaData();
-        state = new PlaybackStateCompat.Builder()
-                .setState(PlaybackStateCompat.STATE_PAUSED, 0, 1.0f)
-                .setActions(ACTIONS)
-                .build();
-        mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed(1.0f));
-        mediaPlayer.pause();
-        if (playNow) {
-            this.onPlay();
-        } else {
-            playNow = true;
+    public void onPlaybackStateChanged(int playbackState) {
+        updatePosition();
+        switch (playbackState) {
+            case Player.STATE_IDLE:
+                Log.d(TAG, "onPlaybackStateChanged STATE_IDLE");
+                break;
+            case Player.STATE_BUFFERING:
+                Log.d(TAG, "onPlaybackStateChanged STATE_BUFFERING");
+                break;
+            case Player.STATE_READY:
+                Log.d(TAG, "onPlaybackStateChanged STATE_READY");
+                setMetaData();
+                state = new PlaybackStateCompat.Builder()
+                        .setState(PlaybackStateCompat.STATE_PAUSED, 0, 1.0f)
+                        .setActions(ACTIONS)
+                        .build();
+                session.setPlaybackState(state);
+                if (playNow) {
+                    this.onPlay();
+                } else {
+                    playNow = true;
+                }
+                break;
+            case Player.STATE_ENDED:
+                Log.d(TAG, "onPlaybackStateChanged STATE_ENDED");
+                state = new PlaybackStateCompat.Builder()
+                        .setState(PlaybackStateCompat.STATE_NONE, player.getCurrentPosition(), 1.0f)
+                        .setBufferedPosition(state.getBufferedPosition())
+                        .setActions(ACTIONS)
+                        .build();
+                session.setPlaybackState(state);
+                this.onSkipToNext();
+                break;
         }
     }
 
     @Override
-    public void onBufferingUpdate(MediaPlayer mp, int percent) {
-        state = new PlaybackStateCompat.Builder()
-                .setState(state.getState(), mediaPlayer.getCurrentPosition(), 1.0f)
-                .setBufferedPosition(percent)
-                .setActions(ACTIONS)
-                .build();
-        session.setPlaybackState(state);
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        Log.d(TAG, "onCompletion");
-        state = new PlaybackStateCompat.Builder()
-                .setState(PlaybackStateCompat.STATE_NONE, mediaPlayer.getCurrentPosition(), 1.0f)
-                .setBufferedPosition(state.getBufferedPosition())
-                .setActions(ACTIONS)
-                .build();
-        session.setPlaybackState(state);
-        this.onSkipToNext();
-    }
-
-    @Override
-    public boolean onError(MediaPlayer mp, int what, int extra) {
-        Log.e(TAG, "onError what " + what + " extra " + extra);
+    public void onPlayerError(@NonNull PlaybackException error) {
+        Log.w(TAG, "onPlayerError ", error);
+        Toast.makeText(context,  error.getErrorCodeName(), Toast.LENGTH_LONG).show();
         state = new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_ERROR, 0, 1.0f)
                 .build();
         session.setPlaybackState(state);
-        mp.reset();
-        return true;
     }
 
     private void initPlay() {
         setMetaData(0);
         musicNotificationService.updateNotification();
-        try {
-            mediaPlayer.reset();
-            mediaPlayer.setDataSource(context, musicPlayDataService.getNowPlayMusic().getDescription().getMediaUri());
-            mediaPlayer.prepareAsync();
-            state = new PlaybackStateCompat.Builder()
-                    .setState(PlaybackStateCompat.STATE_CONNECTING, 0, 1.0f)
-                    .setActions(ACTIONS)
-                    .build();
-            session.setPlaybackState(state);
-        } catch (IOException e) {
-            Log.e(TAG, "setDataSource exception", e);
+
+        Uri mediaUri = musicPlayDataService.getNowPlayMusic().getDescription().getMediaUri();
+        if (null == mediaUri) {
+            return;
         }
+
+        MediaItem mediaItem = MediaItem.fromUri(mediaUri);
+        player.setMediaItem(mediaItem);
+        player.prepare();
+        state = new PlaybackStateCompat.Builder()
+                .setState(PlaybackStateCompat.STATE_CONNECTING, 0, 1.0f)
+                .setActions(ACTIONS)
+                .build();
+        session.setPlaybackState(state);
     }
 
     private void setMetaData() {
-        this.setMetaData(mediaPlayer.getDuration());
+        this.setMetaData(player.getDuration());
     }
 
-    private void setMetaData(int duration) {
+    private void setMetaData(long duration) {
         Uri iconUri = musicPlayDataService.getNowPlayMusic().getDescription().getIconUri();
         String artUri = iconUri == null ? null : iconUri.toString();
         session.setMetadata(new MediaMetadataCompat.Builder()
@@ -293,80 +250,5 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Medi
                 .putString("android.media.metadata.LYRIC_URI", musicPlayDataService.getNowPlayLyricUri())
                 .putText(MediaMetadataCompat.METADATA_KEY_ART_URI, artUri)
                 .build());
-    }
-
-    @Override
-    public void onAudioFocusChange(int focusChange) {
-        switch (focusChange) {
-            // 短暂性丢失焦点，当其他应用申请AUDIOFOCUS_GAIN_TRANSIENT或AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE时，会触发此回调事件
-            // 例如播放短视频，拨打电话等。
-            // 通常需要暂停音乐播放
-            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                Log.d(TAG, "onAudioFocusChange AUDIOFOCUS_LOSS_TRANSIENT");
-                context.unregisterReceiver(noisyAudioStreamReceiver);
-                mediaPlayer.pause();
-                if (wifiLock.isHeld()) {
-                    wifiLock.release();
-                }
-                state = new PlaybackStateCompat.Builder()
-                        .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1.0f)
-                        .setBufferedPosition(state.getBufferedPosition())
-                        .setActions(ACTIONS)
-                        .build();
-                session.setPlaybackState(state);
-                musicNotificationService.updateNotification();
-                break;
-            // 当其他应用申请焦点之后又释放焦点会触发此回调
-            // 可重新播放音乐
-            case AudioManager.AUDIOFOCUS_GAIN:
-                Log.d(TAG, "onAudioFocusChange AUDIOFOCUS_GAIN");
-                context.registerReceiver(noisyAudioStreamReceiver, intentFilter);
-                wifiLock.acquire();
-                mediaPlayer.start();
-                state = new PlaybackStateCompat.Builder()
-                        .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1.0f)
-                        .setBufferedPosition(state.getBufferedPosition())
-                        .setActions(ACTIONS)
-                        .build();
-                session.setPlaybackState(state);
-                Log.i(TAG, "PlaySpeed：" + mediaPlayer.getPlaybackParams().getSpeed());
-                musicNotificationService.updateNotification();
-                break;
-            // 长时间丢失焦点,当其他应用申请的焦点为AUDIOFOCUS_GAIN时，会触发此回调事件
-            // 例如播放QQ音乐，网易云音乐等
-            // 此时应当暂停音频并释放音频相关的资源。
-            case AudioManager.AUDIOFOCUS_LOSS:
-                Log.d(TAG, "onAudioFocusChange AUDIOFOCUS_LOSS");
-                context.unregisterReceiver(noisyAudioStreamReceiver);
-                mediaPlayer.pause();
-                if (wifiLock.isHeld()) {
-                    wifiLock.release();
-                }
-                state = new PlaybackStateCompat.Builder()
-                        .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1.0f)
-                        .setBufferedPosition(state.getBufferedPosition())
-                        .setActions(ACTIONS)
-                        .build();
-                session.setPlaybackState(state);
-                musicNotificationService.updateNotification();
-                break;
-            // 短暂性丢失焦点并作降音处理，当其他应用申请AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK时，会触发此回调事件
-            // 通常需要降低音量
-            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                Log.d(TAG, "onAudioFocusChange AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
-                break;
-        }
-    }
-
-    private class BecomingNoisyReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
-                Log.d(TAG, "receive audio becoming noisy");
-                if (mediaPlayer.isPlaying()) {
-                    MediaPlayerImpl.this.onPause();
-                }
-            }
-        }
     }
 }

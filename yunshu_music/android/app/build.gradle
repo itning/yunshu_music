@@ -74,6 +74,7 @@ flutter {
 }
 
 dependencies{
+    implementation 'com.google.android.exoplayer:exoplayer:2.15.0'
     implementation 'androidx.media2:media2-session:1.2.0'
     implementation 'com.tencent:mmkv-static:1.2.10'
     implementation 'com.github.bumptech.glide:glide:4.12.0'
