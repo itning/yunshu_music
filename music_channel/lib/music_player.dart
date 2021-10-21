@@ -27,6 +27,11 @@ class MusicPlayer {
   void musicChangeEventHandlers(dynamic) {
     if (!_audio.currentTime.isNaN && !_audio.duration.isNaN) {
       _playbackState.position = numSecond2Millisecond(_audio.currentTime);
+      var timeRanges = _audio.buffered;
+      var length = timeRanges.length;
+      _playbackState.bufferedPosition = numSecond2Millisecond(length == 0
+          ? 0
+          : timeRanges.end(length - 1) / _audio.duration * _audio.duration);
       _metaData.duration = numSecond2Millisecond(_audio.duration);
       MusicChannelWeb.playbackStateEventChannel
           .invokeMethod('', _playbackState.toMap());

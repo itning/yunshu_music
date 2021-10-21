@@ -44,9 +44,7 @@ class PlayStatusModel extends ChangeNotifier {
       notifyListeners();
     });
     MusicChannel.get().playbackStateEvent.listen((event) {
-      double bufferedPosition =
-          event['bufferedPosition'] / 100 * _duration.inMilliseconds;
-      _bufferedPosition = Duration(milliseconds: bufferedPosition.toInt());
+      _bufferedPosition = Duration(milliseconds: event['bufferedPosition']);
       _position = Duration(milliseconds: event['position']);
       _state = event['state'];
       notifyListeners();
