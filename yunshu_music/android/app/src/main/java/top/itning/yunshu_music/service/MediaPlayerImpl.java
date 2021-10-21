@@ -199,14 +199,14 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
             case Player.STATE_READY:
                 Log.d(TAG, "onPlaybackStateChanged STATE_READY");
                 setMetaData();
-                state = new PlaybackStateCompat.Builder()
-                        .setState(PlaybackStateCompat.STATE_PAUSED, 0, 1.0f)
-                        .setActions(ACTIONS)
-                        .build();
-                session.setPlaybackState(state);
                 if (playNow) {
                     this.onPlay();
                 } else {
+                    state = new PlaybackStateCompat.Builder()
+                            .setState(PlaybackStateCompat.STATE_PAUSED, 0, 1.0f)
+                            .setActions(ACTIONS)
+                            .build();
+                    session.setPlaybackState(state);
                     playNow = true;
                 }
                 break;
@@ -220,6 +220,22 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
                 session.setPlaybackState(state);
                 this.onSkipToNext();
                 break;
+        }
+    }
+
+    @Override
+    public void onIsPlayingChanged(boolean isPlaying) {
+        if (isPlaying) {
+            return;
+        }
+        if (player.getPlaybackState() == Player.STATE_READY) {
+            state = new PlaybackStateCompat.Builder()
+                    .setState(PlaybackStateCompat.STATE_PAUSED, player.getCurrentPosition(), 1.0f)
+                    .setBufferedPosition(state.getBufferedPosition())
+                    .setActions(ACTIONS)
+                    .build();
+            session.setPlaybackState(state);
+            musicNotificationService.updateNotification();
         }
     }
 
