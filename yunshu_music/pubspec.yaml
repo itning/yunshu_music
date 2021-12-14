@@ -43,7 +43,7 @@ dependencies:
   tuple: ^2.0.0
   dio: ^4.0.4
   move_to_background: ^1.0.2
-  shared_preferences: ^2.0.9
+  shared_preferences: ^2.0.11
   shimmer: ^2.0.0
   audio_video_progress_bar: ^0.10.0
   sqflite: ^2.0.1
@@ -51,7 +51,7 @@ dependencies:
   fluttertoast: ^8.0.8
   logger: ^1.1.0
   crypto: ^3.0.1
-  path_provider: ^2.0.7
+  path_provider: ^2.0.8
   mime_type: ^1.0.0
 
 dev_dependencies:
