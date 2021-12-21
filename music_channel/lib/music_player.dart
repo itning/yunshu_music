@@ -77,6 +77,14 @@ class MusicPlayer {
           .invokeMethod('', _playbackState.toMap());
     });
     _playbackState.state = 0;
+    // Media Session API
+    if (html.MediaStream.supported) {
+      print('Support MediaStream And Add ActionHandler');
+      html.window.navigator.mediaSession
+          ?.setActionHandler('previoustrack', () => onSkipToPrevious());
+      html.window.navigator.mediaSession
+          ?.setActionHandler('nexttrack', () => onSkipToNext());
+    }
   }
 
   void onPlayFromMediaId(String mediaId) {
@@ -143,6 +151,14 @@ class MusicPlayer {
     _metaData.title = nowPlayMusic.name ?? '';
     _metaData.subTitle = nowPlayMusic.singer ?? '';
     MusicChannelWeb.metadataEventChannel.invokeMethod('', _metaData.toMap());
+    // Media Session API
+    if (html.MediaStream.supported) {
+      print('Support MediaStream');
+      html.MediaMetadata metadata = html.MediaMetadata();
+      metadata.title = _metaData.title;
+      metadata.artist = _metaData.subTitle;
+      html.window.navigator.mediaSession?.metadata = metadata;
+    }
     _audio.load();
     _audio.pause();
   }
