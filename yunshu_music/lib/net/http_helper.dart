@@ -1,13 +1,8 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter_rest_template/flutter_rest_template.dart';
-import 'package:flutter_rest_template/impl/dio_client_http_request_factory.dart';
-import 'package:flutter_rest_template/response_entity.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:tuple/tuple.dart';
-import 'package:yunshu_music/net/model/music_entity.dart';
-import 'package:yunshu_music/net/model/music_meta_info_entity.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 class HttpHelper {
@@ -18,15 +13,12 @@ class HttpHelper {
     return _instance!;
   }
 
-  late final RestTemplate _restTemplate;
-
   late final Dio _dio;
 
   final String baseUrl = "https://music.itning.top";
 
   HttpHelper._() {
     _dio = Dio();
-    _restTemplate = RestTemplate(DioClientHttpRequestFactory(_dio));
   }
 
   CancelToken? _cancelToken;
@@ -80,33 +72,8 @@ class HttpHelper {
     }
   }
 
-  Future<ResponseEntity<MusicEntity>> getMusic() async {
-    ResponseEntity<Map<String, dynamic>> responseEntity =
-        await _restTemplate.getForMapEntry("$baseUrl/music?size=5000");
-    Map<String, dynamic>? body = responseEntity.body;
-    if (null != body) {
-      MusicEntity musicEntity = MusicEntity().fromJson(body);
-      return ResponseEntity(responseEntity.status,
-          body: musicEntity, headers: responseEntity.headers);
-    } else {
-      return ResponseEntity(responseEntity.status,
-          headers: responseEntity.headers);
-    }
-  }
-
-  Future<ResponseEntity<MusicMetaInfoEntity>> getMetaInfo(
-      String musicId) async {
-    ResponseEntity<Map<String, dynamic>> responseEntity = await _restTemplate
-        .getForMapEntry("$baseUrl/music/metaInfo?id=$musicId");
-    Map<String, dynamic>? body = responseEntity.body;
-    if (null != body) {
-      MusicMetaInfoEntity musicEntity = MusicMetaInfoEntity().fromJson(body);
-      return ResponseEntity(responseEntity.status,
-          body: musicEntity, headers: responseEntity.headers);
-    } else {
-      return ResponseEntity(responseEntity.status,
-          headers: responseEntity.headers);
-    }
+  Future<Response<Map<String, dynamic>>> getMusic() async {
+    return await _dio.get<Map<String, dynamic>>("$baseUrl/music?size=5000");
   }
 
   Future<String?> getLyric(String lyricId) async {

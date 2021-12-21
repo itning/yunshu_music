@@ -130,13 +130,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_rest_template:
-    dependency: "direct main"
-    description:
-      path: "../../flutter_rest_template"
-      relative: true
-    source: path
-    version: "0.0.1"
   flutter_test:
     dependency: "direct dev"
     description: flutter
