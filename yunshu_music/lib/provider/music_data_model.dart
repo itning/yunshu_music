@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rest_template/response_entity.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_util.dart';
@@ -67,18 +67,19 @@ class MusicDataModel extends ChangeNotifier {
         return null;
       }
     }
-    ResponseEntity<MusicEntity> responseEntity =
-        await HttpHelper.get().getMusic();
-    if (responseEntity.body == null) {
-      return '服务器<${responseEntity.status.value}> BODY NULL';
+    Response<Map<String, dynamic>> response = await HttpHelper.get().getMusic();
+    if (response.statusCode != 200) {
+      return '服务器状态${response.statusCode}';
     }
-    if (responseEntity.body!.code != 200 || responseEntity.body!.data == null) {
-      return responseEntity.body!.msg ?? '服务器错误';
+    if (response.data == null) {
+      return '响应信息为空';
     }
-    if (responseEntity.body!.data!.content == null) {
-      return null;
+    Map<String, dynamic> body = response.data!;
+    MusicEntity musicEntity = MusicEntity().fromJson(body);
+    if (musicEntity.data == null || musicEntity.data?.content == null) {
+      return musicEntity.msg ?? '服务器错误';
     }
-    _musicList = responseEntity.body!.data!.content!;
+    _musicList = musicEntity.data!.content!;
     CacheModel.get().cacheMusicList(_musicList);
     if (needInit) {
       await MusicChannel.get().initMethod();
