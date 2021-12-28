@@ -90,7 +90,7 @@ public class MusicPlayDataService {
             }
         }
         if (-1 == nowPlayIndex) {
-            this.next();
+            this.next(false);
         }
     }
 
@@ -135,7 +135,7 @@ public class MusicPlayDataService {
         kv.encode(NOW_PLAY_MEDIA_ID_KEY, nowPlayMusic.getMediaId());
     }
 
-    public void previous() {
+    public void previous(boolean userTrigger) {
         if (nowPlayIndex - 1 < 0) {
             // 需要新增
             switch (playMode) {
@@ -157,7 +157,7 @@ public class MusicPlayDataService {
                     // do nothing
                     break;
             }
-        } else {
+        } else if (userTrigger || playMode != MusicPlayMode.LOOP){
             nowPlayIndex--;
             nowPlayMusic = PLAY_LIST.get(nowPlayIndex);
         }
@@ -166,7 +166,7 @@ public class MusicPlayDataService {
         kv.encode(NOW_PLAY_MEDIA_ID_KEY, nowPlayMusic.getMediaId());
     }
 
-    public void next() {
+    public void next(boolean userTrigger) {
         if (nowPlayIndex + 1 >= PLAY_LIST.size()) {
             // 需要新增
             switch (playMode) {
@@ -188,7 +188,7 @@ public class MusicPlayDataService {
                     // do nothing
                     break;
             }
-        } else {
+        } else if (userTrigger || playMode != MusicPlayMode.LOOP) {
             nowPlayIndex++;
             nowPlayMusic = PLAY_LIST.get(nowPlayIndex);
         }

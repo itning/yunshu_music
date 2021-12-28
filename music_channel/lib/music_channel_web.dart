@@ -65,10 +65,10 @@ class MusicChannelWeb {
         MusicPlayer.get().onPause();
         break;
       case 'skipToPrevious':
-        MusicPlayer.get().onSkipToPrevious();
+        MusicPlayer.get().onSkipToPrevious(true);
         break;
       case 'skipToNext':
-        MusicPlayer.get().onSkipToNext();
+        MusicPlayer.get().onSkipToNext(true);
         break;
       case 'seekTo':
         dynamic pos = call.arguments['position'];

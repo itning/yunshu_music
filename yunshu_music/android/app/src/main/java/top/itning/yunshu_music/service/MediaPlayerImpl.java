@@ -169,7 +169,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
                 .setActions(ACTIONS)
                 .build();
         session.setPlaybackState(state);
-        musicPlayDataService.previous();
+        musicPlayDataService.previous(true);
         initPlay();
     }
 
@@ -182,7 +182,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
                 .setActions(ACTIONS)
                 .build();
         session.setPlaybackState(state);
-        musicPlayDataService.next();
+        musicPlayDataService.next(true);
         initPlay();
     }
 
@@ -218,7 +218,17 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
                         .setActions(ACTIONS)
                         .build();
                 session.setPlaybackState(state);
-                this.onSkipToNext();
+
+                Log.d(TAG, "onSkipToNext");
+                player.stop();
+                state = new PlaybackStateCompat.Builder()
+                        .setState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, 0, 1.0f)
+                        .setActions(ACTIONS)
+                        .build();
+                session.setPlaybackState(state);
+                musicPlayDataService.next(false);
+                initPlay();
+
                 break;
         }
     }

@@ -48,7 +48,7 @@ class MusicPlayer {
       _playbackState.state = 0;
       MusicChannelWeb.playbackStateEventChannel
           .invokeMethod('', _playbackState.toMap());
-      onSkipToNext();
+      onSkipToNext(false);
     });
 
     _audio.onCanPlay.listen((event) {
@@ -81,9 +81,9 @@ class MusicPlayer {
     if (html.MediaStream.supported) {
       print('Support MediaStream And Add ActionHandler');
       html.window.navigator.mediaSession
-          ?.setActionHandler('previoustrack', () => onSkipToPrevious());
+          ?.setActionHandler('previoustrack', () => onSkipToPrevious(true));
       html.window.navigator.mediaSession
-          ?.setActionHandler('nexttrack', () => onSkipToNext());
+          ?.setActionHandler('nexttrack', () => onSkipToNext(false));
     }
   }
 
@@ -118,21 +118,21 @@ class MusicPlayer {
     _audio.currentTime = position / 1000;
   }
 
-  void onSkipToPrevious() {
+  void onSkipToPrevious(bool userTrigger) {
     print('onSkipToPrevious');
     _playbackState.state = 9;
     MusicChannelWeb.playbackStateEventChannel
         .invokeMethod('', _playbackState.toMap());
-    MusicData.get().previous();
+    MusicData.get().previous(userTrigger);
     initPlay();
   }
 
-  void onSkipToNext() {
+  void onSkipToNext(bool userTrigger) {
     print('onSkipToNext');
     _playbackState.state = 10;
     MusicChannelWeb.playbackStateEventChannel
         .invokeMethod('', _playbackState.toMap());
-    MusicData.get().next();
+    MusicData.get().next(userTrigger);
     initPlay();
   }
 
