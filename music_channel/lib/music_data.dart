@@ -121,7 +121,13 @@ class MusicData {
           _nowPlayIndex = 0;
           break;
         case 'LOOP':
-          // do nothing
+          if (userTrigger) {
+            int sequenceMusicListIndex = toSequencePrevious();
+            _nowPlayMusic = _musicList[sequenceMusicListIndex];
+            _playList.remove(_nowPlayMusic);
+            _playList.insert(0, _nowPlayMusic!);
+            _nowPlayIndex = 0;
+          }
           break;
       }
     } else if (userTrigger || _playMode.name() != 'LOOP') {
@@ -152,7 +158,13 @@ class MusicData {
           _nowPlayIndex++;
           break;
         case 'LOOP':
-          // do nothing
+          if (userTrigger) {
+            int sequenceMusicListIndex = toSequenceNext();
+            _nowPlayMusic = _musicList[sequenceMusicListIndex];
+            _playList.remove(nowPlayMusic);
+            _playList.add(nowPlayMusic!);
+            _nowPlayIndex++;
+          }
           break;
       }
     } else if (userTrigger || _playMode.name() != 'LOOP') {
