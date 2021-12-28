@@ -13,6 +13,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import top.itning.yunshu_music.util.HttpClient;
+
 /**
  * @author itning
  * @since 2021/10/12 14:52
@@ -99,15 +101,15 @@ public class MusicPlayDataService {
     }
 
     public Uri getNowPlayMusicUri() {
-        return Uri.parse("https://music.itning.top/file?id=" + getNowPlayMusic().getMediaId());
+        return Uri.parse(HttpClient.SERVER_URL + "/file?id=" + getNowPlayMusic().getMediaId());
     }
 
     public String getNowPlayLyricUri() {
-        return "https://music.itning.top/file/lyric?id=" + getNowPlayMusic().getMediaId();
+        return HttpClient.SERVER_URL + "/file/lyric?id=" + getNowPlayMusic().getMediaId();
     }
 
     public String getNowPlayArtUri() {
-        return "https://music.itning.top/file/cover?id=" + getNowPlayMusic().getMediaId();
+        return HttpClient.SERVER_URL + "/file/cover?id=" + getNowPlayMusic().getMediaId();
     }
 
     public void playFromMediaId(String mediaId) {
@@ -157,7 +159,7 @@ public class MusicPlayDataService {
                     // do nothing
                     break;
             }
-        } else if (userTrigger || playMode != MusicPlayMode.LOOP){
+        } else if (userTrigger || playMode != MusicPlayMode.LOOP) {
             nowPlayIndex--;
             nowPlayMusic = PLAY_LIST.get(nowPlayIndex);
         }
