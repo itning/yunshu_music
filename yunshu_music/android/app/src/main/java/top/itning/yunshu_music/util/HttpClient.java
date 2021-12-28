@@ -9,6 +9,9 @@ import okhttp3.OkHttpClient;
  * @since 2021/10/20 17:09
  */
 public class HttpClient {
+
+    public static final String SERVER_URL = "https://music.itning.top";
+
     public static final OkHttpClient OK_HTTP_CLIENT = okHttpClient();
 
     private static OkHttpClient okHttpClient() {
