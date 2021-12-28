@@ -156,7 +156,13 @@ public class MusicPlayDataService {
                     nowPlayIndex = 0;
                     break;
                 case LOOP:
-                    // do nothing
+                    if (userTrigger) {
+                        int loopMusicListIndex = toSequencePrevious();
+                        nowPlayMusic = MUSIC_LIST.get(loopMusicListIndex);
+                        PLAY_LIST.remove(nowPlayMusic);
+                        PLAY_LIST.add(0, nowPlayMusic);
+                        nowPlayIndex = 0;
+                    }
                     break;
             }
         } else if (userTrigger || playMode != MusicPlayMode.LOOP) {
@@ -187,7 +193,13 @@ public class MusicPlayDataService {
                     nowPlayIndex++;
                     break;
                 case LOOP:
-                    // do nothing
+                    if (userTrigger) {
+                        int loopMusicListIndex = toSequenceNext();
+                        nowPlayMusic = MUSIC_LIST.get(loopMusicListIndex);
+                        PLAY_LIST.remove(nowPlayMusic);
+                        PLAY_LIST.add(nowPlayMusic);
+                        nowPlayIndex++;
+                    }
                     break;
             }
         } else if (userTrigger || playMode != MusicPlayMode.LOOP) {
