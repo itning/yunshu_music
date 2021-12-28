@@ -66,7 +66,7 @@ class MusicData {
       }
     }
     if (-1 == _nowPlayIndex) {
-      next();
+      next(false);
     }
   }
 
@@ -102,7 +102,7 @@ class MusicData {
     _storage[_nowPlaymusicIdKey] = _nowPlayMusic!.musicId!;
   }
 
-  void previous() {
+  void previous(bool userTrigger) {
     if (_nowPlayIndex - 1 < 0) {
       // 需要新增
       switch (_playMode.name()) {
@@ -124,7 +124,7 @@ class MusicData {
           // do nothing
           break;
       }
-    } else {
+    } else if (userTrigger || _playMode.name() != 'LOOP') {
       _nowPlayIndex--;
       _nowPlayMusic = _playList[_nowPlayIndex];
     }
@@ -133,7 +133,7 @@ class MusicData {
     _storage[_nowPlaymusicIdKey] = _nowPlayMusic!.musicId!;
   }
 
-  void next() {
+  void next(bool userTrigger) {
     if (_nowPlayIndex + 1 >= _playList.length) {
       // 需要新增
       switch (_playMode.name()) {
@@ -155,7 +155,7 @@ class MusicData {
           // do nothing
           break;
       }
-    } else {
+    } else if (userTrigger || _playMode.name() != 'LOOP') {
       _nowPlayIndex++;
       _nowPlayMusic = _playList[_nowPlayIndex];
     }
