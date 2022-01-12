@@ -277,15 +277,18 @@ public class MainActivity extends FlutterActivity {
             Uri iconUri = description.getIconUri();
             Map<String, Object> map;
             if (null != iconUri) {
-                map = new HashMap<>((int) (5 / 0.75F + 1.0F));
+                map = new HashMap<>((int) (8 / 0.75F + 1.0F));
                 map.put("iconUri", iconUri.toString());
             } else {
-                map = new HashMap<>((int) (4 / 0.75F + 1.0F));
+                map = new HashMap<>((int) (7 / 0.75F + 1.0F));
             }
             map.put("mediaId", description.getMediaId());
             map.put("title", description.getTitle());
             map.put("subTitle", description.getSubtitle());
             map.put("duration", metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION));
+            map.put("musicUri", description.getMediaUri());
+            map.put("lyricUri", description.getDescription());
+            map.put("coverUri", description.getIconUri());
             metadataEvent.send(map);
         }
     }

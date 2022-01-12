@@ -101,15 +101,19 @@ public class MusicPlayDataService {
     }
 
     public Uri getNowPlayMusicUri() {
-        return Uri.parse(HttpClient.SERVER_URL + "/file?id=" + getNowPlayMusic().getMediaId());
+        return getNowPlayMusic().getDescription().getMediaUri();
     }
 
     public String getNowPlayLyricUri() {
-        return HttpClient.SERVER_URL + "/file/lyric?id=" + getNowPlayMusic().getMediaId();
+        CharSequence description = getNowPlayMusic().getDescription().getDescription();
+        if(null==description){
+            return null;
+        }
+        return description.toString();
     }
 
-    public String getNowPlayArtUri() {
-        return HttpClient.SERVER_URL + "/file/cover?id=" + getNowPlayMusic().getMediaId();
+    public Uri getNowPlayArtUri() {
+        return getNowPlayMusic().getDescription().getIconUri();
     }
 
     public void playFromMediaId(String mediaId) {

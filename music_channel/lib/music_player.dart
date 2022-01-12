@@ -153,6 +153,9 @@ class MusicPlayer {
     _metaData.mediaId = nowPlayMusic.musicId ?? '';
     _metaData.title = nowPlayMusic.name ?? '';
     _metaData.subTitle = nowPlayMusic.singer ?? '';
+    _metaData.coverUri = nowPlayMusic.coverUri ?? '';
+    _metaData.musicUri = nowPlayMusic.musicUri ?? '';
+    _metaData.lyricUri = nowPlayMusic.lyricUri ?? '';
     MusicChannelWeb.metadataEventChannel.invokeMethod('', _metaData.toMap());
     // Media Session API
     if (html.MediaStream.supported) {

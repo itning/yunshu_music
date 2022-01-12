@@ -157,7 +157,8 @@ class MusicDataModel extends ChangeNotifier {
     String title = event['title'];
     String subTitle = event['subTitle'];
     String mediaId = event['mediaId'];
-    String iconUri = event['iconUri'];
+    String coverUri = event['coverUri'];
+    String lyricUri = event['lyricUri'];
     if (mediaId == lastMusicId) {
       return;
     }
@@ -170,8 +171,8 @@ class MusicDataModel extends ChangeNotifier {
     _nowMusicIndex =
         musicList.indexWhere((element) => element.musicId == mediaId);
     notifyListeners();
-    await _initCover(mediaId);
-    await _initLyric(mediaId);
+    await _initCover(mediaId,coverUri);
+    await _initLyric(mediaId,lyricUri);
   }
 
   /// 上一曲
@@ -190,7 +191,7 @@ class MusicDataModel extends ChangeNotifier {
     await MusicChannel.get().skipToNext();
   }
 
-  Future<void> _initLyric(String lyricId) async {
+  Future<void> _initLyric(String lyricId,String lyricUri) async {
     if (CacheModel.get().enableLyricCache) {
       String? lyric = await CacheModel.get().getLyric(lyricId);
       if (null != lyric) {
@@ -209,7 +210,7 @@ class MusicDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _initCover(String musicId) async {
+  Future<void> _initCover(String musicId,String coverUri) async {
     if (CacheModel.get().enableCoverCache) {
       File? coverFromCache = await CacheModel.get().getCover(musicId);
       if (null != coverFromCache && coverFromCache.existsSync()) {

@@ -47,21 +47,27 @@ class MetaData {
     'title': '',
     'subTitle': '',
     'mediaId': '',
-    'iconUri': ''
+    'iconUri': '',
+    'musicUri': '',
+    'lyricUri': ''
   };
 
   int duration = 0;
   String title = '';
   String subTitle = '';
   String mediaId = '';
-  String iconUri = '';
+  String coverUri = '';
+  String musicUri = '';
+  String lyricUri = '';
 
   Map<String, dynamic> toMap() {
     _map['duration'] = duration;
     _map['title'] = title;
     _map['subTitle'] = subTitle;
     _map['mediaId'] = mediaId;
-    _map['iconUri'] = iconUri;
+    _map['coverUri'] = coverUri;
+    _map['musicUri'] = musicUri;
+    _map['lyricUri'] = lyricUri;
     return _map;
   }
 }
