@@ -142,8 +142,11 @@ class MusicPlayer {
     if (nowPlayMusic == null) {
       return;
     }
+    if (nowPlayMusic.musicUri == null) {
+      return;
+    }
 
-    _audio.src = 'https://music.itning.top/file?id=${nowPlayMusic.musicId}';
+    _audio.src = nowPlayMusic.musicUri!;
     _playbackState.state = 8;
     MusicChannelWeb.playbackStateEventChannel
         .invokeMethod('', _playbackState.toMap());
