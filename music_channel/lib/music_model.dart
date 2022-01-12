@@ -4,6 +4,9 @@ class Music {
   String? singer;
   String? lyricId;
   int? type;
+  String? musicUri;
+  String? lyricUri;
+  String? coverUri;
 
   static Music fromMap(dynamic item) {
     Music music = Music();
@@ -12,6 +15,9 @@ class Music {
     music.singer = item['singer'];
     music.lyricId = item['lyricId'];
     music.type = item['type'];
+    music.musicUri = item['musicUri'];
+    music.lyricUri = item['lyricUri'];
+    music.coverUri = item['coverUri'];
     return music;
   }
 
