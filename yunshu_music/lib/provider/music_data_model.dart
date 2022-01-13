@@ -171,8 +171,8 @@ class MusicDataModel extends ChangeNotifier {
     _nowMusicIndex =
         musicList.indexWhere((element) => element.musicId == mediaId);
     notifyListeners();
-    await _initCover(mediaId,coverUri);
-    await _initLyric(mediaId,lyricUri);
+    await _initCover(mediaId, coverUri);
+    await _initLyric(mediaId, lyricUri);
   }
 
   /// 上一曲
@@ -191,7 +191,7 @@ class MusicDataModel extends ChangeNotifier {
     await MusicChannel.get().skipToNext();
   }
 
-  Future<void> _initLyric(String lyricId,String lyricUri) async {
+  Future<void> _initLyric(String lyricId, String lyricUri) async {
     if (CacheModel.get().enableLyricCache) {
       String? lyric = await CacheModel.get().getLyric(lyricId);
       if (null != lyric) {
@@ -201,7 +201,7 @@ class MusicDataModel extends ChangeNotifier {
         return;
       }
     }
-    String? lyric = await HttpHelper.get().getLyric(lyricId);
+    String? lyric = await HttpHelper.get().getLyric(lyricUri);
     if (CacheModel.get().enableLyricCache) {
       CacheModel.get().cacheLyric(lyricId, lyric);
     }
@@ -210,7 +210,7 @@ class MusicDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _initCover(String musicId,String coverUri) async {
+  Future<void> _initCover(String musicId, String coverUri) async {
     if (CacheModel.get().enableCoverCache) {
       File? coverFromCache = await CacheModel.get().getCover(musicId);
       if (null != coverFromCache && coverFromCache.existsSync()) {
@@ -220,7 +220,7 @@ class MusicDataModel extends ChangeNotifier {
       }
     }
     Tuple2<String?, List<int>?> coverBytes =
-        await HttpHelper.get().getCover(musicId);
+        await HttpHelper.get().getCover(coverUri);
     if (coverBytes.item2 == null) {
       _coverBase64 = await CacheModel.get().getDefaultCover();
       notifyListeners();

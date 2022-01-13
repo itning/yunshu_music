@@ -273,11 +273,11 @@ class CacheModel extends ChangeNotifier {
     return false;
   }
 
-  Future<bool> deleteMusicCacheByMusicId(String musicId) async {
+  Future<bool> deleteMusicCacheByMusicId(String musicId,String musicUri) async {
     if (kIsWeb) {
       return false;
     }
-    Uri uri = Uri.parse(HttpHelper.get().getMusicUrl(musicId));
+    Uri uri = Uri.parse(musicUri);
     File cacheFile = File(joinAll([
       (Directory(
               join((await getTemporaryDirectory()).path, 'just_audio_cache')))

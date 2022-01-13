@@ -140,9 +140,11 @@ class MusicPlayer {
     print('initPlay');
     Music? nowPlayMusic = MusicData.get().nowPlayMusic;
     if (nowPlayMusic == null) {
+      print('nowPlayMusic == null');
       return;
     }
     if (nowPlayMusic.musicUri == null) {
+      print('nowPlayMusic.musicUri == null');
       return;
     }
 
