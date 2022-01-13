@@ -104,6 +104,15 @@ musicDataContentFromJson(MusicDataContent data, Map<String, dynamic> json) {
 				? int.tryParse(json['type'])
 				: json['type'].toInt();
 	}
+	if (json['musicUri'] != null) {
+		data.musicUri = json['musicUri'].toString();
+	}
+	if (json['lyricUri'] != null) {
+		data.lyricUri = json['lyricUri'].toString();
+	}
+	if (json['coverUri'] != null) {
+		data.coverUri = json['coverUri'].toString();
+	}
 	return data;
 }
 
@@ -114,6 +123,9 @@ Map<String, dynamic> musicDataContentToJson(MusicDataContent entity) {
 	data['singer'] = entity.singer;
 	data['lyricId'] = entity.lyricId;
 	data['type'] = entity.type;
+	data['musicUri'] = entity.musicUri;
+	data['lyricUri'] = entity.lyricUri;
+	data['coverUri'] = entity.coverUri;
 	return data;
 }
 
