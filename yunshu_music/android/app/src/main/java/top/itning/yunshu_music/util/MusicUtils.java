@@ -15,9 +15,8 @@ public class MusicUtils {
         MediaMetadataCompat metadata = new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, music.get("musicId"))
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, music.get("musicUri"))
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, music.get("name"))
                 .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, music.get("name"))
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, music.get("singer"))
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, music.get("singer"))
                 .putString(MediaMetadataCompat.METADATA_KEY_ART_URI, music.get("coverUri"))
                 .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, music.get("lyricUri"))
                 .build();

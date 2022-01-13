@@ -286,11 +286,18 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
         Uri iconUri = musicPlayDataService.getNowPlayMusic().getDescription().getIconUri();
         String artUri = iconUri == null ? null : iconUri.toString();
         session.setMetadata(new MediaMetadataCompat.Builder()
+                // 歌曲名
+                .putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, musicPlayDataService.getNowPlayMusic().getDescription().getTitle())
+                // 歌手名
+                .putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, musicPlayDataService.getNowPlayMusic().getDescription().getSubtitle())
+                // 歌词URI
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, musicPlayDataService.getNowPlayLyricUri())
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, musicPlayDataService.getNowPlayMusic().getMediaId())
-                .putText(MediaMetadataCompat.METADATA_KEY_TITLE, musicPlayDataService.getNowPlayMusic().getDescription().getTitle())
-                .putText(MediaMetadataCompat.METADATA_KEY_ARTIST, musicPlayDataService.getNowPlayMusic().getDescription().getSubtitle())
+                // 歌曲URI
+                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI,
+                        musicPlayDataService.getNowPlayMusic().getDescription().getMediaUri() == null ? "" : musicPlayDataService.getNowPlayMusic().getDescription().getMediaUri().toString())
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration)
-                .putString("android.media.metadata.LYRIC_URI", musicPlayDataService.getNowPlayLyricUri())
+                // 封面URI
                 .putText(MediaMetadataCompat.METADATA_KEY_ART_URI, artUri)
                 .build());
     }

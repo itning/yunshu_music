@@ -25,8 +25,7 @@ class Music {
     return {
       'title': name ?? '',
       'subTitle': singer ?? '',
-      'mediaId': musicId ?? '',
-      'iconUri': ''
+      'mediaId': musicId ?? ''
     };
   }
 
@@ -47,7 +46,6 @@ class MetaData {
     'title': '',
     'subTitle': '',
     'mediaId': '',
-    'iconUri': '',
     'musicUri': '',
     'lyricUri': ''
   };

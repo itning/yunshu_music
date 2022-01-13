@@ -12,7 +12,6 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
@@ -92,6 +91,10 @@ class CacheModel extends ChangeNotifier {
 
   Future<List<MusicDataContent>> getMusicList() async {
     if (kIsWeb) {
+      return [];
+    }
+    if (true) {
+      // TODO ITNING:临时不缓存
       return [];
     }
     LogHelper.get().info('get music list from cache');
@@ -273,7 +276,8 @@ class CacheModel extends ChangeNotifier {
     return false;
   }
 
-  Future<bool> deleteMusicCacheByMusicId(String musicId,String musicUri) async {
+  Future<bool> deleteMusicCacheByMusicId(
+      String musicId, String musicUri) async {
     if (kIsWeb) {
       return false;
     }
