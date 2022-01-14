@@ -4,6 +4,9 @@ class Music {
   String? singer;
   String? lyricId;
   int? type;
+  String? musicUri;
+  String? lyricUri;
+  String? coverUri;
 
   static Music fromMap(dynamic item) {
     Music music = Music();
@@ -12,6 +15,9 @@ class Music {
     music.singer = item['singer'];
     music.lyricId = item['lyricId'];
     music.type = item['type'];
+    music.musicUri = item['musicUri'];
+    music.lyricUri = item['lyricUri'];
+    music.coverUri = item['coverUri'];
     return music;
   }
 
@@ -19,8 +25,7 @@ class Music {
     return {
       'title': name ?? '',
       'subTitle': singer ?? '',
-      'mediaId': musicId ?? '',
-      'iconUri': ''
+      'mediaId': musicId ?? ''
     };
   }
 
@@ -41,21 +46,26 @@ class MetaData {
     'title': '',
     'subTitle': '',
     'mediaId': '',
-    'iconUri': ''
+    'musicUri': '',
+    'lyricUri': ''
   };
 
   int duration = 0;
   String title = '';
   String subTitle = '';
   String mediaId = '';
-  String iconUri = '';
+  String coverUri = '';
+  String musicUri = '';
+  String lyricUri = '';
 
   Map<String, dynamic> toMap() {
     _map['duration'] = duration;
     _map['title'] = title;
     _map['subTitle'] = subTitle;
     _map['mediaId'] = mediaId;
-    _map['iconUri'] = iconUri;
+    _map['coverUri'] = coverUri;
+    _map['musicUri'] = musicUri;
+    _map['lyricUri'] = lyricUri;
     return _map;
   }
 }

@@ -100,18 +100,6 @@ public class MusicPlayDataService {
         MUSIC_LIST.remove(music);
     }
 
-    public Uri getNowPlayMusicUri() {
-        return Uri.parse(HttpClient.SERVER_URL + "/file?id=" + getNowPlayMusic().getMediaId());
-    }
-
-    public String getNowPlayLyricUri() {
-        return HttpClient.SERVER_URL + "/file/lyric?id=" + getNowPlayMusic().getMediaId();
-    }
-
-    public String getNowPlayArtUri() {
-        return HttpClient.SERVER_URL + "/file/cover?id=" + getNowPlayMusic().getMediaId();
-    }
-
     public void playFromMediaId(String mediaId) {
         nowPlayIndex = -1;
         nowPlayMusic = null;

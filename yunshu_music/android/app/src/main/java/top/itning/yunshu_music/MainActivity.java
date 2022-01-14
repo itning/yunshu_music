@@ -7,7 +7,6 @@ import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.media.AudioManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
@@ -273,19 +272,16 @@ public class MainActivity extends FlutterActivity {
 
         @Override
         public void onMetadataChanged(MediaMetadataCompat metadata) {
+
             MediaDescriptionCompat description = metadata.getDescription();
-            Uri iconUri = description.getIconUri();
-            Map<String, Object> map;
-            if (null != iconUri) {
-                map = new HashMap<>((int) (5 / 0.75F + 1.0F));
-                map.put("iconUri", iconUri.toString());
-            } else {
-                map = new HashMap<>((int) (4 / 0.75F + 1.0F));
-            }
+            Map<String, Object> map = new HashMap<>((int) (7 / 0.75F + 1.0F));
             map.put("mediaId", description.getMediaId());
             map.put("title", description.getTitle());
             map.put("subTitle", description.getSubtitle());
             map.put("duration", metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION));
+            map.put("musicUri", description.getMediaUri() == null ? "" : description.getMediaUri().toString());
+            map.put("lyricUri", description.getDescription());
+            map.put("coverUri", description.getIconUri() == null ? "" : description.getIconUri().toString());
             metadataEvent.send(map);
         }
     }
