@@ -88,6 +88,7 @@ class HttpHelper {
     try {
       Response<String> response =
           await _dio.get<String>(lyricUri, cancelToken: _lyricCancelToken);
+      _lyricCancelToken = null;
       return response.data;
     } on DioError catch (e) {
       if (e.type == DioErrorType.cancel) {
@@ -114,6 +115,7 @@ class HttpHelper {
       Response<List<int>> response = await _dio.get<List<int>>(coverUri,
           options: Options(responseType: ResponseType.bytes),
           cancelToken: _coverCancelToken);
+      _coverCancelToken = null;
       List<String>? contentTypes = response.headers[Headers.contentTypeHeader];
       String? contentType;
       if (contentTypes != null && contentTypes.isNotEmpty) {
