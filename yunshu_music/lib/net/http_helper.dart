@@ -22,6 +22,8 @@ class HttpHelper {
   }
 
   CancelToken? _cancelToken;
+  CancelToken? _coverCancelToken;
+  CancelToken? _lyricCancelToken;
   String? _lastUrl;
 
   Future<File?> download(String url, String savePath) async {
@@ -78,13 +80,22 @@ class HttpHelper {
 
   Future<String?> getLyric(String lyricUri) async {
     LogHelper.get().info('获取歌词：$lyricUri');
+    if (null != _lyricCancelToken && !_lyricCancelToken!.isCancelled) {
+      LogHelper.get().info('取消上一个获取歌词的请求');
+      _lyricCancelToken!.cancel();
+    }
+    _lyricCancelToken = CancelToken();
     try {
       Response<String> response =
-          await _dio.get<String>(lyricUri);
+          await _dio.get<String>(lyricUri, cancelToken: _lyricCancelToken);
       return response.data;
     } on DioError catch (e) {
-      Fluttertoast.showToast(msg: '获取歌词网络异常');
-      LogHelper.get().warn('获取歌词网络异常', e);
+      if (e.type == DioErrorType.cancel) {
+        LogHelper.get().info('获取歌词请求取消 $lyricUri');
+      } else {
+        Fluttertoast.showToast(msg: '获取歌词网络异常');
+        LogHelper.get().warn('获取歌词网络异常', e);
+      }
     } catch (e) {
       Fluttertoast.showToast(msg: '获取歌词失败');
       LogHelper.get().error('获取歌词失败', e);
@@ -93,11 +104,16 @@ class HttpHelper {
   }
 
   Future<Tuple2<String?, List<int>?>> getCover(String coverUri) async {
-    LogHelper.get().info('获取歌词：$coverUri');
+    LogHelper.get().info('获取封面：$coverUri');
+    if (null != _coverCancelToken && !_coverCancelToken!.isCancelled) {
+      LogHelper.get().info('取消上一个获取封面的请求');
+      _coverCancelToken!.cancel();
+    }
+    _coverCancelToken = CancelToken();
     try {
-      Response<List<int>> response = await _dio.get<List<int>>(
-          coverUri,
-          options: Options(responseType: ResponseType.bytes));
+      Response<List<int>> response = await _dio.get<List<int>>(coverUri,
+          options: Options(responseType: ResponseType.bytes),
+          cancelToken: _coverCancelToken);
       List<String>? contentTypes = response.headers[Headers.contentTypeHeader];
       String? contentType;
       if (contentTypes != null && contentTypes.isNotEmpty) {
@@ -105,8 +121,12 @@ class HttpHelper {
       }
       return Tuple2(contentType, response.data);
     } on DioError catch (e) {
-      Fluttertoast.showToast(msg: '获取封面网络异常');
-      LogHelper.get().warn('获取封面网络异常', e);
+      if (e.type == DioErrorType.cancel) {
+        LogHelper.get().info('获取封面请求取消 $coverUri');
+      } else {
+        Fluttertoast.showToast(msg: '获取封面网络异常');
+        LogHelper.get().warn('获取封面网络异常', e);
+      }
     } catch (e) {
       Fluttertoast.showToast(msg: '获取封面失败');
       LogHelper.get().error('获取封面失败', e);
