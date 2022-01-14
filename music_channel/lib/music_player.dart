@@ -44,7 +44,7 @@ class MusicPlayer {
     _audio.onDurationChange.listen(musicChangeEventHandlers);
     // 播放完成
     _audio.onEnded.listen((event) {
-      print('onEnd');
+      html.window.console.info('onEnd');
       _playbackState.state = 0;
       MusicChannelWeb.playbackStateEventChannel
           .invokeMethod('', _playbackState.toMap());
@@ -52,7 +52,7 @@ class MusicPlayer {
     });
 
     _audio.onCanPlay.listen((event) {
-      print('onCanPlay');
+      html.window.console.info('onCanPlay');
       if (_playNow) {
         onPlay();
       } else {
@@ -64,22 +64,36 @@ class MusicPlayer {
     });
 
     _audio.onPlay.listen((event) {
-      print('onPlayStream');
+      html.window.console.info('onPlayStream');
       _playbackState.state = 3;
       MusicChannelWeb.playbackStateEventChannel
           .invokeMethod('', _playbackState.toMap());
     });
 
     _audio.onPause.listen((event) {
-      print('onPauseStream');
+      html.window.console.info('onPauseStream');
       _playbackState.state = 2;
       MusicChannelWeb.playbackStateEventChannel
           .invokeMethod('', _playbackState.toMap());
     });
+
+    _audio.onAbort.listen((event) {
+      html.window.console.warn('不是因为出错而导致的媒体数据下载中止。');
+      html.window.console.warn(event);
+    });
+    _audio.onError.listen((event) {
+      html.window.console.warn('媒体下载过程中错误。例如突然无网络了。或者文件地址不对。');
+      html.window.console.warn(event);
+    });
+    _audio.onStalled.listen((event) {
+      html.window.console.warn('媒体数据意外地不再可用。');
+      html.window.console.warn(event);
+    });
+
     _playbackState.state = 0;
     // Media Session API
     if (html.MediaStream.supported) {
-      print('Support MediaStream And Add ActionHandler');
+      html.window.console.info('Support MediaStream And Add ActionHandler');
       html.window.navigator.mediaSession
           ?.setActionHandler('previoustrack', () => onSkipToPrevious(true));
       html.window.navigator.mediaSession
@@ -93,15 +107,21 @@ class MusicPlayer {
   }
 
   void onPlay() {
-    print('onPlay');
-    _audio.play();
-    _playbackState.state = 3;
-    MusicChannelWeb.playbackStateEventChannel
-        .invokeMethod('', _playbackState.toMap());
+    html.window.console.info('onPlay');
+    _audio.play().then((value) {
+      _playbackState.state = 3;
+      MusicChannelWeb.playbackStateEventChannel
+          .invokeMethod('', _playbackState.toMap());
+    }).catchError((error) {
+      html.window.console.error(error);
+      _playbackState.state = 3;
+      MusicChannelWeb.playbackStateEventChannel
+          .invokeMethod('', _playbackState.toMap());
+    });
   }
 
   void onPause() {
-    print('onPause');
+    html.window.console.info('onPause');
     _audio.pause();
     _playbackState.state = 2;
     MusicChannelWeb.playbackStateEventChannel
@@ -119,7 +139,7 @@ class MusicPlayer {
   }
 
   void onSkipToPrevious(bool userTrigger) {
-    print('onSkipToPrevious');
+    html.window.console.info('onSkipToPrevious');
     _playbackState.state = 9;
     MusicChannelWeb.playbackStateEventChannel
         .invokeMethod('', _playbackState.toMap());
@@ -128,7 +148,7 @@ class MusicPlayer {
   }
 
   void onSkipToNext(bool userTrigger) {
-    print('onSkipToNext');
+    html.window.console.info('onSkipToNext');
     _playbackState.state = 10;
     MusicChannelWeb.playbackStateEventChannel
         .invokeMethod('', _playbackState.toMap());
@@ -137,14 +157,14 @@ class MusicPlayer {
   }
 
   void initPlay() {
-    print('initPlay');
+    html.window.console.info('initPlay');
     Music? nowPlayMusic = MusicData.get().nowPlayMusic;
     if (nowPlayMusic == null) {
-      print('nowPlayMusic == null');
+      html.window.console.info('nowPlayMusic == null');
       return;
     }
     if (nowPlayMusic.musicUri == null) {
-      print('nowPlayMusic.musicUri == null');
+      html.window.console.info('nowPlayMusic.musicUri == null');
       return;
     }
 
@@ -161,7 +181,7 @@ class MusicPlayer {
     MusicChannelWeb.metadataEventChannel.invokeMethod('', _metaData.toMap());
     // Media Session API
     if (html.MediaStream.supported) {
-      print('Support MediaStream');
+      html.window.console.info('Support MediaStream');
       html.MediaMetadata metadata = html.MediaMetadata();
       metadata.title = _metaData.title;
       metadata.artist = _metaData.subTitle;
