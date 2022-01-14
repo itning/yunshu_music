@@ -49,12 +49,24 @@ class CacheModel extends ChangeNotifier {
     _enableCoverCache = sharedPreferences.getBool(_enableCoverCacheKey) ?? true;
     _enableLyricCache = sharedPreferences.getBool(_enableLyricCacheKey) ?? true;
     if (!kIsWeb) {
-      _database = await openDatabase('cache.db', version: 1,
-          onCreate: (Database db, int version) async {
-        // 所有音乐列表 缓存
-        await db.execute(
-            'CREATE TABLE list_cache (musicId TEXT PRIMARY KEY, lyricId TEXT, name TEXT, singer TEXT, type INTEGER)');
-      });
+      _database = await openDatabase(
+        'cache.db',
+        version: 2,
+        onCreate: (Database db, int version) async {
+          // 所有音乐列表 缓存
+          await db.execute(
+              'CREATE TABLE list_cache (musicId TEXT PRIMARY KEY, lyricId TEXT, name TEXT, singer TEXT, type INTEGER, musicUri TEXT, lyricUri TEXT, coverUri TEXT)');
+        },
+        onUpgrade: (Database db, int oldVersion, int newVersion) async {
+          LogHelper().info('升级数据库：oldVersion：$oldVersion newVersion：$newVersion');
+          if (oldVersion == 1 && newVersion == 2) {
+            await db.execute('ALTER TABLE list_cache ADD COLUMN musicUri TEXT');
+            await db.execute('ALTER TABLE list_cache ADD COLUMN lyricUri TEXT');
+            await db.execute('ALTER TABLE list_cache ADD COLUMN coverUri TEXT');
+            await db.execute('DELETE FROM list_cache');
+          }
+        },
+      );
       getDefaultCover();
     }
   }
@@ -75,7 +87,10 @@ class CacheModel extends ChangeNotifier {
             'lyricId': item.lyricId,
             'name': item.name,
             'singer': item.singer,
-            'type': item.type
+            'type': item.type,
+            'musicUri': item.musicUri,
+            'lyricUri': item.lyricUri,
+            'coverUri': item.coverUri
           });
         } catch (e) {
           LogHelper.get().error("插入数据库出错", e);
@@ -91,10 +106,6 @@ class CacheModel extends ChangeNotifier {
 
   Future<List<MusicDataContent>> getMusicList() async {
     if (kIsWeb) {
-      return [];
-    }
-    if (true) {
-      // TODO ITNING:临时不缓存
       return [];
     }
     LogHelper.get().info('get music list from cache');
