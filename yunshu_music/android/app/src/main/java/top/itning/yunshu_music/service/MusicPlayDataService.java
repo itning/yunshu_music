@@ -100,22 +100,6 @@ public class MusicPlayDataService {
         MUSIC_LIST.remove(music);
     }
 
-    public Uri getNowPlayMusicUri() {
-        return getNowPlayMusic().getDescription().getMediaUri();
-    }
-
-    public String getNowPlayLyricUri() {
-        CharSequence description = getNowPlayMusic().getDescription().getDescription();
-        if(null==description){
-            return null;
-        }
-        return description.toString();
-    }
-
-    public Uri getNowPlayArtUri() {
-        return getNowPlayMusic().getDescription().getIconUri();
-    }
-
     public void playFromMediaId(String mediaId) {
         nowPlayIndex = -1;
         nowPlayMusic = null;

@@ -6,6 +6,7 @@ import static top.itning.yunshu_music.service.MusicBrowserService.ACTIONS;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -15,10 +16,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource;
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
@@ -37,7 +38,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
     private final MusicNotificationService musicNotificationService;
     private PlaybackStateCompat state;
     private boolean playNow = false;
-    private final SimpleExoPlayer player;
+    private final ExoPlayer player;
     private final Handler updatePositionHandler;
     private final Runnable updatePositionRunnable;
 
@@ -62,7 +63,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
                 .setAllowedCapturePolicy(C.ALLOW_CAPTURE_BY_ALL)
                 .setUsage(C.USAGE_MEDIA)
                 .build();
-        player = new SimpleExoPlayer.Builder(context)
+        player = new ExoPlayer.Builder(context)
                 .setWakeMode(C.WAKE_MODE_NETWORK)
                 .setAudioAttributes(audioAttributes, true)
                 .setHandleAudioBecomingNoisy(true)
@@ -283,22 +284,20 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
     }
 
     private void setMetaData(long duration) {
-        Uri iconUri = musicPlayDataService.getNowPlayMusic().getDescription().getIconUri();
-        String artUri = iconUri == null ? null : iconUri.toString();
+        MediaDescriptionCompat description = musicPlayDataService.getNowPlayMusic().getDescription();
         session.setMetadata(new MediaMetadataCompat.Builder()
                 // 歌曲名
-                .putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, musicPlayDataService.getNowPlayMusic().getDescription().getTitle())
+                .putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, description.getTitle())
                 // 歌手名
-                .putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, musicPlayDataService.getNowPlayMusic().getDescription().getSubtitle())
+                .putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, description.getSubtitle())
                 // 歌词URI
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, musicPlayDataService.getNowPlayLyricUri())
+                .putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, description.getDescription())
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, musicPlayDataService.getNowPlayMusic().getMediaId())
                 // 歌曲URI
-                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI,
-                        musicPlayDataService.getNowPlayMusic().getDescription().getMediaUri() == null ? "" : musicPlayDataService.getNowPlayMusic().getDescription().getMediaUri().toString())
+                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, description.getMediaUri() == null ? null : description.getMediaUri().toString())
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration)
                 // 封面URI
-                .putText(MediaMetadataCompat.METADATA_KEY_ART_URI, artUri)
+                .putText(MediaMetadataCompat.METADATA_KEY_ART_URI, description.getIconUri() == null ? null : description.getIconUri().toString())
                 .build());
     }
 }
