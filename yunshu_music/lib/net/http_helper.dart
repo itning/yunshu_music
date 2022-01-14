@@ -76,11 +76,11 @@ class HttpHelper {
     return await _dio.get<Map<String, dynamic>>("$baseUrl/music?size=5000");
   }
 
-  Future<String?> getLyric(String lyricId) async {
-    LogHelper.get().info('获取歌词：$baseUrl/file/lyric?id=$lyricId');
+  Future<String?> getLyric(String lyricUri) async {
+    LogHelper.get().info('获取歌词：$lyricUri');
     try {
       Response<String> response =
-          await _dio.get<String>('$baseUrl/file/lyric?id=$lyricId');
+          await _dio.get<String>(lyricUri);
       return response.data;
     } on DioError catch (e) {
       Fluttertoast.showToast(msg: '获取歌词网络异常');
@@ -92,11 +92,11 @@ class HttpHelper {
     return null;
   }
 
-  Future<Tuple2<String?, List<int>?>> getCover(String musicId) async {
-    LogHelper.get().info('获取歌词：$baseUrl/file/cover?id=$musicId');
+  Future<Tuple2<String?, List<int>?>> getCover(String coverUri) async {
+    LogHelper.get().info('获取歌词：$coverUri');
     try {
       Response<List<int>> response = await _dio.get<List<int>>(
-          '$baseUrl/file/cover?id=$musicId',
+          coverUri,
           options: Options(responseType: ResponseType.bytes));
       List<String>? contentTypes = response.headers[Headers.contentTypeHeader];
       String? contentType;
@@ -112,9 +112,5 @@ class HttpHelper {
       LogHelper.get().error('获取封面失败', e);
     }
     return const Tuple2(null, null);
-  }
-
-  String getMusicUrl(String musicId) {
-    return "$baseUrl/file?id=$musicId";
   }
 }

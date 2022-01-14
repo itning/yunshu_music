@@ -5,7 +5,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/page/music_list/component/music_list_item.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
@@ -80,6 +79,7 @@ class _MusicListState extends State<MusicList> {
                         singer: music.singer ?? '',
                         musicId: music.musicId ?? '',
                         lyricId: music.lyricId ?? '',
+                        musicUri: music.musicUri ?? '',
                       );
                     }),
               ),
@@ -95,6 +95,7 @@ class _InnerListItem extends StatelessWidget {
   final String singer;
   final String musicId;
   final String lyricId;
+  final String musicUri;
 
   const _InnerListItem(
       {Key? key,
@@ -102,7 +103,8 @@ class _InnerListItem extends StatelessWidget {
       required this.name,
       required this.singer,
       required this.musicId,
-      required this.lyricId})
+      required this.lyricId,
+      required this.musicUri})
       : super(key: key);
 
   Future<bool?> showDeleteConfirmDialog(BuildContext context) {
@@ -214,7 +216,7 @@ class _InnerListItem extends StatelessWidget {
                         showDeleteConfirmDialog(context).then((value) {
                           if (value ?? false) {
                             CacheModel.get()
-                                .deleteMusicCacheByMusicId(musicId)
+                                .deleteMusicCacheByMusicId(musicId, musicUri)
                                 .then((value) {
                               if (value) {
                                 Fluttertoast.showToast(msg: "删除歌曲缓存成功");
@@ -230,10 +232,9 @@ class _InnerListItem extends StatelessWidget {
                       leading: const Icon(Icons.download),
                       title: const Text('下载歌曲到本地'),
                       onTap: () async {
-                        String url = HttpHelper.get().getMusicUrl(musicId);
-                        bool can = await canLaunch(url);
+                        bool can = await canLaunch(musicUri);
                         if (can) {
-                          await launch(url);
+                          await launch(musicUri);
                         } else {
                           Fluttertoast.showToast(msg: "下载失败");
                         }

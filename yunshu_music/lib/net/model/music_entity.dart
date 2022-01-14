@@ -26,6 +26,9 @@ class MusicDataContent with JsonConvert<MusicDataContent> {
   String? singer;
   String? lyricId;
   int? type;
+  String? musicUri;
+  String? lyricUri;
+  String? coverUri;
 
   @override
   bool operator ==(Object other) =>
@@ -36,7 +39,10 @@ class MusicDataContent with JsonConvert<MusicDataContent> {
           name == other.name &&
           singer == other.singer &&
           lyricId == other.lyricId &&
-          type == other.type;
+          type == other.type&&
+          musicUri == other.musicUri&&
+          lyricUri == other.lyricUri&&
+          coverUri == other.coverUri;
 
   @override
   int get hashCode =>
@@ -44,7 +50,10 @@ class MusicDataContent with JsonConvert<MusicDataContent> {
       name.hashCode ^
       singer.hashCode ^
       lyricId.hashCode ^
-      type.hashCode;
+      type.hashCode^
+      musicUri.hashCode^
+      lyricUri.hashCode^
+      coverUri.hashCode;
 }
 
 class MusicDataPageable with JsonConvert<MusicDataPageable> {

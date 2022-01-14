@@ -140,16 +140,24 @@ class MusicPlayer {
     print('initPlay');
     Music? nowPlayMusic = MusicData.get().nowPlayMusic;
     if (nowPlayMusic == null) {
+      print('nowPlayMusic == null');
+      return;
+    }
+    if (nowPlayMusic.musicUri == null) {
+      print('nowPlayMusic.musicUri == null');
       return;
     }
 
-    _audio.src = 'https://music.itning.top/file?id=${nowPlayMusic.musicId}';
+    _audio.src = nowPlayMusic.musicUri!;
     _playbackState.state = 8;
     MusicChannelWeb.playbackStateEventChannel
         .invokeMethod('', _playbackState.toMap());
     _metaData.mediaId = nowPlayMusic.musicId ?? '';
     _metaData.title = nowPlayMusic.name ?? '';
     _metaData.subTitle = nowPlayMusic.singer ?? '';
+    _metaData.coverUri = nowPlayMusic.coverUri ?? '';
+    _metaData.musicUri = nowPlayMusic.musicUri ?? '';
+    _metaData.lyricUri = nowPlayMusic.lyricUri ?? '';
     MusicChannelWeb.metadataEventChannel.invokeMethod('', _metaData.toMap());
     // Media Session API
     if (html.MediaStream.supported) {
