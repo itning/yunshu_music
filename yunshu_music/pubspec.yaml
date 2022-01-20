@@ -37,15 +37,15 @@ dependencies:
   cupertino_icons: ^1.0.4
   music_channel:
     path: ../music_channel
-  provider: ^6.0.1
+  provider: ^6.0.2
   tuple: ^2.0.0
   dio: ^4.0.4
   move_to_background: ^1.0.2
-  shared_preferences: ^2.0.11
+  shared_preferences: ^2.0.12
   shimmer: ^2.0.0
   audio_video_progress_bar: ^0.10.0
-  sqflite: ^2.0.1
-  url_launcher: ^6.0.17
+  sqflite: ^2.0.2
+  url_launcher: ^6.0.18
   fluttertoast: ^8.0.8
   logger: ^1.1.0
   crypto: ^3.0.1
