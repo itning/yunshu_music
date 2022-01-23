@@ -93,6 +93,8 @@ class HttpHelper {
     } on DioError catch (e) {
       if (e.type == DioErrorType.cancel) {
         LogHelper.get().info('获取歌词请求取消 $lyricUri');
+      } else if (e.response?.statusCode == 404) {
+        LogHelper.get().info('该歌曲无歌词 $lyricUri');
       } else {
         Fluttertoast.showToast(msg: '获取歌词网络异常');
         LogHelper.get().warn('获取歌词网络异常', e);
@@ -125,6 +127,8 @@ class HttpHelper {
     } on DioError catch (e) {
       if (e.type == DioErrorType.cancel) {
         LogHelper.get().info('获取封面请求取消 $coverUri');
+      } else if (e.response?.statusCode == 404) {
+        LogHelper.get().info('该歌曲无封面 $coverUri');
       } else {
         Fluttertoast.showToast(msg: '获取封面网络异常');
         LogHelper.get().warn('获取封面网络异常', e);
