@@ -60,8 +60,11 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
               GlobalCupertinoLocalizations.delegate,
             ],
             supportedLocales: const [Locale.fromSubtags(languageCode: 'zh')],
-            darkTheme: ThemeData.dark(),
+            // 与 ThemeData.dark() 相同
+            darkTheme: ThemeData(
+                brightness: Brightness.dark, fontFamily: 'LXGWWenKaiMono'),
             themeMode: theme.themeMode,
+            theme: ThemeData(fontFamily: 'LXGWWenKaiMono'),
             title: '云舒音乐',
             routeInformationParser: AppRouteParser(),
             routerDelegate: delegate,
