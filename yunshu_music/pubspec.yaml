@@ -117,3 +117,6 @@ flutter:
     - family: LXGWWenKaiMono
       fonts:
         - asset: asserts/fonts/LXGWWenKaiMono-Regular.ttf
+    - family: Roboto
+      fonts:
+        - asset: asserts/fonts/Roboto.ttf
