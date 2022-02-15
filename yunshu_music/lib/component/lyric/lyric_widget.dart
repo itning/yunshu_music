@@ -68,17 +68,17 @@ class LyricWidget extends StatefulWidget {
       TextStyle? currRemarkLyricStyle})
       : assert(lyrics.isNotEmpty),
         super(key: key) {
-    this.lyricStyle =
-        lyricStyle ??= const TextStyle(color: Colors.white70, fontSize: 16);
-    this.remarkStyle =
-        remarkStyle ??= const TextStyle(color: Colors.white70, fontSize: 16);
-    this.currLyricStyle =
-        currLyricStyle ??= const TextStyle(color: Colors.white, fontSize: 16);
+    this.lyricStyle = lyricStyle ??= const TextStyle(
+        color: Colors.white70, fontSize: 16, fontFamily: 'LXGWWenKaiMono');
+    this.remarkStyle = remarkStyle ??= const TextStyle(
+        color: Colors.white70, fontSize: 16, fontFamily: 'LXGWWenKaiMono');
+    this.currLyricStyle = currLyricStyle ??= const TextStyle(
+        color: Colors.white, fontSize: 16, fontFamily: 'LXGWWenKaiMono');
     this.currRemarkLyricStyle = currRemarkLyricStyle ??= this.currLyricStyle;
-    this.draggingLyricStyle =
-        draggingLyricStyle ??= lyricStyle.copyWith(color: Colors.grey[300]);
-    this.draggingRemarkLyricStyle = draggingRemarkLyricStyle ??=
-        remarkStyle.copyWith(color: Colors.grey[300]);
+    this.draggingLyricStyle = draggingLyricStyle ??= lyricStyle.copyWith(
+        color: Colors.grey[300], fontFamily: 'LXGWWenKaiMono');
+    this.draggingRemarkLyricStyle = draggingRemarkLyricStyle ??= remarkStyle
+        .copyWith(color: Colors.grey[300], fontFamily: 'LXGWWenKaiMono');
 
     //歌词转画笔
     lyricTextPaints.addAll(lyrics
