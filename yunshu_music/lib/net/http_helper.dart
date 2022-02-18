@@ -72,6 +72,7 @@ class HttpHelper {
       _cancelToken = null;
       _lastUrl = null;
     }
+    return null;
   }
 
   Future<Response<Map<String, dynamic>>> getMusic() async {
