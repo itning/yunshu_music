@@ -112,3 +112,11 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+  fonts:
+    # https://github.com/lxgw/LxgwWenKai/releases
+    - family: LXGWWenKaiMono
+      fonts:
+        - asset: asserts/fonts/LXGWWenKaiMono-Regular.ttf
+    - family: Roboto
+      fonts:
+        - asset: asserts/fonts/Roboto.ttf
