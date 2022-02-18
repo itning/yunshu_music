@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:yunshu_music/page/music_list/music_index_page.dart';
 import 'package:yunshu_music/page/music_play/music_play_page.dart';

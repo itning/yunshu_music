@@ -85,6 +85,7 @@ class MusicDataModel extends ChangeNotifier {
       await MusicChannel.get().initMethod();
     }
     notifyListeners();
+    return null;
   }
 
   Future<void> init() async {
