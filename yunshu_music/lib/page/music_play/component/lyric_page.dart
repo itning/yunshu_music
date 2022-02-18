@@ -60,6 +60,7 @@ class _LyricPageState extends State<LyricPage>
                         );
                       } else {
                         return LyricWidget(
+                          key: UniqueKey(),
                           size: const Size(double.infinity, double.infinity),
                           lyrics: value,
                           controller: controller,
