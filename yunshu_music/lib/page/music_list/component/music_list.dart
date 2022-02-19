@@ -142,11 +142,12 @@ class _InnerListItem extends StatelessWidget {
             .setNowPlayMusicUseMusicId(musicId);
       },
       onLongPress: () {
-        Clipboard.setData(ClipboardData(text: "$name-$singer")).then(
-            (_) => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('复制成功'),
-                  duration: Duration(seconds: 1),
-                )));
+        Clipboard.setData(ClipboardData(text: "$name-$singer")).then((_) =>
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content:
+                  Text('复制成功', style: TextStyle(fontFamily: 'LXGWWenKaiMono')),
+              duration: Duration(seconds: 1),
+            )));
       },
       rightButtonTap: () {
         showModalBottomSheet(
