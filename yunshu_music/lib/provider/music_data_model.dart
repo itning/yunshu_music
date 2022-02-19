@@ -173,7 +173,7 @@ class MusicDataModel extends ChangeNotifier {
     _nowMusicIndex =
         musicList.indexWhere((element) => element.musicId == mediaId);
     if (kIsWeb) {
-      setTitle('$title-$subTitle');
+      setTitle('$title-$subTitle 云舒音乐');
     }
     notifyListeners();
     await _initCover(mediaId, coverUri);
