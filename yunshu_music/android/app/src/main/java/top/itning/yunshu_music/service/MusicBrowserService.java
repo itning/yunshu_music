@@ -1,7 +1,9 @@
 package top.itning.yunshu_music.service;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
@@ -16,7 +18,6 @@ import java.util.stream.Collectors;
 
 import io.flutter.plugin.common.MethodChannel;
 import top.itning.yunshu_music.channel.MusicChannel;
-import top.itning.yunshu_music.util.MusicUtils;
 
 
 /**
@@ -73,7 +74,24 @@ public class MusicBrowserService extends MediaBrowserServiceCompat {
                 }
                 @SuppressWarnings("unchecked")
                 List<Map<String, String>> musicList = (List<Map<String, String>>) response;
-                List<MediaBrowserCompat.MediaItem> list = musicList.stream().map(MusicUtils::to).collect(Collectors.toList());
+                List<MediaBrowserCompat.MediaItem> list = musicList.stream()
+                        .map(music -> {
+                            Bundle bundle = new Bundle();
+                            bundle.putString("lyricUri", music.get("lyricUri"));
+                            MediaDescriptionCompat mediaDescriptionCompat = new MediaDescriptionCompat.Builder()
+                                    .setMediaId(music.get("musicId"))
+                                    .setMediaUri(Uri.parse(music.get("musicUri")))
+                                    .setTitle(music.get("name"))
+                                    .setSubtitle(music.get("singer"))
+                                    .setIconUri(Uri.parse(music.get("coverUri")))
+                                    .setExtras(bundle)
+                                    .build();
+                            return new MediaBrowserCompat.MediaItem(
+                                    mediaDescriptionCompat,
+                                    MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
+                            );
+                        })
+                        .collect(Collectors.toList());
                 MusicBrowserService.this.list = list;
                 result.sendResult(list);
             }

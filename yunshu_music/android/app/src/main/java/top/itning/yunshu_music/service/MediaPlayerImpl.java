@@ -287,17 +287,18 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
         MediaDescriptionCompat description = musicPlayDataService.getNowPlayMusic().getDescription();
         session.setMetadata(new MediaMetadataCompat.Builder()
                 // 歌曲名
-                .putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, description.getTitle())
+                .putText(MediaMetadataCompat.METADATA_KEY_TITLE, description.getTitle())
                 // 歌手名
-                .putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, description.getSubtitle())
+                .putText(MediaMetadataCompat.METADATA_KEY_ARTIST, description.getSubtitle())
                 // 歌词URI
-                .putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, description.getDescription())
-                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, musicPlayDataService.getNowPlayMusic().getMediaId())
+                .putString("lyricUri", description.getExtras() == null ? null : description.getExtras().getString("lyricUri"))
+                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, description.getMediaId())
                 // 歌曲URI
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, description.getMediaUri() == null ? null : description.getMediaUri().toString())
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration)
                 // 封面URI
                 .putText(MediaMetadataCompat.METADATA_KEY_ART_URI, description.getIconUri() == null ? null : description.getIconUri().toString())
-                .build());
+                .build()
+        );
     }
 }
