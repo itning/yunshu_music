@@ -272,7 +272,6 @@ public class MainActivity extends FlutterActivity {
 
         @Override
         public void onMetadataChanged(MediaMetadataCompat metadata) {
-
             MediaDescriptionCompat description = metadata.getDescription();
             Map<String, Object> map = new HashMap<>((int) (7 / 0.75F + 1.0F));
             map.put("mediaId", description.getMediaId());
@@ -280,7 +279,7 @@ public class MainActivity extends FlutterActivity {
             map.put("subTitle", description.getSubtitle());
             map.put("duration", metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION));
             map.put("musicUri", description.getMediaUri() == null ? "" : description.getMediaUri().toString());
-            map.put("lyricUri", description.getDescription());
+            map.put("lyricUri", metadata.getBundle().getString("lyricUri"));
             map.put("coverUri", description.getIconUri() == null ? "" : description.getIconUri().toString());
             metadataEvent.send(map);
         }
