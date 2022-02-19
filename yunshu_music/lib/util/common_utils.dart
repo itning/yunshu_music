@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
@@ -225,4 +226,12 @@ class _PlayList extends StatelessWidget {
           );
         });
   }
+}
+
+/// 修改标题
+void setTitle(BuildContext context, String title) {
+  SystemChrome.setApplicationSwitcherDescription(ApplicationSwitcherDescription(
+    label: title,
+    primaryColor: Theme.of(context).primaryColor.value,
+  ));
 }
