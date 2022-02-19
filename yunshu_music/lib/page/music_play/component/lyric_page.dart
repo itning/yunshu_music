@@ -41,6 +41,12 @@ class _LyricPageState extends State<LyricPage>
   }
 
   @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     return Column(
