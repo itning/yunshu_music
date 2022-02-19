@@ -229,9 +229,7 @@ class _PlayList extends StatelessWidget {
 }
 
 /// 修改标题
-void setTitle(BuildContext context, String title) {
-  SystemChrome.setApplicationSwitcherDescription(ApplicationSwitcherDescription(
-    label: title,
-    primaryColor: Theme.of(context).primaryColor.value,
-  ));
+void setTitle(String title) {
+  SystemChrome.setApplicationSwitcherDescription(
+      ApplicationSwitcherDescription(label: title));
 }

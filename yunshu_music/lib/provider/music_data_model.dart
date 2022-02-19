@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_util.dart';
@@ -10,6 +10,7 @@ import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 /// 音乐数据模型
 class MusicDataModel extends ChangeNotifier {
@@ -171,6 +172,9 @@ class MusicDataModel extends ChangeNotifier {
     _nowPlayMusic!.lyricId = mediaId;
     _nowMusicIndex =
         musicList.indexWhere((element) => element.musicId == mediaId);
+    if (kIsWeb) {
+      setTitle('$title-$subTitle');
+    }
     notifyListeners();
     await _initCover(mediaId, coverUri);
     await _initLyric(mediaId, lyricUri);
