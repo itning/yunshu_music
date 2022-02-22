@@ -76,7 +76,7 @@ class HttpHelper {
   }
 
   Future<Response<Map<String, dynamic>>> getMusic() async {
-    return await _dio.get<Map<String, dynamic>>("$baseUrl/music?size=5000");
+    return await _dio.get<Map<String, dynamic>>("$baseUrl/music?size=5000&sort=gmtCreate,desc");
   }
 
   Future<String?> getLyric(String lyricUri) async {
