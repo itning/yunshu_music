@@ -16,6 +16,7 @@ limitations under the License.
 修改说明：
 1. 适配dart空安全
 2. 注释修改
+3. 歌词如果不是换行符结尾则添加换行符
 */
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
@@ -28,6 +29,9 @@ class LyricUtil {
   static List<Lyric>? formatLyric(String? lyricStr) {
     if (lyricStr == null || lyricStr.trim().isEmpty) {
       return null;
+    }
+    if (!lyricStr.endsWith("\n")) {
+      lyricStr += "\n";
     }
     lyricStr = lyricStr.replaceAll("\r", "");
     RegExp reg = RegExp(r"""\[(.*?):(.*?)\](.*?)\n""");
@@ -54,9 +58,9 @@ class LyricUtil {
           }
           lyrics.add(
             Lyric(
-              list[i][3],
+              temp[3],
               startTime: lyricTimeToDuration(
-                "${temp[1]}:${temp[2]}",
+                "$title:${temp[2]}",
               ),
             ),
           );
