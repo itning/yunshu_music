@@ -79,9 +79,15 @@ class LyricUtil {
     return lyrics;
   }
 
+  /// 1、标准格式： [分钟:秒.毫秒] 歌词
+  /// 2、其他格式①：[分钟:秒] 歌词；
+  /// 3、其他格式②：[分钟:秒:毫秒] 歌词，与标准格式相比，秒后边的点号被改成了冒号。
   static Duration lyricTimeToDuration(String time) {
     int minuteSeparatorIndex = time.indexOf(":");
     int secondSeparatorIndex = time.indexOf(".");
+    if (secondSeparatorIndex == -1) {
+      secondSeparatorIndex = time.lastIndexOf(":");
+    }
 
     // 分
     var minute = time.substring(0, minuteSeparatorIndex);
