@@ -22,7 +22,7 @@ void main() async {
       "exception": details.exceptionAsString(),
       "stackTrace": details.stack.toString(),
     };
-    //上报错误
+    // 上报错误
     LogHelper.get().error("reportErrorAndLog : $errorMsg");
   }
 
@@ -32,7 +32,7 @@ void main() async {
   }
 
   FlutterError.onError = (FlutterErrorDetails details) {
-    //获取 widget build 过程中出现的异常错误
+    // 获取 widget build 过程中出现的异常错误
     reportErrorAndLog(details);
   };
 
