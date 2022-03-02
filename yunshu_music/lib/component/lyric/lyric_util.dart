@@ -29,6 +29,9 @@ class LyricUtil {
     if (lyricStr == null || lyricStr.trim().isEmpty) {
       return null;
     }
+    if (!lyricStr.endsWith("\n")) {
+      lyricStr += "\n";
+    }
     lyricStr = lyricStr.replaceAll("\r", "");
     RegExp reg = RegExp(r"""\[(.*?):(.*?)\](.*?)\n""");
 
@@ -54,9 +57,9 @@ class LyricUtil {
           }
           lyrics.add(
             Lyric(
-              list[i][3],
+              temp[3],
               startTime: lyricTimeToDuration(
-                "${temp[1]}:${temp[2]}",
+                "$title:${temp[2]}",
               ),
             ),
           );
