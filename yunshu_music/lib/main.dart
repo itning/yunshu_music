@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -13,15 +14,43 @@ import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 import 'package:yunshu_music/route/app_route_delegate.dart';
 import 'package:yunshu_music/route/app_route_parser.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 void main() async {
+  void reportErrorAndLog(FlutterErrorDetails details) {
+    final errorMsg = {
+      "exception": details.exceptionAsString(),
+      "stackTrace": details.stack.toString(),
+    };
+    //上报错误
+    LogHelper.get().error("reportErrorAndLog : $errorMsg");
+  }
+
+  FlutterErrorDetails makeDetails(Object error, StackTrace stackTrace) {
+    // 构建错误信息
+    return FlutterErrorDetails(stack: stackTrace, exception: error);
+  }
+
+  FlutterError.onError = (FlutterErrorDetails details) {
+    //获取 widget build 过程中出现的异常错误
+    reportErrorAndLog(details);
+  };
+
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
   await CacheModel.get().init(sharedPreferences);
   await ThemeModel.get().init(sharedPreferences);
   await MusicDataModel.get().init();
   await MusicChannel.get().init();
-  runApp(const YunShuMusicApp());
+  runZonedGuarded(
+    () {
+      runApp(const YunShuMusicApp());
+    },
+    (error, stackTrace) {
+      // 没被我们catch的异常
+      reportErrorAndLog(makeDetails(error, stackTrace));
+    },
+  );
   if (!kIsWeb && Platform.isAndroid) {
     // 沉浸式状态栏
     // 写在组件渲染之后，是为了在渲染后进行设置赋值，覆盖状态栏，写在渲染之前对MaterialApp组件会覆盖这个值。
