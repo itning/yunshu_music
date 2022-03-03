@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yunshu_music/method_channel/music_channel_windows.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 
@@ -20,7 +21,7 @@ class MusicChannel {
 
   late Stream<dynamic> metadataEvent;
 
-  Future<void> init() async {
+  Future<void> init(SharedPreferences sharedPreferences) async {
     _methodChannel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'getMusicList':

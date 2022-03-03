@@ -73,7 +73,7 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<int> cacheMusicList(List<MusicDataContent> list) async {
-    if (kIsWeb) {
+    if (kIsWeb || Platform.isWindows) {
       return 0;
     }
     LogHelper.get().info('start cache music list');
@@ -106,7 +106,7 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<List<MusicDataContent>> getMusicList() async {
-    if (kIsWeb) {
+    if (kIsWeb || Platform.isWindows) {
       return [];
     }
     LogHelper.get().info('get music list from cache');
@@ -118,7 +118,7 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<File?> cacheLyric(String lyricId, String? content) async {
-    if (kIsWeb) {
+    if (kIsWeb || Platform.isWindows) {
       return null;
     }
     LogHelper.get().info('start cache lyric');
@@ -138,7 +138,7 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<bool> deleteLyric(String lyricId) async {
-    if (kIsWeb) {
+    if (kIsWeb || Platform.isWindows) {
       return false;
     }
     LogHelper.get().info('start delete cache lyric $lyricId');
@@ -158,7 +158,7 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<String?> getLyric(String lyricId) async {
-    if (kIsWeb) {
+    if (kIsWeb || Platform.isWindows) {
       return null;
     }
     LogHelper.get().info('get lyric from cache $lyricId');
@@ -176,7 +176,7 @@ class CacheModel extends ChangeNotifier {
 
   Future<File?> cacheCover(
       String musicId, List<int>? by, String? mimeType) async {
-    if (kIsWeb) {
+    if (kIsWeb || Platform.isWindows) {
       return null;
     }
     if (null == by) {
@@ -209,7 +209,7 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<File?> getCover(String musicId) async {
-    if (kIsWeb) {
+    if (kIsWeb || Platform.isWindows) {
       return null;
     }
     File extFile = File(joinAll([
@@ -233,7 +233,7 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<Uint8List> getDefaultCover() async {
-    if (kIsWeb) {
+    if (kIsWeb || Platform.isWindows) {
       ByteData data = await rootBundle.load("asserts/images/default_cover.jpg");
       return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
     }
@@ -255,7 +255,7 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<bool> deleteCover(String musicId) async {
-    if (kIsWeb) {
+    if (kIsWeb || Platform.isWindows) {
       return false;
     }
     LogHelper.get().info('start delete cache cover $musicId');
@@ -290,7 +290,7 @@ class CacheModel extends ChangeNotifier {
 
   Future<bool> deleteMusicCacheByMusicId(
       String musicId, String musicUri) async {
-    if (kIsWeb) {
+    if (kIsWeb || Platform.isWindows) {
       return false;
     }
     Uri uri = Uri.parse(musicUri);
