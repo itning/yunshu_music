@@ -28,7 +28,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   //Win32Window::Point origin(10, 10);
   //Win32Window::Size size(400, 800);
 
-  UINT windowWidth = 400, windowHeight = 800;
+  UINT windowWidth = 450, windowHeight = 900;
   Win32Window::Size size(windowWidth, windowHeight);
   UINT scrWidth, scrHeight, xShaft, yShaft;
   scrWidth = GetSystemMetrics(SM_CXFULLSCREEN);

@@ -60,8 +60,7 @@ class MusicChannelWindows extends MusicChannel {
     }
 
     setWindowTitle("云舒音乐");
-    setWindowMinSize(const Size(400, 800));
-    setWindowMaxSize(const Size(400, 800));
+    setWindowMinSize(const Size(450, 900));
 
     this.sharedPreferences = sharedPreferences;
     _nowPlayIndex = -1;
@@ -86,8 +85,6 @@ class MusicChannelWindows extends MusicChannel {
     });
 
     player.playbackStream.listen((event) {
-      LogHelper().debug(
-          'isPlaying ${event.isPlaying} isSeekable ${event.isSeekable} isCompleted ${event.isCompleted}');
       if (first || _playbackState.state != 8 || event.isPlaying) {
         if (first) {
           first = false;
