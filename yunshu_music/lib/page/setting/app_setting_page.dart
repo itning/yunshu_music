@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_update_dialog/flutter_update_dialog.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -162,44 +164,66 @@ class AppSettingPage extends StatelessWidget {
               style: TextStyle(fontSize: 12.0),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  '版本',
-                  style: TextStyle(fontSize: 17.0),
+          InkWell(
+            onTap: () {
+              if (!kIsWeb) {
+                UpdateDialog _ = UpdateDialog.showUpdate(
+                  context,
+                  title: "检测到新版本",
+                  updateContent: "点击升级按钮下载新版本",
+                  updateButtonText: '升级',
+                  onUpdate: () async {
+                    bool can = await canLaunch(
+                        'https://github.com/itning/yunshu_music');
+                    if (can) {
+                      await launch('https://github.com/itning/yunshu_music');
+                    } else {
+                      Fluttertoast.showToast(msg: "无法升级");
+                    }
+                  },
+                );
+              }
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    '版本',
+                    style: TextStyle(fontSize: 17.0),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: FutureBuilder(
-                    future: PackageInfo.fromPlatform(),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<PackageInfo> snapshot) {
-                      // 请求已结束
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        return Text(
-                          snapshot.hasError
-                              ? '未知'
-                              : '${snapshot.data?.version}(${snapshot.data?.buildNumber})',
-                          style: const TextStyle(fontSize: 17.0),
-                        );
-                      } else {
-                        // 请求未结束，显示loading
-                        return const Text(
-                          '加载中',
-                          style: TextStyle(fontSize: 17.0),
-                        );
-                      }
-                    }),
-              )
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: FutureBuilder(
+                      future: PackageInfo.fromPlatform(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<PackageInfo> snapshot) {
+                        // 请求已结束
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          return Text(
+                            snapshot.hasError
+                                ? '未知'
+                                : '${snapshot.data?.version}(${snapshot.data?.buildNumber})',
+                            style: const TextStyle(fontSize: 17.0),
+                          );
+                        } else {
+                          // 请求未结束，显示loading
+                          return const Text(
+                            '加载中',
+                            style: TextStyle(fontSize: 17.0),
+                          );
+                        }
+                      }),
+                )
+              ],
+            ),
           ),
           InkWell(
-            onTap: () async{
-              bool can = await canLaunch('https://github.com/itning/yunshu_music');
+            onTap: () async {
+              bool can =
+                  await canLaunch('https://github.com/itning/yunshu_music');
               if (can) {
                 await launch('https://github.com/itning/yunshu_music');
               } else {
