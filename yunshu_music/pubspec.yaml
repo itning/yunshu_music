@@ -46,7 +46,7 @@ dependencies:
   audio_video_progress_bar: ^0.10.0
   sqflite: ^2.0.2
   url_launcher: ^6.0.20
-  fluttertoast: ^8.0.8
+  fluttertoast: ^8.0.9
   logger: ^1.1.0
   crypto: ^3.0.1
   path_provider: ^2.0.9
