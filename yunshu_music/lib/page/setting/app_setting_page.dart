@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 
@@ -150,6 +153,78 @@ class AppSettingPage extends StatelessWidget {
                 },
               ),
             ],
+          ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.only(left: 16.0, top: 16.0),
+            child: Text(
+              '关于',
+              style: TextStyle(fontSize: 12.0),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  '版本',
+                  style: TextStyle(fontSize: 17.0),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: FutureBuilder(
+                    future: PackageInfo.fromPlatform(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<PackageInfo> snapshot) {
+                      // 请求已结束
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return Text(
+                          snapshot.hasError
+                              ? '未知'
+                              : '${snapshot.data?.version}(${snapshot.data?.buildNumber})',
+                          style: const TextStyle(fontSize: 17.0),
+                        );
+                      } else {
+                        // 请求未结束，显示loading
+                        return const Text(
+                          '加载中',
+                          style: TextStyle(fontSize: 17.0),
+                        );
+                      }
+                    }),
+              )
+            ],
+          ),
+          InkWell(
+            onTap: () async{
+              bool can = await canLaunch('https://github.com/itning/yunshu_music');
+              if (can) {
+                await launch('https://github.com/itning/yunshu_music');
+              } else {
+                Fluttertoast.showToast(msg: "无法打开");
+              }
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: const [
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'GitHub',
+                    style: TextStyle(fontSize: 17.0),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Icon(
+                    Icons.open_in_new,
+                    size: 17.0,
+                  ),
+                )
+              ],
+            ),
           ),
         ],
       ),
