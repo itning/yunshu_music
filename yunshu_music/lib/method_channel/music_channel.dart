@@ -1,17 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:yunshu_music/method_channel/music_channel_windows.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
-import 'package:yunshu_music/util/common_utils.dart';
 
 class MusicChannel {
   static MusicChannel? _instance;
 
   static MusicChannel get() {
-    _instance ??= MusicChannel();
+    _instance ??= Platform.isWindows ? MusicChannelWindows() : MusicChannel();
     return _instance!;
   }
 
@@ -21,16 +20,7 @@ class MusicChannel {
 
   late Stream<dynamic> metadataEvent;
 
-  late Player player;
-
   Future<void> init() async {
-    if (!Platform.isWindows) {
-      LogHelper().error('非windows平台调用');
-      return;
-    }
-    LogHelper().debug('初始化DartVLC');
-    DartVLC.initialize();
-    player = Player(id: 69420);
     _methodChannel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'getMusicList':
@@ -64,29 +54,50 @@ class MusicChannel {
     }
   }
 
-  Future<void> initMethod() async {}
+  Future<void> initMethod() async {
+    await _methodChannel.invokeMethod("init");
+  }
 
-  Future<void> playFromId(String id) async {}
+  Future<void> playFromId(String id) async {
+    await _methodChannel.invokeMethod("playFromId", {'id': id});
+  }
 
-  Future<void> play() async {}
+  Future<void> play() async {
+    await _methodChannel.invokeMethod("play");
+  }
 
-  Future<void> pause() async {}
+  Future<void> pause() async {
+    await _methodChannel.invokeMethod("pause");
+  }
 
-  Future<void> skipToPrevious() async {}
+  Future<void> skipToPrevious() async {
+    await _methodChannel.invokeMethod("skipToPrevious");
+  }
 
-  Future<void> skipToNext() async {}
+  Future<void> skipToNext() async {
+    await _methodChannel.invokeMethod("skipToNext");
+  }
 
-  Future<void> seekTo(Duration position) async {}
+  Future<void> seekTo(Duration position) async {
+    await _methodChannel
+        .invokeMethod('seekTo', {'position': position.inMilliseconds});
+  }
 
-  Future<void> setPlayMode(String mode) async {}
+  Future<void> setPlayMode(String mode) async {
+    await _methodChannel.invokeMethod('setPlayMode', {'mode': mode});
+  }
 
   Future<String> getPlayMode() async {
-    return 'sequence';
+    return await _methodChannel.invokeMethod('getPlayMode');
   }
 
   Future<List<dynamic>> getPlayList() async {
-    return [];
+    // List<Map<String,String>>
+    return await _methodChannel.invokeMethod('getPlayList');
   }
 
-  Future<void> delPlayListByMediaId(String mediaId) async {}
+  Future<void> delPlayListByMediaId(String mediaId) async {
+    await _methodChannel
+        .invokeMethod('delPlayListByMediaId', {'mediaId': mediaId});
+  }
 }

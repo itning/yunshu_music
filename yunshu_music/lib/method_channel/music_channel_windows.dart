@@ -1,17 +1,14 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 class MusicChannelWindows extends MusicChannel {
-  static MusicChannelWindows? _instance;
-
-  static MusicChannel get() {
-    _instance ??= MusicChannelWindows();
-    return _instance!;
-  }
 
   static const _methodChannel = MethodChannel('yunshu.music/method_channel');
 
@@ -19,7 +16,16 @@ class MusicChannelWindows extends MusicChannel {
 
   late Stream<dynamic> metadataEvent;
 
+  late Player player;
+
   Future<void> init() async {
+    if (!Platform.isWindows) {
+      LogHelper().error('非windows平台调用');
+      return;
+    }
+    LogHelper().debug('初始化DartVLC');
+    DartVLC.initialize();
+    player = Player(id: 69420);
     _methodChannel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'getMusicList':
@@ -29,7 +35,7 @@ class MusicChannelWindows extends MusicChannel {
     });
     if (kIsWeb) {
       StreamController<dynamic> playbackStateController =
-          StreamController<dynamic>();
+      StreamController<dynamic>();
       playbackStateEvent = playbackStateController.stream;
       const MethodChannel('yunshu.music/playback_state_event_channel')
           .setMethodCallHandler((call) async {
@@ -37,7 +43,7 @@ class MusicChannelWindows extends MusicChannel {
       });
 
       StreamController<dynamic> metadataEventController =
-          StreamController<dynamic>();
+      StreamController<dynamic>();
       metadataEvent = metadataEventController.stream;
       const MethodChannel('yunshu.music/metadata_event_channel')
           .setMethodCallHandler((call) async {
@@ -45,58 +51,37 @@ class MusicChannelWindows extends MusicChannel {
       });
     } else {
       EventChannel _playbackStateEventChannel =
-          const EventChannel('yunshu.music/playback_state_event_channel');
+      const EventChannel('yunshu.music/playback_state_event_channel');
       playbackStateEvent = _playbackStateEventChannel.receiveBroadcastStream();
       EventChannel _metadataEventChannel =
-          const EventChannel('yunshu.music/metadata_event_channel');
+      const EventChannel('yunshu.music/metadata_event_channel');
       metadataEvent = _metadataEventChannel.receiveBroadcastStream();
     }
   }
 
-  Future<void> initMethod() async {
-    await _methodChannel.invokeMethod("init");
-  }
+  Future<void> initMethod() async {}
 
-  Future<void> playFromId(String id) async {
-    await _methodChannel.invokeMethod("playFromId", {'id': id});
-  }
+  Future<void> playFromId(String id) async {}
 
-  Future<void> play() async {
-    await _methodChannel.invokeMethod("play");
-  }
+  Future<void> play() async {}
 
-  Future<void> pause() async {
-    await _methodChannel.invokeMethod("pause");
-  }
+  Future<void> pause() async {}
 
-  Future<void> skipToPrevious() async {
-    await _methodChannel.invokeMethod("skipToPrevious");
-  }
+  Future<void> skipToPrevious() async {}
 
-  Future<void> skipToNext() async {
-    await _methodChannel.invokeMethod("skipToNext");
-  }
+  Future<void> skipToNext() async {}
 
-  Future<void> seekTo(Duration position) async {
-    await _methodChannel
-        .invokeMethod('seekTo', {'position': position.inMilliseconds});
-  }
+  Future<void> seekTo(Duration position) async {}
 
-  Future<void> setPlayMode(String mode) async {
-    await _methodChannel.invokeMethod('setPlayMode', {'mode': mode});
-  }
+  Future<void> setPlayMode(String mode) async {}
 
   Future<String> getPlayMode() async {
-    return await _methodChannel.invokeMethod('getPlayMode');
+    return 'sequence';
   }
 
   Future<List<dynamic>> getPlayList() async {
-    // List<Map<String,String>>
-    return await _methodChannel.invokeMethod('getPlayList');
+    return [];
   }
 
-  Future<void> delPlayListByMediaId(String mediaId) async {
-    await _methodChannel
-        .invokeMethod('delPlayListByMediaId', {'mediaId': mediaId});
-  }
+  Future<void> delPlayListByMediaId(String mediaId) async {}
 }

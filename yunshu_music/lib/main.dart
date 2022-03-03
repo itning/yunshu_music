@@ -8,7 +8,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
-import 'package:yunshu_music/method_channel/music_channel_windows.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
@@ -42,11 +41,7 @@ void main() async {
   await CacheModel.get().init(sharedPreferences);
   await ThemeModel.get().init(sharedPreferences);
   await MusicDataModel.get().init();
-  if (Platform.isWindows) {
-    await MusicChannelWindows.get().init();
-  } else {
-    await MusicChannel.get().init();
-  }
+  await MusicChannel.get().init();
   runZonedGuarded(
     () {
       runApp(const YunShuMusicApp());
