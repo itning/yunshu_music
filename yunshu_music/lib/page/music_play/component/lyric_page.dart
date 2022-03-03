@@ -42,6 +42,7 @@ class _LyricPageState extends State<LyricPage>
 
   @override
   void dispose() {
+    controller.animationController?.dispose();
     controller.dispose();
     super.dispose();
   }
