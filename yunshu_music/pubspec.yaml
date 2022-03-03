@@ -54,6 +54,10 @@ dependencies:
   package_info_plus: ^1.4.0
   flutter_update_dialog: ^2.0.0
   dart_vlc: ^0.1.8
+  window_size:
+    git:
+      url: git://github.com/google/flutter-desktop-embedding.git
+      path: plugins/window_size
 
 dev_dependencies:
   flutter_test:

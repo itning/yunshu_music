@@ -25,9 +25,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
   FlutterWindow window(project);
-  Win32Window::Point origin(10, 10);
-  Win32Window::Size size(1280, 720);
-  if (!window.CreateAndShow(L"yunshu_music", origin, size)) {
+  //Win32Window::Point origin(10, 10);
+  //Win32Window::Size size(400, 800);
+
+  UINT windowWidth = 400, windowHeight = 800;
+  Win32Window::Size size(windowWidth, windowHeight);
+  UINT scrWidth, scrHeight, xShaft, yShaft;
+  scrWidth = GetSystemMetrics(SM_CXFULLSCREEN);
+  scrHeight = GetSystemMetrics(SM_CYFULLSCREEN);
+  xShaft = (scrWidth - windowWidth) / 2;
+  yShaft = (scrHeight - windowHeight) / 2;
+  Win32Window::Point origin(xShaft, yShaft);
+
+  if (!window.CreateAndShow(L"Loading...", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);
