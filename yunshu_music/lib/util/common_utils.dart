@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
@@ -9,7 +13,11 @@ import 'package:yunshu_music/util/log_console.dart';
 
 class LogHelper {
   static final Logger _logger = Logger(
-    output: LogConsole.wrap(),
+    output: LogConsole.wrap(
+        innerOutput: (!kIsWeb && Platform.isWindows)
+            ? MultiOutput(
+                [ConsoleOutput(), FileOutput(file: File("./yunshu_music.log"))])
+            : ConsoleOutput()),
     filter: ProductionFilter(),
     printer: SimplePrinter(printTime: true),
   );
@@ -34,6 +42,40 @@ class LogHelper {
 
   void error(dynamic message, [dynamic error, StackTrace? stackTrace]) {
     _logger.log(Level.error, message, error, stackTrace);
+  }
+}
+
+/// see https://github.com/leisim/logger/issues/128
+class FileOutput extends LogOutput {
+  final File file;
+  final bool overrideExisting;
+  final Encoding encoding;
+  IOSink? _sink;
+
+  FileOutput({
+    required this.file,
+    this.overrideExisting = false,
+    this.encoding = utf8,
+  });
+
+  @override
+  void init() {
+    _sink = file.openWrite(
+      mode: overrideExisting ? FileMode.writeOnly : FileMode.writeOnlyAppend,
+      encoding: encoding,
+    );
+  }
+
+  @override
+  void output(OutputEvent event) {
+    _sink?.writeAll(event.lines, '\n');
+    _sink?.writeln();
+  }
+
+  @override
+  void destroy() async {
+    await _sink?.flush();
+    await _sink?.close();
   }
 }
 
