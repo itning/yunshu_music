@@ -1,8 +1,8 @@
 import 'dart:html' as html;
 
-import 'package:music_channel/music_channel_web.dart';
-import 'package:music_channel/music_data.dart';
-import 'package:music_channel/music_model.dart';
+import 'package:music_channel_web/music_channel_web.dart';
+import 'package:music_channel_web/music_data.dart';
+import 'package:music_platform_interface/music_model.dart';
 
 class MusicPlayer {
   final html.AudioElement _audio = html.AudioElement();
@@ -33,9 +33,8 @@ class MusicPlayer {
           ? 0
           : timeRanges.end(length - 1) / _audio.duration * _audio.duration);
       _metaData.duration = numSecond2Millisecond(_audio.duration);
-      MusicChannelWeb.playbackStateEventChannel
-          .invokeMethod('', _playbackState.toMap());
-      MusicChannelWeb.metadataEventChannel.invokeMethod('', _metaData.toMap());
+      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+      MusicChannel.get().metadataEventController.sink.add(_metaData.toMap());
     }
   }
 
@@ -46,8 +45,7 @@ class MusicPlayer {
     _audio.onEnded.listen((event) {
       html.window.console.info('onEnd');
       _playbackState.state = 0;
-      MusicChannelWeb.playbackStateEventChannel
-          .invokeMethod('', _playbackState.toMap());
+      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
       onSkipToNext(false);
     });
 
@@ -57,8 +55,7 @@ class MusicPlayer {
         onPlay();
       } else {
         _playbackState.state = 2;
-        MusicChannelWeb.playbackStateEventChannel
-            .invokeMethod('', _playbackState.toMap());
+        MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
         _playNow = true;
       }
     });
@@ -66,15 +63,13 @@ class MusicPlayer {
     _audio.onPlay.listen((event) {
       html.window.console.info('onPlayStream');
       _playbackState.state = 3;
-      MusicChannelWeb.playbackStateEventChannel
-          .invokeMethod('', _playbackState.toMap());
+      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
     });
 
     _audio.onPause.listen((event) {
       html.window.console.info('onPauseStream');
       _playbackState.state = 2;
-      MusicChannelWeb.playbackStateEventChannel
-          .invokeMethod('', _playbackState.toMap());
+      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
     });
 
     _audio.onAbort.listen((event) {
@@ -110,13 +105,11 @@ class MusicPlayer {
     html.window.console.info('onPlay');
     _audio.play().then((value) {
       _playbackState.state = 3;
-      MusicChannelWeb.playbackStateEventChannel
-          .invokeMethod('', _playbackState.toMap());
+      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
     }).catchError((error) {
       html.window.console.error(error);
       _playbackState.state = 3;
-      MusicChannelWeb.playbackStateEventChannel
-          .invokeMethod('', _playbackState.toMap());
+      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
     });
   }
 
@@ -124,8 +117,7 @@ class MusicPlayer {
     html.window.console.info('onPause');
     _audio.pause();
     _playbackState.state = 2;
-    MusicChannelWeb.playbackStateEventChannel
-        .invokeMethod('', _playbackState.toMap());
+    MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
   }
 
   void onSeekTo(int position) {
@@ -141,8 +133,7 @@ class MusicPlayer {
   void onSkipToPrevious(bool userTrigger) {
     html.window.console.info('onSkipToPrevious');
     _playbackState.state = 9;
-    MusicChannelWeb.playbackStateEventChannel
-        .invokeMethod('', _playbackState.toMap());
+    MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
     MusicData.get().previous(userTrigger);
     initPlay();
   }
@@ -150,8 +141,7 @@ class MusicPlayer {
   void onSkipToNext(bool userTrigger) {
     html.window.console.info('onSkipToNext');
     _playbackState.state = 10;
-    MusicChannelWeb.playbackStateEventChannel
-        .invokeMethod('', _playbackState.toMap());
+    MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
     MusicData.get().next(userTrigger);
     initPlay();
   }
@@ -170,15 +160,14 @@ class MusicPlayer {
 
     _audio.src = nowPlayMusic.musicUri!;
     _playbackState.state = 8;
-    MusicChannelWeb.playbackStateEventChannel
-        .invokeMethod('', _playbackState.toMap());
+    MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
     _metaData.mediaId = nowPlayMusic.musicId ?? '';
     _metaData.title = nowPlayMusic.name ?? '';
     _metaData.subTitle = nowPlayMusic.singer ?? '';
     _metaData.coverUri = nowPlayMusic.coverUri ?? '';
     _metaData.musicUri = nowPlayMusic.musicUri ?? '';
     _metaData.lyricUri = nowPlayMusic.lyricUri ?? '';
-    MusicChannelWeb.metadataEventChannel.invokeMethod('', _metaData.toMap());
+    MusicChannel.get().metadataEventController.sink.add(_metaData.toMap());
     // Media Session API
     if (html.MediaStream.supported) {
       html.window.console.info('Support MediaStream');
