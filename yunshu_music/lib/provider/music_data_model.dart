@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:tuple/tuple.dart';
+import 'package:window_size/window_size.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_util.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
@@ -174,6 +175,8 @@ class MusicDataModel extends ChangeNotifier {
         musicList.indexWhere((element) => element.musicId == mediaId);
     if (kIsWeb) {
       setTitle('$title-$subTitle');
+    } else if (Platform.isWindows) {
+      setWindowTitle('$title-$subTitle');
     }
     notifyListeners();
     await _initCover(mediaId, coverUri);

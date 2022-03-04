@@ -1,25 +1,28 @@
-name: music_channel
+name: music_channel_windows
 description: A new Flutter project.
 version: 0.0.1
 homepage:
 
 environment:
   sdk: ">=2.16.1 <3.0.0"
-  flutter: ">=1.17.0"
+  flutter: ">=2.5.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  music_channel_web:
-    path: ../music_channel_web
-  music_channel_windows:
-    path: ../music_channel_windows
   music_platform_interface:
     path: ../music_platform_interface
+  dart_vlc: ^0.1.8
+  window_size:
+    git:
+      url: git://github.com/google/flutter-desktop-embedding.git
+      path: plugins/window_size
+  shared_preferences: ^2.0.13
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^1.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -27,8 +30,8 @@ dev_dependencies:
 # The following section is specific to Flutter.
 flutter:
   plugin:
+    implements: music_channel
     platforms:
-      web:
-        default_package: music_channel_web
       windows:
-        default_package: music_channel_windows
+        pluginClass: MusicChannelWindowsPlugin
+        dartPluginClass: MusicChannelWindows
