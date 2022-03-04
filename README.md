@@ -20,7 +20,7 @@
 
 </div>
 
-一个音乐APP，使用flutter编写，目前支持web和android。
+一个音乐APP，使用flutter编写，目前支持web和android和windows。
 
 <div  align="center">
 <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/a.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/b.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/c.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/d.jpg"/>
