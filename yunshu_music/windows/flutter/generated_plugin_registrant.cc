@@ -10,6 +10,7 @@
 #include <music_channel_windows/music_channel_windows_plugin.h>
 #include <url_launcher_windows/url_launcher_windows.h>
 #include <window_size/window_size_plugin.h>
+#include <windows_taskbar/windows_taskbar_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
   DartVlcPluginRegisterWithRegistrar(
@@ -20,4 +21,6 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("UrlLauncherWindows"));
   WindowSizePluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("WindowSizePlugin"));
+  WindowsTaskbarPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("WindowsTaskbarPlugin"));
 }

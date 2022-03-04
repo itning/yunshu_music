@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   music_channel_windows
   url_launcher_windows
   window_size
+  windows_taskbar
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

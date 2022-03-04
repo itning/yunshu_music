@@ -651,6 +651,13 @@ packages:
       url: "git://github.com/google/flutter-desktop-embedding.git"
     source: git
     version: "0.1.0"
+  windows_taskbar:
+    dependency: transitive
+    description:
+      name: windows_taskbar
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.1.0"
   xdg_directories:
     dependency: transitive
     description:

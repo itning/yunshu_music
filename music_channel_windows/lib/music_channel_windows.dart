@@ -8,6 +8,7 @@ import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_size/window_size.dart';
+import 'package:windows_taskbar/windows_taskbar.dart';
 
 class MusicChannelWindows extends MusicPlatform {
   static void registerWith() {
@@ -81,11 +82,14 @@ class MusicChannelWindows extends MusicPlatform {
     player = Player(id: 69420);
 
     player.positionStream.listen((event) {
-      _playbackState.position = event.position?.inMilliseconds ?? 0;
-      _metaData.duration(event.duration?.inMilliseconds ?? 0);
+      int position = event.position?.inMilliseconds ?? 0;
+      int duration = event.duration?.inMilliseconds ?? 0;
+      _playbackState.position = position;
+      _metaData.duration(duration);
 
       playbackStateController.sink.add(_playbackState.toMap());
       metadataEventController.sink.add(_metaData.toMap());
+      WindowsTaskbar.setProgress(position, duration);
     });
 
     player.playbackStream.listen((event) {
@@ -95,10 +99,14 @@ class MusicChannelWindows extends MusicPlatform {
         }
         _playbackState.state = event.isPlaying ? 3 : 2;
         playbackStateController.sink.add(_playbackState.toMap());
+        WindowsTaskbar.setProgressMode(event.isPlaying
+            ? TaskbarProgressMode.normal
+            : TaskbarProgressMode.paused);
       }
       if (event.isCompleted) {
         _playbackState.state = 0;
         playbackStateController.sink.add(_playbackState.toMap());
+        WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
         next(false);
         initPlay(autoStart: true);
       }
@@ -116,6 +124,7 @@ class MusicChannelWindows extends MusicPlatform {
     }
     _playbackState.state = 8;
     playbackStateController.sink.add(_playbackState.toMap());
+    WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
     player.open(Media.network(_nowPlayMusic!.musicUri!), autoStart: autoStart);
     _metaData.from(_nowPlayMusic!);
     metadataEventController.sink.add(_metaData.toMap());
