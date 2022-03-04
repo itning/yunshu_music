@@ -47,6 +47,10 @@ class CacheModel extends ChangeNotifier {
     _enableMusicCache = sharedPreferences.getBool(_enableMusicCacheKey) ?? true;
     _enableCoverCache = sharedPreferences.getBool(_enableCoverCacheKey) ?? true;
     _enableLyricCache = sharedPreferences.getBool(_enableLyricCacheKey) ?? true;
+    if(kIsWeb){
+      // sqflite不支持web平台，并且web平台不支持Platform进行判断操作
+      return;
+    }
     // support platform see https://pub.dev/packages/sqflite
     if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       _database = await openDatabase(

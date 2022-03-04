@@ -3,15 +3,14 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:yunshu_music/method_channel/music_channel_windows.dart';
+import 'package:music_channel/music_channel.dart' as channel;
 import 'package:yunshu_music/provider/music_data_model.dart';
 
 class MusicChannel {
   static MusicChannel? _instance;
 
   static MusicChannel get() {
-    _instance ??= Platform.isWindows ? MusicChannelWindows() : MusicChannel();
+    _instance ??= MusicChannel();
     return _instance!;
   }
 
@@ -21,7 +20,7 @@ class MusicChannel {
 
   late Stream<dynamic> metadataEvent;
 
-  Future<void> init(SharedPreferences sharedPreferences) async {
+  Future<void> init() async {
     _methodChannel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'getMusicList':
@@ -29,23 +28,31 @@ class MusicChannel {
         default:
       }
     });
+    // web平台
     if (kIsWeb) {
       StreamController<dynamic> playbackStateController =
           StreamController<dynamic>();
       playbackStateEvent = playbackStateController.stream;
-      const MethodChannel('yunshu.music/playback_state_event_channel')
-          .setMethodCallHandler((call) async {
-        playbackStateController.sink.add(call.arguments);
-      });
 
       StreamController<dynamic> metadataEventController =
           StreamController<dynamic>();
       metadataEvent = metadataEventController.stream;
-      const MethodChannel('yunshu.music/metadata_event_channel')
-          .setMethodCallHandler((call) async {
-        metadataEventController.sink.add(call.arguments);
-      });
+      channel.init(metadataEventController, playbackStateController);
     } else {
+      // windows平台
+      if (Platform.isWindows) {
+        StreamController<dynamic> playbackStateController =
+            StreamController<dynamic>();
+        playbackStateEvent = playbackStateController.stream;
+
+        StreamController<dynamic> metadataEventController =
+            StreamController<dynamic>();
+        metadataEvent = metadataEventController.stream;
+
+        channel.init(metadataEventController, playbackStateController);
+        return;
+      }
+      // android平台
       EventChannel _playbackStateEventChannel =
           const EventChannel('yunshu.music/playback_state_event_channel');
       playbackStateEvent = _playbackStateEventChannel.receiveBroadcastStream();
@@ -56,48 +63,82 @@ class MusicChannel {
   }
 
   Future<void> initMethod() async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.initMethod(
+          MusicDataModel.get().musicList.map((e) => e.toJson()).toList());
+    }
     await _methodChannel.invokeMethod("init");
   }
 
   Future<void> playFromId(String id) async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.playFromId(id);
+    }
     await _methodChannel.invokeMethod("playFromId", {'id': id});
   }
 
   Future<void> play() async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.play();
+    }
     await _methodChannel.invokeMethod("play");
   }
 
   Future<void> pause() async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.pause();
+    }
     await _methodChannel.invokeMethod("pause");
   }
 
   Future<void> skipToPrevious() async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.skipToPrevious();
+    }
     await _methodChannel.invokeMethod("skipToPrevious");
   }
 
   Future<void> skipToNext() async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.skipToNext();
+    }
     await _methodChannel.invokeMethod("skipToNext");
   }
 
   Future<void> seekTo(Duration position) async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.seekTo(position);
+    }
     await _methodChannel
         .invokeMethod('seekTo', {'position': position.inMilliseconds});
   }
 
   Future<void> setPlayMode(String mode) async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.setPlayMode(mode);
+    }
     await _methodChannel.invokeMethod('setPlayMode', {'mode': mode});
   }
 
   Future<String> getPlayMode() async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.getPlayMode();
+    }
     return await _methodChannel.invokeMethod('getPlayMode');
   }
 
   Future<List<dynamic>> getPlayList() async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.getPlayList();
+    }
     // List<Map<String,String>>
     return await _methodChannel.invokeMethod('getPlayList');
   }
 
   Future<void> delPlayListByMediaId(String mediaId) async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.delPlayListByMediaId(mediaId);
+    }
     await _methodChannel
         .invokeMethod('delPlayListByMediaId', {'mediaId': mediaId});
   }

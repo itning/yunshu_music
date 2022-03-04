@@ -175,8 +175,7 @@ class MusicDataModel extends ChangeNotifier {
         musicList.indexWhere((element) => element.musicId == mediaId);
     if (kIsWeb) {
       setTitle('$title-$subTitle');
-    }
-    if (Platform.isWindows) {
+    } else if (Platform.isWindows) {
       setWindowTitle('$title-$subTitle');
     }
     notifyListeners();

@@ -40,7 +40,7 @@ void main() async {
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
   await CacheModel.get().init(sharedPreferences);
   await ThemeModel.get().init(sharedPreferences);
-  await MusicChannel.get().init(sharedPreferences);
+  await MusicChannel.get().init();
   await MusicDataModel.get().init();
   runZonedGuarded(
     () {
