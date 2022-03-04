@@ -1,7 +1,8 @@
 import 'dart:html' as html;
 import 'dart:math';
 
-import 'package:music_channel/music_model.dart';
+import 'package:music_platform_interface/music_model.dart';
+
 
 class MusicData {
   static const String _nowPlaymusicIdKey = "NOW_PLAY_MEDIA_ID_KEY";

@@ -40,8 +40,8 @@ void main() async {
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
   await CacheModel.get().init(sharedPreferences);
   await ThemeModel.get().init(sharedPreferences);
-  await MusicDataModel.get().init();
   await MusicChannel.get().init();
+  await MusicDataModel.get().init();
   runZonedGuarded(
     () {
       runApp(const YunShuMusicApp());

@@ -227,6 +227,9 @@ class _LyricWidgetState extends State<LyricWidget> {
   }
 
   void resetDragging() {
+    if (!mounted) {
+      return;
+    }
     _lyricPainter.currentLyricIndex =
         findLyricIndexByDuration(widget.controller.progress, widget.lyrics);
 
@@ -262,6 +265,9 @@ class _LyricWidgetState extends State<LyricWidget> {
     var animationController = widget.controller.animationController;
     if (animationController != null) {
       animationController.stop();
+    }
+    if (!mounted) {
+      return;
     }
     animationController = AnimationController(
         vsync: tickerProvider, duration: const Duration(milliseconds: 300))
