@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   dart_vlc
   music_channel_windows
+  system_tray
   url_launcher_windows
   window_size
   windows_taskbar

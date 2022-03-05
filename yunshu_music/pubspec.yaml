@@ -88,6 +88,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - asserts/images/default_cover.jpg
+    - asserts/icon/app_icon.ico
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
