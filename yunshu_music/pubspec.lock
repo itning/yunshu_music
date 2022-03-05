@@ -649,6 +649,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.4.1"
+  window_manager:
+    dependency: transitive
+    description:
+      name: window_manager
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.8"
   window_size:
     dependency: transitive
     description:

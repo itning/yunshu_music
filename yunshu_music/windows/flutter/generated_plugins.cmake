@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   music_channel_windows
   system_tray
   url_launcher_windows
+  window_manager
   window_size
   windows_taskbar
 )
