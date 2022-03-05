@@ -20,7 +20,23 @@
 
 </div>
 
-一个音乐APP，使用flutter编写，目前支持web和android和windows。
+一个使用flutter编写的跨平台音乐播放app
+
+目前支持平台：
+
+| 平台    | 支持 |
+| ------- | ---- |
+| Android | √    |
+| Web     | √    |
+| Windows | √    |
+
+功能清单：[功能计划](https://github.com/itning/yunshu_music/projects/1)
+
+需求列表：[feat](https://github.com/itning/yunshu_music/issues)
+
+依赖库：[dependencies](https://github.com/itning/yunshu_music/blob/master/yunshu_music/pubspec.yaml#L29)
+
+
 
 <div  align="center">
 <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/a.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/b.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/c.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/d.jpg"/>
