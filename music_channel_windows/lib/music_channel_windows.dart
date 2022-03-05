@@ -9,6 +9,7 @@ import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_tray/system_tray.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
@@ -85,13 +86,14 @@ class MusicChannelWindows extends MusicPlatform {
     _nowPlayIndex = -1;
     _playMode =
         valueOf(_sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE');
+    await windowManager.ensureInitialized();
 
     DartVLC.initialize();
     _player = Player(id: 69420);
     _systemTray = SystemTray();
 
     _menus = [
-      MenuItem(label: '云舒音乐'),
+      MenuItem(label: '云舒音乐', onClicked: () => windowManager.show()),
       MenuSeparator(),
       MenuItem(label: '上一曲', onClicked: () => skipToPrevious()),
       MenuItem(label: '下一曲', onClicked: () => skipToNext()),
@@ -144,6 +146,8 @@ class MusicChannelWindows extends MusicPlatform {
     _systemTray.registerSystemTrayEventHandler((eventName) {
       if (eventName == "rightMouseUp") {
         _systemTray.popUpContextMenu();
+      } else if (eventName == "leftMouseDown") {
+        windowManager.show();
       }
     });
   }
