@@ -36,8 +36,9 @@
 
 依赖库：[dependencies](https://github.com/itning/yunshu_music/blob/master/yunshu_music/pubspec.yaml#L29)
 
-
-
 <div  align="center">
+<img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/a.gif"/> 
+<img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/b.gif"/> 
+<img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/c.gif"/> 
 <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/a.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/b.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/c.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/d.jpg"/>
 <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/e.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/f.jpg"/> <img width="150" height="300" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/g.jpg"/></div>
