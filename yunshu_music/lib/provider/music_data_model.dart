@@ -11,6 +11,7 @@ import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
+import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 /// 音乐数据模型
@@ -151,6 +152,10 @@ class MusicDataModel extends ChangeNotifier {
       return;
     }
     if (_nowPlayMusic != null && _nowPlayMusic!.musicId == musicId) {
+      if (!PlayStatusModel.get().isPlayNow) {
+        // 虽然是同一首歌但是是暂停状态那么直接进行播放
+        PlayStatusModel.get().setPlay(true);
+      }
       return;
     }
     MusicChannel.get().playFromId(musicId);
