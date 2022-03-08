@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/image_fade.dart';
 import 'package:yunshu_music/page/music_play/component/cover_page.dart';
@@ -46,6 +49,17 @@ class MusicPlayPage extends StatelessWidget {
                 return const CoverPage();
               } else {
                 return const LyricPage();
+              }
+            },
+            onPageChanged: (index) {
+              if (!kIsWeb && Platform.isAndroid) {
+                if (index == 0) {
+                  FlutterWindowManager.clearFlags(
+                      FlutterWindowManager.FLAG_KEEP_SCREEN_ON);
+                } else {
+                  FlutterWindowManager.addFlags(
+                      FlutterWindowManager.FLAG_KEEP_SCREEN_ON);
+                }
               }
             },
           ),
