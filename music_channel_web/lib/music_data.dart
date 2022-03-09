@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:music_platform_interface/music_model.dart';
 
-
 class MusicData {
   static const String _nowPlaymusicIdKey = "NOW_PLAY_MEDIA_ID_KEY";
   static const String _playModeKey = "PLAY_MODE";

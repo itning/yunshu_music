@@ -20,12 +20,16 @@ class MusicChannel extends MusicPlatform {
 
   late StreamController<dynamic> metadataEventController;
   late StreamController<dynamic> playbackStateController;
+  late StreamController<double> volumeController;
 
   @override
-  Future<void> init(StreamController<dynamic> metadataEventController,
-      StreamController<dynamic> playbackStateController) async {
+  Future<void> init(
+      StreamController<dynamic> metadataEventController,
+      StreamController<dynamic> playbackStateController,
+      StreamController<double> volumeController) async {
     this.metadataEventController = metadataEventController;
     this.playbackStateController = playbackStateController;
+    this.volumeController = volumeController;
   }
 
   @override
@@ -88,5 +92,10 @@ class MusicChannel extends MusicPlatform {
   @override
   Future<void> skipToPrevious() async {
     MusicPlayer.get().onSkipToPrevious(true);
+  }
+
+  @override
+  Future<void> setVolume(double value) async {
+    MusicPlayer.get().setVolume(value);
   }
 }

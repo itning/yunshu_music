@@ -20,6 +20,8 @@ class MusicChannel {
 
   late Stream<dynamic> metadataEvent;
 
+  late Stream<double> volumeEvent;
+
   Future<void> init() async {
     _methodChannel.setMethodCallHandler((call) async {
       switch (call.method) {
@@ -28,8 +30,8 @@ class MusicChannel {
         default:
       }
     });
-    // web平台
-    if (kIsWeb) {
+    // web平台 || windows平台
+    if (kIsWeb || Platform.isWindows) {
       StreamController<dynamic> playbackStateController =
           StreamController<dynamic>();
       playbackStateEvent = playbackStateController.stream;
@@ -37,21 +39,14 @@ class MusicChannel {
       StreamController<dynamic> metadataEventController =
           StreamController<dynamic>();
       metadataEvent = metadataEventController.stream;
-      channel.init(metadataEventController, playbackStateController);
+
+      StreamController<double> volumeEventController =
+          StreamController<double>();
+      volumeEvent = volumeEventController.stream;
+
+      await channel.init(metadataEventController, playbackStateController,
+          volumeEventController);
     } else {
-      // windows平台
-      if (Platform.isWindows) {
-        StreamController<dynamic> playbackStateController =
-            StreamController<dynamic>();
-        playbackStateEvent = playbackStateController.stream;
-
-        StreamController<dynamic> metadataEventController =
-            StreamController<dynamic>();
-        metadataEvent = metadataEventController.stream;
-
-        channel.init(metadataEventController, playbackStateController);
-        return;
-      }
       // android平台
       EventChannel _playbackStateEventChannel =
           const EventChannel('yunshu.music/playback_state_event_channel');
@@ -141,5 +136,13 @@ class MusicChannel {
     }
     await _methodChannel
         .invokeMethod('delPlayListByMediaId', {'mediaId': mediaId});
+  }
+
+  Future<void> setVolume(double value) async {
+    // 0.0 ~ 1.0
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.setVolume(value);
+    }
+    throw UnimplementedError('android not impl set volume');
   }
 }
