@@ -26,7 +26,7 @@ class VolumeDataModel extends ChangeNotifier {
     }
     MusicChannel.get().volumeEvent.listen((event) {
       _volume = event;
-      sharedPreferences.setDouble(_volumeKey, volume);
+      sharedPreferences.setDouble(_volumeKey, event);
       notifyListeners();
     });
   }
