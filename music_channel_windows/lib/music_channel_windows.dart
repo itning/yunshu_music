@@ -74,8 +74,10 @@ class MusicChannelWindows extends MusicPlatform {
   late List<MenuItemBase> _menus;
 
   @override
-  Future<void> init(StreamController<dynamic> metadataEventController,
-      StreamController<dynamic> playbackStateController) async {
+  Future<void> init(
+      StreamController<dynamic> metadataEventController,
+      StreamController<dynamic> playbackStateController,
+      StreamController<double> volumeController) async {
     setWindowTitle("云舒音乐");
     setWindowMinSize(const Size(450, 900));
 
@@ -132,6 +134,10 @@ class MusicChannelWindows extends MusicPlatform {
         next(false);
         initPlay(autoStart: true);
       }
+    });
+
+    _player.generalStream.listen((event) {
+      volumeController.sink.add(event.volume);
     });
 
     _playbackState.state = 0;
@@ -428,6 +434,11 @@ class MusicChannelWindows extends MusicPlatform {
     } else {
       return musicListIndex - 1;
     }
+  }
+
+  @override
+  Future<void> setVolume(double value) async {
+    _player.setVolume(value);
   }
 }
 

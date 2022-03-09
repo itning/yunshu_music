@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:music_platform_interface/music_platform_interface.dart';
 
-class UnimplementedMusic extends MusicPlatform{
+class UnimplementedMusic extends MusicPlatform {
   @override
   Future<void> delPlayListByMediaId(String mediaId) {
     throw UnimplementedError();
@@ -19,7 +19,10 @@ class UnimplementedMusic extends MusicPlatform{
   }
 
   @override
-  Future<void> init(StreamController<dynamic> metadataEventController, StreamController<dynamic> playbackStateController) {
+  Future<void> init(
+      StreamController<dynamic> metadataEventController,
+      StreamController<dynamic> playbackStateController,
+      StreamController<double> volumeController) {
     throw UnimplementedError();
   }
 
@@ -60,6 +63,11 @@ class UnimplementedMusic extends MusicPlatform{
 
   @override
   Future<void> skipToPrevious() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> setVolume(double value) {
     throw UnimplementedError();
   }
 }

@@ -17,7 +17,8 @@ abstract class MusicPlatform extends PlatformInterface {
   }
 
   Future<void> init(StreamController<dynamic> metadataEventController,
-      StreamController<dynamic> playbackStateController);
+      StreamController<dynamic> playbackStateController,
+      StreamController<double> volumeController);
 
   Future<void> initMethod(List<Map> musicList);
 
@@ -40,4 +41,6 @@ abstract class MusicPlatform extends PlatformInterface {
   Future<List<dynamic>> getPlayList();
 
   Future<void> delPlayListByMediaId(String mediaId);
+
+  Future<void> setVolume(double value);
 }

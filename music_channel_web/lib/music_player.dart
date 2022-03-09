@@ -33,7 +33,10 @@ class MusicPlayer {
           ? 0
           : timeRanges.end(length - 1) / _audio.duration * _audio.duration);
       _metaData.duration = numSecond2Millisecond(_audio.duration);
-      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+      MusicChannel.get()
+          .playbackStateController
+          .sink
+          .add(_playbackState.toMap());
       MusicChannel.get().metadataEventController.sink.add(_metaData.toMap());
     }
   }
@@ -45,7 +48,10 @@ class MusicPlayer {
     _audio.onEnded.listen((event) {
       html.window.console.info('onEnd');
       _playbackState.state = 0;
-      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+      MusicChannel.get()
+          .playbackStateController
+          .sink
+          .add(_playbackState.toMap());
       onSkipToNext(false);
     });
 
@@ -55,7 +61,10 @@ class MusicPlayer {
         onPlay();
       } else {
         _playbackState.state = 2;
-        MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+        MusicChannel.get()
+            .playbackStateController
+            .sink
+            .add(_playbackState.toMap());
         _playNow = true;
       }
     });
@@ -63,13 +72,19 @@ class MusicPlayer {
     _audio.onPlay.listen((event) {
       html.window.console.info('onPlayStream');
       _playbackState.state = 3;
-      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+      MusicChannel.get()
+          .playbackStateController
+          .sink
+          .add(_playbackState.toMap());
     });
 
     _audio.onPause.listen((event) {
       html.window.console.info('onPauseStream');
       _playbackState.state = 2;
-      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+      MusicChannel.get()
+          .playbackStateController
+          .sink
+          .add(_playbackState.toMap());
     });
 
     _audio.onAbort.listen((event) {
@@ -83,6 +98,11 @@ class MusicPlayer {
     _audio.onStalled.listen((event) {
       html.window.console.warn('媒体数据意外地不再可用。');
       html.window.console.warn(event);
+    });
+
+    _audio.onVolumeChange.listen((event) {
+      print(_audio.volume.toDouble());
+      MusicChannel.get().volumeController.sink.add(_audio.volume.toDouble());
     });
 
     _playbackState.state = 0;
@@ -105,11 +125,17 @@ class MusicPlayer {
     html.window.console.info('onPlay');
     _audio.play().then((value) {
       _playbackState.state = 3;
-      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+      MusicChannel.get()
+          .playbackStateController
+          .sink
+          .add(_playbackState.toMap());
     }).catchError((error) {
       html.window.console.error(error);
       _playbackState.state = 3;
-      MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+      MusicChannel.get()
+          .playbackStateController
+          .sink
+          .add(_playbackState.toMap());
     });
   }
 
@@ -178,5 +204,9 @@ class MusicPlayer {
     }
     _audio.load();
     _audio.pause();
+  }
+
+  void setVolume(double value) {
+    _audio.volume = value;
   }
 }
