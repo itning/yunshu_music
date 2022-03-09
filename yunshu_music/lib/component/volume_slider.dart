@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/provider/volume_data_model.dart';
 
 class VolumeSlider extends StatelessWidget {
@@ -25,7 +24,7 @@ class VolumeSlider extends StatelessWidget {
               max: 1.0,
               min: 0.0,
               onChanged: (value) async {
-                await MusicChannel.get().setVolume(value);
+                await VolumeDataModel.get().setVolume(value);
               },
             );
           },
