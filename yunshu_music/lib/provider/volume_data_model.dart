@@ -26,6 +26,7 @@ class VolumeDataModel extends ChangeNotifier {
     }
     MusicChannel.get().volumeEvent.listen((event) {
       _volume = event;
+      sharedPreferences.setDouble(_volumeKey, volume);
       notifyListeners();
     });
   }
@@ -37,10 +38,5 @@ class VolumeDataModel extends ChangeNotifier {
     this.sharedPreferences = sharedPreferences;
     _volume = sharedPreferences.getDouble(_volumeKey) ?? 1.0;
     await MusicChannel.get().setVolume(_volume);
-  }
-
-  Future<void> setVolume(double volume) async {
-    await MusicChannel.get().setVolume(_volume);
-    await sharedPreferences.setDouble(_volumeKey, volume);
   }
 }
