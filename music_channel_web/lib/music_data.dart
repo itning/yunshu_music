@@ -77,6 +77,12 @@ class MusicData {
     _storage[_playListKey] = playListString;
   }
 
+  void clearPlayList() {
+    _playList.clear();
+    _nowPlayIndex = -1;
+    _storage[_playListKey] = '';
+  }
+
   void playFromMusicId(String musicId) {
     _nowPlayIndex = -1;
     _nowPlayMusic = null;

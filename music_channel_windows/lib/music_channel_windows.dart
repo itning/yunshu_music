@@ -265,6 +265,18 @@ class MusicChannelWindows extends MusicPlatform {
         _playListKey, _playList.map((e) => e.musicId!).toList());
   }
 
+  @override
+  Future<void> clearPlayList() async {
+    _playList.clear();
+    _nowPlayIndex = -1;
+    _sharedPreferences.remove(_playListKey);
+  }
+
+  @override
+  Future<void> setVolume(double value) async {
+    _player.setVolume(value);
+  }
+
   void addMusic(List<Music> data) {
     List<String> playListMusicIdList =
         _sharedPreferences.getStringList(_playListKey) ?? [];
@@ -434,11 +446,6 @@ class MusicChannelWindows extends MusicPlatform {
     } else {
       return musicListIndex - 1;
     }
-  }
-
-  @override
-  Future<void> setVolume(double value) async {
-    _player.setVolume(value);
   }
 }
 

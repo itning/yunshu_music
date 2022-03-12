@@ -38,6 +38,11 @@ class MusicChannel extends MusicPlatform {
   }
 
   @override
+  Future<void> clearPlayList() async {
+    MusicData.get().clearPlayList();
+  }
+
+  @override
   Future<List> getPlayList() async {
     return MusicData.get().playList.map((e) => e.toMetaDataMap()).toList();
   }

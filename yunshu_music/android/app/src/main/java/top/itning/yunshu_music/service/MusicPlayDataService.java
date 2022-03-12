@@ -1,6 +1,5 @@
 package top.itning.yunshu_music.service;
 
-import android.net.Uri;
 import android.support.v4.media.MediaBrowserCompat;
 
 import com.tencent.mmkv.MMKV;
@@ -12,8 +11,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import top.itning.yunshu_music.util.HttpClient;
 
 /**
  * @author itning
@@ -63,6 +60,12 @@ public class MusicPlayDataService {
         PLAY_LIST.removeIf(it -> mediaId.equals(it.getMediaId()));
         String playListString = PLAY_LIST.stream().map(MediaBrowserCompat.MediaItem::getMediaId).collect(Collectors.joining("@"));
         kv.encode(PLAY_LIST_KEY, playListString);
+    }
+
+    public void clearPlayList() {
+        PLAY_LIST.clear();
+        nowPlayIndex = -1;
+        kv.removeValueForKey(PLAY_LIST_KEY);
     }
 
     public void setPlayMode(MusicPlayMode playMode) {

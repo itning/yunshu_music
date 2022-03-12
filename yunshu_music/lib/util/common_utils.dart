@@ -146,7 +146,7 @@ void showPlayList(BuildContext context) {
         future: MusicChannel.get().getPlayList(),
         builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.data == null) {
+            if (snapshot.data == null || snapshot.data!.isEmpty) {
               return DraggableScrollableSheet(
                 maxChildSize: 0.5,
                 expand: false,
@@ -198,10 +198,51 @@ class _PlayList extends StatelessWidget {
         itemCount: reversed.length + 1,
         itemBuilder: (BuildContext context, int index) {
           if (index == 0) {
-            return Container(
-              alignment: AlignmentDirectional.center,
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: const Text('播放列表'),
+            return Column(
+              children: [
+                Container(
+                  alignment: AlignmentDirectional.center,
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: const Text('播放列表'),
+                ),
+                Container(
+                  padding: const EdgeInsetsDirectional.only(end: 18.0),
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: IconButton(
+                    tooltip: '清空播放列表',
+                    icon: const Icon(Icons.delete_forever),
+                    onPressed: () async {
+                      bool status = await showDialog(
+                        barrierDismissible: false,
+                        context: context,
+                        builder: (_) {
+                          return AlertDialog(
+                              title: const Text('提示'),
+                              content: const Text('确定清空播放列表？'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('取消'),
+                                  onPressed: () {
+                                    Navigator.pop(context, false);
+                                  },
+                                ),
+                                TextButton(
+                                  child: const Text('确认'),
+                                  onPressed: () {
+                                    MusicChannel.get().clearPlayList();
+                                    Navigator.pop(context, true);
+                                  },
+                                ),
+                              ]);
+                        },
+                      );
+                      if (status) {
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                ),
+              ],
             );
           }
           index -= 1;

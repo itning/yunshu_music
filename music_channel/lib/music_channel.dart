@@ -54,6 +54,10 @@ Future<void> delPlayListByMediaId(String mediaId) {
   return MusicPlatform.instance.delPlayListByMediaId(mediaId);
 }
 
+Future<void> clearPlayList() {
+  return MusicPlatform.instance.clearPlayList();
+}
+
 Future<void> setVolume(double value) {
   return MusicPlatform.instance.setVolume(value);
 }

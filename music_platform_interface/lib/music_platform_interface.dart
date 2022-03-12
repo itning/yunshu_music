@@ -42,5 +42,7 @@ abstract class MusicPlatform extends PlatformInterface {
 
   Future<void> delPlayListByMediaId(String mediaId);
 
+  Future<void> clearPlayList();
+
   Future<void> setVolume(double value);
 }
