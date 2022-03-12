@@ -182,6 +182,15 @@ public class MainActivity extends FlutterActivity {
                         result.error("-1", null, null);
                     }
                     break;
+                case "clearPlayList":
+                    try {
+                        MusicChannel.musicPlayDataService.clearPlayList();
+                        result.success(null);
+                    } catch (Exception e) {
+                        Log.e(TAG, "clearPlayList error", e);
+                        result.error("-1", null, null);
+                    }
+                    break;
                 default:
                     result.notImplemented();
             }

@@ -70,4 +70,9 @@ class UnimplementedMusic extends MusicPlatform {
   Future<void> setVolume(double value) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> clearPlayList() {
+    throw UnimplementedError();
+  }
 }

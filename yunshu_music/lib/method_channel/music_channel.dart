@@ -138,6 +138,14 @@ class MusicChannel {
         .invokeMethod('delPlayListByMediaId', {'mediaId': mediaId});
   }
 
+  Future<void> clearPlayList() async {
+    if (kIsWeb || Platform.isWindows) {
+      return await channel.clearPlayList();
+    }
+    await _methodChannel
+        .invokeMethod('clearPlayList');
+  }
+
   Future<void> setVolume(double value) async {
     // 0.0 ~ 1.0
     if (kIsWeb || Platform.isWindows) {
