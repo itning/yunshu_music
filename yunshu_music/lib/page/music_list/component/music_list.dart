@@ -90,7 +90,7 @@ class _MusicListState extends State<MusicList> {
                 }
                 return ScrollConfiguration(
                   behavior:
-                  ScrollConfiguration.of(context).copyWith(dragDevices: {
+                      ScrollConfiguration.of(context).copyWith(dragDevices: {
                     PointerDeviceKind.touch,
                     PointerDeviceKind.mouse,
                   }),
@@ -98,19 +98,17 @@ class _MusicListState extends State<MusicList> {
                     controller: _scrollController,
                     child: ListView.builder(
                         controller: _scrollController,
+                        itemExtent: 55.0,
                         itemCount: musicList.length,
                         itemBuilder: (BuildContext context, int index) {
                           MusicDataContent music = musicList[index];
-                          return SizedBox(
-                            height: 55.0,
-                            child: _InnerListItem(
-                              index: index,
-                              name: music.name ?? '',
-                              singer: music.singer ?? '',
-                              musicId: music.musicId ?? '',
-                              lyricId: music.lyricId ?? '',
-                              musicUri: music.musicUri ?? '',
-                            ),
+                          return _InnerListItem(
+                            index: index,
+                            name: music.name ?? '',
+                            singer: music.singer ?? '',
+                            musicId: music.musicId ?? '',
+                            lyricId: music.lyricId ?? '',
+                            musicUri: music.musicUri ?? '',
                           );
                         }),
                   ),
@@ -123,20 +121,20 @@ class _MusicListState extends State<MusicList> {
               selector: (_, model) => model.visible,
               builder: (BuildContext context, visible, Widget? child) =>
                   AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: visible ? 1.0 : 0.0,
-                    child: FloatingActionButton.small(
-                      onPressed: () {
-                        if (visible) {
-                          _scrollController.animateTo(
-                              MusicDataModel.get().nowMusicIndex * 55.0,
-                              duration: const Duration(seconds: 1),
-                              curve: Curves.easeOut);
-                        }
-                      },
-                      child: const Icon(Icons.gps_fixed),
-                    ),
-                  ),
+                duration: const Duration(milliseconds: 300),
+                opacity: visible ? 1.0 : 0.0,
+                child: FloatingActionButton.small(
+                  onPressed: () {
+                    if (visible) {
+                      _scrollController.animateTo(
+                          MusicDataModel.get().nowMusicIndex * 55.0,
+                          duration: const Duration(seconds: 1),
+                          curve: Curves.easeOut);
+                    }
+                  },
+                  child: const Icon(Icons.gps_fixed),
+                ),
+              ),
             ),
           )
         ],
@@ -155,12 +153,12 @@ class _InnerListItem extends StatelessWidget {
 
   const _InnerListItem(
       {Key? key,
-        required this.index,
-        required this.name,
-        required this.singer,
-        required this.musicId,
-        required this.lyricId,
-        required this.musicUri})
+      required this.index,
+      required this.name,
+      required this.singer,
+      required this.musicId,
+      required this.lyricId,
+      required this.musicUri})
       : super(key: key);
 
   Future<bool?> showDeleteConfirmDialog(BuildContext context) {
@@ -201,7 +199,7 @@ class _InnerListItem extends StatelessWidget {
         Clipboard.setData(ClipboardData(text: "$name-$singer")).then((_) =>
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content:
-              Text('复制成功', style: TextStyle(fontFamily: 'LXGWWenKaiMono')),
+                  Text('复制成功', style: TextStyle(fontFamily: 'LXGWWenKaiMono')),
               duration: Duration(seconds: 1),
             )));
       },

@@ -40,6 +40,7 @@ class MusicListItem extends StatelessWidget {
             Expanded(
               flex: 11,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
