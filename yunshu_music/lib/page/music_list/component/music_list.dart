@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +11,7 @@ import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/page/music_list/component/music_list_item.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
+import 'package:yunshu_music/provider/music_list_status_model.dart';
 import 'package:yunshu_music/route/app_route_delegate.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
@@ -20,6 +23,9 @@ class MusicList extends StatefulWidget {
 }
 
 class _MusicListState extends State<MusicList> {
+  late ScrollController _scrollController;
+  Timer? _debounce;
+
   /// SnackBar消息
   void message(String? message) {
     if (null == message) {
@@ -37,6 +43,16 @@ class _MusicListState extends State<MusicList> {
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(() {
+      MusicListStatusModel.get().visible = false;
+      if (_debounce?.isActive ?? false) {
+        _debounce!.cancel();
+      }
+      _debounce = Timer(const Duration(milliseconds: 500), () {
+        MusicListStatusModel.get().visible = true;
+      });
+    });
     Provider.of<MusicDataModel>(context, listen: false)
         .refreshMusicList(needInit: true)
         .then(message)
@@ -44,6 +60,13 @@ class _MusicListState extends State<MusicList> {
       message(error.toString());
       LogHelper.get().error('刷新歌曲列表失败', error, stackTrace);
     });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -57,34 +80,67 @@ class _MusicListState extends State<MusicList> {
         message(error.toString());
         LogHelper.get().error(error, stackTrace);
       }),
-      child: Selector<MusicDataModel, List<MusicDataContent>>(
-          selector: (_, model) => model.musicList,
-          builder: (BuildContext context, musicList, Widget? child) {
-            if (musicList.isEmpty) {
-              return const _InnerShimmer();
-            }
-            return ScrollConfiguration(
-              behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
-                PointerDeviceKind.touch,
-                PointerDeviceKind.mouse,
+      child: Stack(
+        children: [
+          Selector<MusicDataModel, List<MusicDataContent>>(
+              selector: (_, model) => model.musicList,
+              builder: (BuildContext context, musicList, Widget? child) {
+                if (musicList.isEmpty) {
+                  return const _InnerShimmer();
+                }
+                return ScrollConfiguration(
+                  behavior:
+                  ScrollConfiguration.of(context).copyWith(dragDevices: {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                  }),
+                  child: Scrollbar(
+                    controller: _scrollController,
+                    child: ListView.builder(
+                        controller: _scrollController,
+                        itemCount: musicList.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          MusicDataContent music = musicList[index];
+                          return SizedBox(
+                            height: 55.0,
+                            child: _InnerListItem(
+                              index: index,
+                              name: music.name ?? '',
+                              singer: music.singer ?? '',
+                              musicId: music.musicId ?? '',
+                              lyricId: music.lyricId ?? '',
+                              musicUri: music.musicUri ?? '',
+                            ),
+                          );
+                        }),
+                  ),
+                );
               }),
-              child: Scrollbar(
-                child: ListView.builder(
-                    itemCount: musicList.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      MusicDataContent music = musicList[index];
-                      return _InnerListItem(
-                        index: index,
-                        name: music.name ?? '',
-                        singer: music.singer ?? '',
-                        musicId: music.musicId ?? '',
-                        lyricId: music.lyricId ?? '',
-                        musicUri: music.musicUri ?? '',
-                      );
-                    }),
-              ),
-            );
-          }),
+          Positioned(
+            right: 16.0,
+            bottom: 16.0,
+            child: Selector<MusicListStatusModel, bool>(
+              selector: (_, model) => model.visible,
+              builder: (BuildContext context, visible, Widget? child) =>
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: visible ? 1.0 : 0.0,
+                    child: FloatingActionButton.small(
+                      onPressed: () {
+                        if (visible) {
+                          _scrollController.animateTo(
+                              MusicDataModel.get().nowMusicIndex * 55.0,
+                              duration: const Duration(seconds: 1),
+                              curve: Curves.easeOut);
+                        }
+                      },
+                      child: const Icon(Icons.gps_fixed),
+                    ),
+                  ),
+            ),
+          )
+        ],
+      ),
     );
   }
 }
@@ -99,12 +155,12 @@ class _InnerListItem extends StatelessWidget {
 
   const _InnerListItem(
       {Key? key,
-      required this.index,
-      required this.name,
-      required this.singer,
-      required this.musicId,
-      required this.lyricId,
-      required this.musicUri})
+        required this.index,
+        required this.name,
+        required this.singer,
+        required this.musicId,
+        required this.lyricId,
+        required this.musicUri})
       : super(key: key);
 
   Future<bool?> showDeleteConfirmDialog(BuildContext context) {
@@ -145,7 +201,7 @@ class _InnerListItem extends StatelessWidget {
         Clipboard.setData(ClipboardData(text: "$name-$singer")).then((_) =>
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content:
-                  Text('复制成功', style: TextStyle(fontFamily: 'LXGWWenKaiMono')),
+              Text('复制成功', style: TextStyle(fontFamily: 'LXGWWenKaiMono')),
               duration: Duration(seconds: 1),
             )));
       },
