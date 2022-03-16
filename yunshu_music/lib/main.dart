@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
+import 'package:yunshu_music/provider/music_list_status_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 import 'package:yunshu_music/provider/volume_data_model.dart';
@@ -82,6 +83,7 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
         ChangeNotifierProvider(create: (_) => PlayStatusModel.get()),
         ChangeNotifierProvider(create: (_) => MusicDataModel.get()),
         ChangeNotifierProvider(create: (_) => VolumeDataModel.get()),
+        ChangeNotifierProvider(create: (_) => MusicListStatusModel.get()),
       ],
       child: Consumer<ThemeModel>(
         builder: (_, theme, __) {
