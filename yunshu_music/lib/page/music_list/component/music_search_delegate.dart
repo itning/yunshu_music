@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
@@ -12,7 +14,7 @@ class MusicSearchDelegate extends SearchDelegate {
   List<Widget>? buildActions(BuildContext context) {
     return [
       IconButton(
-        tooltip: 'Clear',
+        tooltip: '清空',
         icon: const Icon(Icons.clear),
         onPressed: () {
           query = '';
@@ -25,7 +27,7 @@ class MusicSearchDelegate extends SearchDelegate {
   @override
   Widget? buildLeading(BuildContext context) {
     return IconButton(
-      tooltip: 'Back',
+      tooltip: '返回',
       icon: AnimatedIcon(
         icon: AnimatedIcons.menu_arrow,
         progress: transitionAnimation,
@@ -52,24 +54,44 @@ class MusicSearchDelegate extends SearchDelegate {
 
   Widget _buildWidget(
       BuildContext context, List<MusicDataContent> result, String keyword) {
-    return Scrollbar(
-      child: ListView.builder(
-          itemCount: result.length,
-          itemBuilder: (_, int index) {
-            MusicDataContent music = result[index];
-            return ListTile(
-              title: Text.rich(TextSpan(
-                  children:
-                      highlight(music.name!, search(music.name!, keyword)))),
-              subtitle: Text.rich(TextSpan(
-                  children: highlight(
-                      music.singer!, search(music.singer!, keyword)))),
-              trailing: IconButton(
-                onPressed: () => _play(context, music.musicId),
-                icon: const Icon(Icons.play_arrow),
-              ),
-            );
-          }),
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+      }),
+      child: Scrollbar(
+        child: ListView.builder(
+            itemCount: result.length,
+            itemBuilder: (_, int index) {
+              MusicDataContent music = result[index];
+              return InkWell(
+                onTap: () => _play(context, music.musicId),
+                onLongPress: () {
+                  Clipboard.setData(
+                          ClipboardData(text: "${music.name}-${music.singer}"))
+                      .then((_) => ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
+                            content: Text('复制成功',
+                                style: TextStyle(fontFamily: 'LXGWWenKaiMono')),
+                            duration: Duration(seconds: 1),
+                          )));
+                },
+                child: ListTile(
+                  title: Text.rich(TextSpan(
+                      children: highlight(
+                          music.name!, search(music.name!, keyword)))),
+                  subtitle: Text.rich(TextSpan(
+                      children: highlight(
+                          music.singer!, search(music.singer!, keyword)))),
+                  trailing: IconButton(
+                    tooltip: '播放',
+                    onPressed: () => _play(context, music.musicId),
+                    icon: const Icon(Icons.play_arrow),
+                  ),
+                ),
+              );
+            }),
+      ),
     );
   }
 
