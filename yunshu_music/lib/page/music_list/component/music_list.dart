@@ -124,6 +124,7 @@ class _MusicListState extends State<MusicList> {
                 duration: const Duration(milliseconds: 300),
                 opacity: visible ? 1.0 : 0.0,
                 child: FloatingActionButton.small(
+                  tooltip: '定位歌曲位置',
                   onPressed: () {
                     if (visible) {
                       _scrollController.animateTo(
