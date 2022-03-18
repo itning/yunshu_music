@@ -26,15 +26,15 @@ class _CoverPageState extends State<CoverPage>
           bool largeMode = isLargeMode(context);
           if (value == null) {
             return RotateCoverImageWidget(
-              width: largeMode ? 350 : 225,
-              height: largeMode ? 350 : 225,
+              width: largeMode ? 325 : 225,
+              height: largeMode ? 325 : 225,
               duration: const Duration(seconds: 20),
               image: Image.asset('asserts/images/default_cover.jpg').image,
             );
           } else {
             return RotateCoverImageWidget(
-              width: largeMode ? 350 : 225,
-              height: largeMode ? 350 : 225,
+              width: largeMode ? 325 : 225,
+              height: largeMode ? 325 : 225,
               duration: const Duration(seconds: 20),
               image: Image.memory(value).image,
             );
