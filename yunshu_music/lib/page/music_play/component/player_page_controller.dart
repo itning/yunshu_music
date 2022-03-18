@@ -11,7 +11,9 @@ class PlayerPageController extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      mainAxisAlignment: isLargeMode(context)
+          ? MainAxisAlignment.center
+          : MainAxisAlignment.spaceAround,
       children: [
         Selector<MusicDataModel, String>(
           selector: (_, model) => model.playMode,

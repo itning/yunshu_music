@@ -316,3 +316,9 @@ void setTitle(String title) {
   SystemChrome.setApplicationSwitcherDescription(
       ApplicationSwitcherDescription(label: title));
 }
+
+/// 大屏模式
+bool isLargeMode(BuildContext context) {
+  return MediaQuery.of(context).size.width > 700 &&
+      (kIsWeb || Platform.isWindows);
+}

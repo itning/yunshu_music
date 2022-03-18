@@ -103,7 +103,8 @@ class LyricWidget extends StatefulWidget {
   _LyricWidgetState createState() => _LyricWidgetState();
 }
 
-class _LyricWidgetState extends State<LyricWidget> {
+class _LyricWidgetState extends State<LyricWidget>
+    with TickerProviderStateMixin {
   late LyricPainter _lyricPainter;
   double totalHeight = 0;
 
@@ -124,16 +125,18 @@ class _LyricWidgetState extends State<LyricWidget> {
       if (widget.controller.oldLine != curLine) {
         _lyricPainter.currentLyricIndex = curLine;
         if (!widget.controller.isDragging) {
-          if (widget.controller.vsync == null) {
-            _lyricPainter.offset = -computeScrollY(curLine);
-          } else {
-            animationScrollY(curLine, widget.controller.vsync!);
-          }
+          animationScrollY(curLine, this);
         }
         widget.controller.oldLine = curLine;
       }
     });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.controller.clear();
+    super.dispose();
   }
 
   ///因空行高度与非空行高度不一致，获取非空行的位置
@@ -150,7 +153,6 @@ class _LyricWidgetState extends State<LyricWidget> {
 
     _lyricPainter = LyricPainter(
         widget.lyrics, widget.lyricTextPaints, widget.subLyricTextPaints,
-        vsync: widget.controller.vsync,
         subLyrics: widget.remarkLyrics,
         lyricTextStyle: widget.lyricStyle,
         subLyricTextStyle: widget.remarkStyle,
@@ -178,11 +180,7 @@ class _LyricWidgetState extends State<LyricWidget> {
         if (widget.controller.oldLine != curLine) {
           _lyricPainter.currentLyricIndex = curLine;
           if (!widget.controller.isDragging) {
-            if (widget.controller.vsync == null) {
-              _lyricPainter.offset = -computeScrollY(curLine);
-            } else {
-              animationScrollY(curLine, widget.controller.vsync!);
-            }
+            animationScrollY(curLine, this);
           }
           widget.controller.oldLine = curLine;
         }
@@ -230,11 +228,14 @@ class _LyricWidgetState extends State<LyricWidget> {
     if (!mounted) {
       return;
     }
+    if (null == widget.controller.draggingOffset) {
+      return;
+    }
+
     _lyricPainter.currentLyricIndex =
         findLyricIndexByDuration(widget.controller.progress, widget.lyrics);
-
     widget.controller.previousRowOffset = -widget.controller.draggingOffset!;
-    animationScrollY(_lyricPainter.currentLyricIndex, widget.controller.vsync!);
+    animationScrollY(_lyricPainter.currentLyricIndex, this);
     _lyricPainter.draggingLine = null;
     widget.controller.isDragging = false;
   }
@@ -262,21 +263,17 @@ class _LyricWidgetState extends State<LyricWidget> {
   }
 
   animationScrollY(currentLyricIndex, TickerProvider tickerProvider) {
-    var animationController = widget.controller.animationController;
-    if (animationController != null) {
-      animationController.stop();
-    }
     if (!mounted) {
       return;
     }
-    animationController = AnimationController(
-        vsync: tickerProvider, duration: const Duration(milliseconds: 300))
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          animationController!.dispose();
-          animationController = null;
-        }
-      });
+
+    AnimationController animationController = AnimationController(
+        vsync: tickerProvider, duration: const Duration(milliseconds: 300));
+    animationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        animationController.dispose();
+      }
+    });
     // 计算当前行偏移量
     var currentRowOffset = computeScrollY(currentLyricIndex);
     //如果偏移量相同不执行动画
@@ -286,12 +283,12 @@ class _LyricWidgetState extends State<LyricWidget> {
     // 起始为上一行，结束点为当前行
     Animation animation = Tween<double>(
             begin: widget.controller.previousRowOffset, end: currentRowOffset)
-        .animate(animationController!);
+        .animate(animationController);
     widget.controller.previousRowOffset = currentRowOffset;
-    animationController!.addListener(() {
+    animationController.addListener(() {
       _lyricPainter.offset = -animation.value;
     });
-    animationController!.forward();
+    animationController.forward();
   }
 
   /// 根据当前时长获取歌词位置
