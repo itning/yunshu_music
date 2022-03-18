@@ -12,6 +12,7 @@ import 'package:yunshu_music/page/music_play/component/lyric_page.dart';
 import 'package:yunshu_music/page/music_play/component/player_page_bottom_navigation_bar.dart';
 import 'package:yunshu_music/page/music_play/component/title_music_info.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 /// 音乐播放页面
 class MusicPlayPage extends StatelessWidget {
@@ -19,6 +20,8 @@ class MusicPlayPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const CoverPage _coverPage = CoverPage();
+    const LyricPage _lyricPage = LyricPage();
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -37,35 +40,48 @@ class MusicPlayPage extends StatelessWidget {
             elevation: 0,
             backgroundColor: Colors.transparent,
           ),
-          body: PageView.builder(
-            scrollBehavior:
-                ScrollConfiguration.of(context).copyWith(dragDevices: {
-              PointerDeviceKind.touch,
-              PointerDeviceKind.mouse,
-            }),
-            itemCount: 2,
-            itemBuilder: (BuildContext context, int index) {
-              if (index == 0) {
-                return const CoverPage();
-              } else {
-                return const LyricPage();
-              }
-            },
-            onPageChanged: (index) {
-              if (!kIsWeb && Platform.isAndroid) {
-                if (index == 0) {
-                  FlutterWindowManager.clearFlags(
-                      FlutterWindowManager.FLAG_KEEP_SCREEN_ON);
-                } else {
-                  FlutterWindowManager.addFlags(
-                      FlutterWindowManager.FLAG_KEEP_SCREEN_ON);
-                }
-              }
-            },
-          ),
+          body: isLargeMode(context)
+              ? buildLargeWidget(context, _coverPage, _lyricPage)
+              : buildNormalWidget(context, _coverPage, _lyricPage),
           bottomNavigationBar: const PlayerPageBottomNavigationBar(),
         )
       ],
+    );
+  }
+
+  Widget buildLargeWidget(
+      BuildContext context, CoverPage coverPage, LyricPage lyricPage) {
+    return Row(
+      children: [Expanded(child: coverPage), Expanded(child: lyricPage)],
+    );
+  }
+
+  Widget buildNormalWidget(
+      BuildContext context, CoverPage coverPage, LyricPage lyricPage) {
+    return PageView.builder(
+      scrollBehavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+      }),
+      itemCount: 2,
+      itemBuilder: (BuildContext context, int index) {
+        if (index == 0) {
+          return coverPage;
+        } else {
+          return lyricPage;
+        }
+      },
+      onPageChanged: (index) {
+        if (!kIsWeb && Platform.isAndroid) {
+          if (index == 0) {
+            FlutterWindowManager.clearFlags(
+                FlutterWindowManager.FLAG_KEEP_SCREEN_ON);
+          } else {
+            FlutterWindowManager.addFlags(
+                FlutterWindowManager.FLAG_KEEP_SCREEN_ON);
+          }
+        }
+      },
     );
   }
 }

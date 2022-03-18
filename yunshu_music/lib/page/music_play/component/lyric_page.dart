@@ -21,34 +21,9 @@ class LyricPage extends StatefulWidget {
 }
 
 class _LyricPageState extends State<LyricPage>
-    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin<LyricPage> {
-  //是否显示选择器
-  bool showSelect = false;
-
-  //歌词控制器
-  late LyricController controller;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = LyricController(vsync: this);
-    //监听控制器
-    controller.addListener(() {
-      //如果拖动歌词则显示选择器
-      if (showSelect != controller.isDragging) {
-        if (mounted) {
-          setState(() {
-            showSelect = controller.isDragging;
-          });
-        }
-      }
-    });
-  }
-
+    with AutomaticKeepAliveClientMixin<LyricPage> {
   @override
   void dispose() {
-    controller.animationController?.dispose();
-    controller.dispose();
     if (!kIsWeb && Platform.isAndroid) {
       FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_KEEP_SCREEN_ON);
     }
@@ -79,36 +54,41 @@ class _LyricPageState extends State<LyricPage>
                           key: UniqueKey(),
                           size: const Size(double.infinity, double.infinity),
                           lyrics: value,
-                          controller: controller,
+                          controller: context.read<LyricController>(),
                         );
                       }
                     }),
               ),
-              Offstage(
-                offstage: !showSelect,
-                child: GestureDetector(
-                  onTap: () {
-                    //点击选择器后移动歌词到滑动位置;
-                    controller.draggingComplete();
-                    //当前进度
-                    LogHelper.get().debug("进度:${controller.draggingProgress}");
-                    context
-                        .read<PlayStatusModel>()
-                        .seek(controller.draggingProgress);
-                  },
-                  child: Row(
-                    children: const [
-                      Icon(
-                        Icons.play_arrow,
-                        color: Colors.white,
+              Selector<LyricController, bool>(
+                selector: (_, c) => c.isDragging,
+                builder: (BuildContext context, value, _) {
+                  return Offstage(
+                    offstage: !value,
+                    child: GestureDetector(
+                      onTap: () {
+                        //点击选择器后移动歌词到滑动位置;
+                        context.read<LyricController>().draggingComplete();
+                        //当前进度
+                        LogHelper.get().debug(
+                            "进度:${context.read<LyricController>().draggingProgress}");
+                        context.read<PlayStatusModel>().seek(
+                            context.read<LyricController>().draggingProgress);
+                      },
+                      child: Row(
+                        children: const [
+                          Icon(
+                            Icons.play_arrow,
+                            color: Colors.white,
+                          ),
+                          Expanded(
+                              child: Divider(
+                            color: Colors.grey,
+                          )),
+                        ],
                       ),
-                      Expanded(
-                          child: Divider(
-                        color: Colors.grey,
-                      )),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               )
             ],
           ),

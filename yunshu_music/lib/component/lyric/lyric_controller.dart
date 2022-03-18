@@ -23,13 +23,7 @@ import 'package:flutter/material.dart';
 
 class LyricController extends ChangeNotifier {
   /// 当前进度
-  Duration _progress = const Duration();
-
-  set progress(Duration value) {
-    _progress = value;
-  }
-
-  Duration get progress => _progress;
+  Duration progress = const Duration();
 
   //滑动保持器
   Timer? draggingTimer;
@@ -46,17 +40,15 @@ class LyricController extends ChangeNotifier {
     notifyListeners();
   }
 
+  clear() {
+    _isDragging = false;
+  }
+
   late Duration draggingProgress;
 
   late Function draggingComplete;
 
   double? draggingOffset;
-
-  //启用动画
-  TickerProvider? vsync;
-
-  //动画控制器
-  AnimationController? animationController;
 
   //动画 存放上一次偏移量
   double previousRowOffset = 0;
@@ -64,5 +56,4 @@ class LyricController extends ChangeNotifier {
   int oldLine = 0;
   int draggingLine = 0;
 
-  LyricController({this.vsync, this.draggingTimerDuration});
 }
