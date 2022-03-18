@@ -32,107 +32,103 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
         height: 60.0,
         child: InkWell(
           onTap: () => AppRouterDelegate.of(context).push('/musicPlay'),
-          child: Column(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flex(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                direction: Axis.horizontal,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-                    child: Selector<MusicDataModel, Uint8List?>(
-                      selector: (_, model) => model.coverBase64,
-                      builder: (_, value, __) {
-                        if (value == null) {
-                          return RotateCoverImageWidget(
-                            image:
-                                Image.asset('asserts/images/default_cover.jpg')
-                                    .image,
-                            width: 52,
-                            height: 52,
-                            duration: const Duration(seconds: 20),
-                          );
-                        } else {
-                          return RotateCoverImageWidget(
-                            image: Image.memory(value).image,
-                            width: 52,
-                            height: 52,
-                            duration: const Duration(seconds: 20),
-                          );
-                        }
-                      },
+              Expanded(
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                      child: Selector<MusicDataModel, Uint8List?>(
+                        selector: (_, model) => model.coverBase64,
+                        builder: (_, value, __) {
+                          if (value == null) {
+                            return RotateCoverImageWidget(
+                              image: Image.asset(
+                                      'asserts/images/default_cover.jpg')
+                                  .image,
+                              width: 52,
+                              height: 52,
+                              duration: const Duration(seconds: 20),
+                            );
+                          } else {
+                            return RotateCoverImageWidget(
+                              image: Image.memory(value).image,
+                              width: 52,
+                              height: 52,
+                              duration: const Duration(seconds: 20),
+                            );
+                          }
+                        },
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    flex: 6,
-                    child: Selector<MusicDataModel, MusicDataContent?>(
+                    Selector<MusicDataModel, MusicDataContent?>(
                       selector: (_, data) => data.getNowPlayMusic(),
                       builder: (_, music, __) {
                         if (null == music) {
                           return const Text('云舒音乐',
                               overflow: TextOverflow.ellipsis);
                         }
-                        return Text('${music.name}-${music.singer}',
-                            overflow: TextOverflow.ellipsis);
+                        return Expanded(
+                          child: Text('${music.name}-${music.singer}',
+                              overflow: TextOverflow.ellipsis),
+                        );
                       },
                     ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Selector<PlayStatusModel, Tuple2<bool, bool>>(
-                          selector: (_, status) =>
-                              Tuple2(status.isPlayNow, status.processingState),
-                          builder: (context, status, __) {
-                            if (status.item2) {
-                              return Container(
-                                margin: const EdgeInsets.all(16.0),
-                                child: const SizedBox(
-                                  width: 15.0,
-                                  height: 15.0,
-                                  child: CircularProgressIndicator(
-                                    backgroundColor: Colors.white,
-                                    valueColor:
-                                        AlwaysStoppedAnimation(Colors.black),
-                                  ),
-                                ),
-                              );
-                            }
-                            return status.item1
-                                ? IconButton(
-                                    icon: const Icon(Icons.pause),
-                                    tooltip: '暂停',
-                                    onPressed: () {
-                                      PlayStatusModel playStatusModel =
-                                          context.read<PlayStatusModel>();
-                                      playStatusModel.setPlay(false);
-                                    },
-                                  )
-                                : IconButton(
-                                    icon: const Icon(Icons.play_arrow),
-                                    tooltip: '播放',
-                                    onPressed: () {
-                                      PlayStatusModel playStatusModel =
-                                          context.read<PlayStatusModel>();
-                                      playStatusModel.setPlay(true);
-                                    },
-                                  );
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.playlist_play),
-                          tooltip: '播放列表',
-                          onPressed: () => showPlayList(context),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
+                  ],
+                ),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 6.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Selector<PlayStatusModel, Tuple2<bool, bool>>(
+                    selector: (_, status) =>
+                        Tuple2(status.isPlayNow, status.processingState),
+                    builder: (context, status, __) {
+                      if (status.item2) {
+                        return Container(
+                          margin: const EdgeInsets.all(16.0),
+                          child: const SizedBox(
+                            width: 15.0,
+                            height: 15.0,
+                            child: CircularProgressIndicator(
+                              backgroundColor: Colors.white,
+                              valueColor: AlwaysStoppedAnimation(Colors.black),
+                            ),
+                          ),
+                        );
+                      }
+                      return status.item1
+                          ? IconButton(
+                              icon: const Icon(Icons.pause),
+                              tooltip: '暂停',
+                              onPressed: () {
+                                PlayStatusModel playStatusModel =
+                                    context.read<PlayStatusModel>();
+                                playStatusModel.setPlay(false);
+                              },
+                            )
+                          : IconButton(
+                              icon: const Icon(Icons.play_arrow),
+                              tooltip: '播放',
+                              onPressed: () {
+                                PlayStatusModel playStatusModel =
+                                    context.read<PlayStatusModel>();
+                                playStatusModel.setPlay(true);
+                              },
+                            );
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 6.0, right: 16.0),
+                    child: IconButton(
+                      icon: const Icon(Icons.playlist_play),
+                      tooltip: '播放列表',
+                      onPressed: () => showPlayList(context),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
