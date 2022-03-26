@@ -12,15 +12,15 @@ dependencies:
     sdk: flutter
   music_platform_interface:
     path: ../music_platform_interface
-  dart_vlc: ^0.1.8
+  dart_vlc: ^0.1.9
   window_size:
     git:
       url: git://github.com/google/flutter-desktop-embedding.git
       path: plugins/window_size
   shared_preferences: ^2.0.13
-  windows_taskbar: ^1.1.0
+  windows_taskbar: ^1.1.0+1
   system_tray: ^0.1.0
-  window_manager: ^0.1.9
+  window_manager: ^0.2.0
 
 dev_dependencies:
   flutter_test:
