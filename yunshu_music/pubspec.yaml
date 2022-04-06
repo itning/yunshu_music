@@ -39,7 +39,7 @@ dependencies:
     path: ../music_channel
   provider: ^6.0.2
   tuple: ^2.0.0
-  dio: ^4.0.5
+  dio: ^4.0.6
   move_to_background: ^1.0.2
   shared_preferences: ^2.0.13
   shimmer: ^2.0.0
@@ -51,7 +51,7 @@ dependencies:
   crypto: ^3.0.1
   path_provider: ^2.0.9
   mime_type: ^1.0.0
-  package_info_plus: ^1.4.0
+  package_info_plus: ^1.4.2
   flutter_update_dialog: ^2.0.0
   flutter_windowmanager: ^0.2.0
 
