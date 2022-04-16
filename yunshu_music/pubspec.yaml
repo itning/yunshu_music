@@ -44,7 +44,7 @@ dependencies:
   shared_preferences: ^2.0.13
   shimmer: ^2.0.0
   audio_video_progress_bar: ^0.10.0
-  sqflite: ^2.0.2
+  sqflite: ^2.0.2+1
   url_launcher: ^6.0.20
   fluttertoast: ^8.0.9
   logger: ^1.1.0
