@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:tuple/tuple.dart';
+import 'package:yunshu_music/provider/login_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 class HttpHelper {
@@ -14,8 +15,6 @@ class HttpHelper {
   }
 
   late final Dio _dio;
-
-  final String baseUrl = "https://music.itning.top";
 
   HttpHelper._() {
     _dio = Dio();
@@ -76,7 +75,8 @@ class HttpHelper {
   }
 
   Future<Response<Map<String, dynamic>>> getMusic() async {
-    return await _dio.get<Map<String, dynamic>>("$baseUrl/music?size=5000&sort=gmtCreate,desc");
+    return await _dio.get<Map<String, dynamic>>(
+        "${LoginModel.get().getBaseUrl()}/music?size=5000&sort=gmtCreate,desc");
   }
 
   Future<String?> getLyric(String lyricUri) async {
