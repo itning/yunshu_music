@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:yunshu_music/page/login/login_page.dart';
 import 'package:yunshu_music/page/music_list/music_index_page.dart';
 import 'package:yunshu_music/page/music_play/music_play_page.dart';
 import 'package:yunshu_music/page/setting/app_setting_page.dart';
+import 'package:yunshu_music/provider/login_model.dart';
 
 class AppRoutePath {
   static AppRoutePath createPage(String? path) {
     if (null == path) {
       return AppRoutePath(widget: const MusicIndexPage(), path: '/');
+    }
+    if (!LoginModel.get().isLogin()) {
+      return AppRoutePath(widget: const LoginPage(), path: '/login');
     }
     switch (path) {
       case "/":
@@ -15,6 +20,8 @@ class AppRoutePath {
         return AppRoutePath(widget: const MusicPlayPage(), path: path);
       case "/setting":
         return AppRoutePath(widget: const AppSettingPage(), path: path);
+      case "/login":
+        return AppRoutePath(widget: const LoginPage(), path: path);
       default:
         return AppRoutePath(widget: const MusicIndexPage(), path: '/');
     }
