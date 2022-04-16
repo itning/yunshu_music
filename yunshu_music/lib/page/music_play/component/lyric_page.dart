@@ -50,11 +50,13 @@ class _LyricPageState extends State<LyricPage>
                           style: TextStyle(color: Colors.white),
                         );
                       } else {
-                        return LyricWidget(
-                          key: UniqueKey(),
-                          size: const Size(double.infinity, double.infinity),
-                          lyrics: value,
-                          controller: context.read<LyricController>(),
+                        return RepaintBoundary(
+                          child: LyricWidget(
+                            key: UniqueKey(),
+                            size: const Size(double.infinity, double.infinity),
+                            lyrics: value,
+                            controller: context.read<LyricController>(),
+                          ),
                         );
                       }
                     }),

@@ -49,15 +49,17 @@ class _RotateCoverImageWidgetState extends State<RotateCoverImageWidget>
         return child!;
       },
       selector: (_, model) => model.isPlayNow,
-      child: RotationTransition(
-        alignment: Alignment.center,
-        turns: _coverController,
-        child: ClipOval(
-          child: ImageFade(
-            fit: BoxFit.cover,
-            width: widget.width,
-            height: widget.height,
-            image: widget.image,
+      child: RepaintBoundary(
+        child: RotationTransition(
+          alignment: Alignment.center,
+          turns: _coverController,
+          child: ClipOval(
+            child: ImageFade(
+              fit: BoxFit.cover,
+              width: widget.width,
+              height: widget.height,
+              image: widget.image,
+            ),
           ),
         ),
       ),
