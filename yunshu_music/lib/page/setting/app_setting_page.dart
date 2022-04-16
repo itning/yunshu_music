@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
+import 'package:yunshu_music/route/app_route_delegate.dart';
 
 /// 应用设置页面
 class AppSettingPage extends StatelessWidget {
@@ -244,6 +245,36 @@ class AppSettingPage extends StatelessWidget {
                   padding: EdgeInsets.all(16.0),
                   child: Icon(
                     Icons.open_in_new,
+                    size: 17.0,
+                  ),
+                )
+              ],
+            ),
+          ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.only(left: 16.0, top: 16.0),
+            child: Text(
+              '其它设置',
+              style: TextStyle(fontSize: 12.0),
+            ),
+          ),
+          InkWell(
+            onTap: () => AppRouterDelegate.of(context).push('/login'),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: const [
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    '音乐源设置',
+                    style: TextStyle(fontSize: 17.0),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Icon(
+                    Icons.web,
                     size: 17.0,
                   ),
                 )

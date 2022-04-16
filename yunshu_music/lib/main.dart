@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yunshu_music/component/lyric/lyric_controller.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
+import 'package:yunshu_music/provider/login_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/music_list_status_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
@@ -43,6 +44,7 @@ void main() async {
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
   await CacheModel.get().init(sharedPreferences);
   await ThemeModel.get().init(sharedPreferences);
+  await LoginModel.get().init(sharedPreferences);
   await MusicChannel.get().init();
   await MusicDataModel.get().init();
   await VolumeDataModel.get().init(sharedPreferences);
