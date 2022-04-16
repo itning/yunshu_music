@@ -22,6 +22,8 @@
 
 一个使用flutter编写的跨平台音乐播放app
 
+[配合云舒NAS作为后端音乐服务器，请自行搭建](https://github.com/itning/yunshu-nas)
+
 目前支持平台：
 
 | 平台    | 支持 |
