@@ -1,1 +1,1 @@
-flutter clean&&flutter build apk --split-per-abi
+flutter clean&&flutter build apk --release --split-per-abi
