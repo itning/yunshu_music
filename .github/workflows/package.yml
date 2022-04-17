@@ -33,7 +33,11 @@ jobs:
           echo $KEY_PROPERTIES | base64 -di > android/key.properties
 
       - name: Restore packages
-        run: flutter pub get
+        run: |
+          cd yunshu_music
+          flutter pub get
 
       - name: Build Android App Bundle
-        run: flutter build apk --release
+        run: |
+          cd yunshu_music
+          flutter build apk --release --split-per-abi
