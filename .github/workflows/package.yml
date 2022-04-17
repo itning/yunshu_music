@@ -1,3 +1,5 @@
+name: Flutter Package
+
 on:
   workflow_dispatch:
 
