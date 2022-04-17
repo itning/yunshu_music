@@ -1,1 +1,1 @@
-flutter clean&&flutter build web --web-renderer canvaskit --release&&flutter build apk --split-per-abi&&flutter build windows --release
+flutter clean&&flutter build web --web-renderer canvaskit --release&&flutter build apk --release --split-per-abi&&flutter build windows --release
