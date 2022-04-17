@@ -4,6 +4,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  build_web:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Install and set Flutter version
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "2.10.4"
+
+      - name: Restore packages
+        run: |
+          cd yunshu_music
+          flutter pub get
+
+      - name: Build Web App
+        run: |
+          cd yunshu_music
+          flutter build web --web-renderer canvaskit --release
+
   build_android:
     runs-on: ubuntu-latest
 
@@ -37,7 +59,30 @@ jobs:
           cd yunshu_music
           flutter pub get
 
-      - name: Build Android App Bundle
+      - name: Build Android App
         run: |
           cd yunshu_music
           flutter build apk --release --split-per-abi
+
+  build_windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Install and set Flutter version
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "2.10.4"
+
+      - name: Restore packages
+        run: |
+          cd yunshu_music
+          flutter pub get
+
+      - name: Build Windows App
+        run: |
+          cd yunshu_music
+          flutter build windows --release
+          Compress-Archive -Path .\build\windows\runner\Release\* -DestinationPath windows.zip
