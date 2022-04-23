@@ -14,7 +14,7 @@ import 'package:yunshu_music/util/log_console.dart';
 class LogHelper {
   static final Logger _logger = Logger(
     output: LogConsole.wrap(
-        innerOutput: (!kIsWeb && Platform.isWindows)
+        innerOutput: (!kIsWeb && (Platform.isWindows || Platform.isMacOS))
             ? MultiOutput(
                 [ConsoleOutput(), FileOutput(file: File("./yunshu_music.log"))])
             : ConsoleOutput()),
@@ -320,5 +320,5 @@ void setTitle(String title) {
 /// 大屏模式
 bool isLargeMode(BuildContext context) {
   return MediaQuery.of(context).size.width > 700 &&
-      (kIsWeb || Platform.isWindows);
+      (kIsWeb || Platform.isWindows || Platform.isMacOS);
 }
