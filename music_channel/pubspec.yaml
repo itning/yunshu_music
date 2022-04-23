@@ -14,6 +14,8 @@ dependencies:
     path: ../music_channel_web
   music_channel_windows:
     path: ../music_channel_windows
+  music_channel_macos:
+    path: ../music_channel_macos
   music_platform_interface:
     path: ../music_platform_interface
 
@@ -32,3 +34,5 @@ flutter:
         default_package: music_channel_web
       windows:
         default_package: music_channel_windows
+      macos:
+        default_package: music_channel_macos
