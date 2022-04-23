@@ -31,6 +31,7 @@
 | Android | √    |
 | Web     | √    |
 | Windows | √    |
+| MacOS   | √    |
 
 功能清单：[功能计划](https://github.com/itning/yunshu_music/projects/1)
 
