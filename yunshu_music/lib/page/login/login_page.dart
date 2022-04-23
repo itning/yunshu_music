@@ -20,7 +20,6 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('设置音乐源'),
-        backgroundColor: Colors.transparent,
       ),
       body: Form(
         key: _formKey,
