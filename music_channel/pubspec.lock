@@ -56,14 +56,14 @@ packages:
       name: dart_vlc
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.1.8"
+    version: "0.1.9"
   dart_vlc_ffi:
     dependency: transitive
     description:
       name: dart_vlc_ffi
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.1.5"
+    version: "0.1.5+1"
   fake_async:
     dependency: transitive
     description:
@@ -315,6 +315,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.0"
+  system_tray:
+    dependency: transitive
+    description:
+      name: system_tray
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.0"
   term_glyph:
     dependency: transitive
     description:
@@ -350,13 +357,20 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.4.1"
+  window_manager:
+    dependency: transitive
+    description:
+      name: window_manager
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.1"
   window_size:
     dependency: transitive
     description:
       path: "plugins/window_size"
       ref: HEAD
-      resolved-ref: a738913c8ce2c9f47515382d40827e794a334274
-      url: "git://github.com/google/flutter-desktop-embedding.git"
+      resolved-ref: "5c51870ced62a00e809ba4b81a846a052d241c9f"
+      url: "https://github.com/google/flutter-desktop-embedding.git"
     source: git
     version: "0.1.0"
   windows_taskbar:
@@ -365,7 +379,7 @@ packages:
       name: windows_taskbar
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.1.0"
+    version: "1.1.0+1"
   xdg_directories:
     dependency: transitive
     description:

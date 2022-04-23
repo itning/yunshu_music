@@ -1,0 +1,35 @@
+name: music_channel_macos
+description: A new Flutter project.
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: ">=2.16.2 <3.0.0"
+  flutter: ">=2.5.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  music_platform_interface:
+    path: ../music_platform_interface
+  dart_vlc: ^0.1.9
+  window_size:
+    git:
+      url: https://github.com/google/flutter-desktop-embedding.git
+      path: plugins/window_size
+  shared_preferences: ^2.0.13
+  system_tray: ^0.1.0
+  window_manager: ^0.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^1.0.4
+
+flutter:
+  plugin:
+    implements: music_channel
+    platforms:
+      macos:
+        pluginClass: MusicChannelMacosPlugin
+        dartPluginClass: MusicChannelMacOS

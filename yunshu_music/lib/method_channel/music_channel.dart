@@ -31,7 +31,7 @@ class MusicChannel {
       }
     });
     // web平台 || windows平台
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       StreamController<dynamic> playbackStateController =
           StreamController<dynamic>();
       playbackStateEvent = playbackStateController.stream;
@@ -58,7 +58,7 @@ class MusicChannel {
   }
 
   Future<void> initMethod() async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.initMethod(
           MusicDataModel.get().musicList.map((e) => e.toJson()).toList());
     }
@@ -66,42 +66,42 @@ class MusicChannel {
   }
 
   Future<void> playFromId(String id) async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.playFromId(id);
     }
     await _methodChannel.invokeMethod("playFromId", {'id': id});
   }
 
   Future<void> play() async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.play();
     }
     await _methodChannel.invokeMethod("play");
   }
 
   Future<void> pause() async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.pause();
     }
     await _methodChannel.invokeMethod("pause");
   }
 
   Future<void> skipToPrevious() async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.skipToPrevious();
     }
     await _methodChannel.invokeMethod("skipToPrevious");
   }
 
   Future<void> skipToNext() async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.skipToNext();
     }
     await _methodChannel.invokeMethod("skipToNext");
   }
 
   Future<void> seekTo(Duration position) async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.seekTo(position);
     }
     await _methodChannel
@@ -109,21 +109,21 @@ class MusicChannel {
   }
 
   Future<void> setPlayMode(String mode) async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.setPlayMode(mode);
     }
     await _methodChannel.invokeMethod('setPlayMode', {'mode': mode});
   }
 
   Future<String> getPlayMode() async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.getPlayMode();
     }
     return await _methodChannel.invokeMethod('getPlayMode');
   }
 
   Future<List<dynamic>> getPlayList() async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.getPlayList();
     }
     // List<Map<String,String>>
@@ -131,7 +131,7 @@ class MusicChannel {
   }
 
   Future<void> delPlayListByMediaId(String mediaId) async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.delPlayListByMediaId(mediaId);
     }
     await _methodChannel
@@ -139,16 +139,15 @@ class MusicChannel {
   }
 
   Future<void> clearPlayList() async {
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.clearPlayList();
     }
-    await _methodChannel
-        .invokeMethod('clearPlayList');
+    await _methodChannel.invokeMethod('clearPlayList');
   }
 
   Future<void> setVolume(double value) async {
     // 0.0 ~ 1.0
-    if (kIsWeb || Platform.isWindows) {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS) {
       return await channel.setVolume(value);
     }
     throw UnimplementedError('android not impl set volume');
