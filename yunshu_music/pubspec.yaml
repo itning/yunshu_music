@@ -49,7 +49,7 @@ dependencies:
   fluttertoast: ^8.0.9
   logger: ^1.1.0
   crypto: ^3.0.2
-  path_provider: ^2.0.9
+  path_provider: ^2.0.10
   mime_type: ^1.0.0
   package_info_plus: ^1.4.2
   flutter_update_dialog: ^2.0.0
