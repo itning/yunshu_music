@@ -45,7 +45,7 @@ dependencies:
   shimmer: ^2.0.0
   audio_video_progress_bar: ^0.10.0
   sqflite: ^2.0.2+1
-  url_launcher: ^6.1.1
+  url_launcher: ^6.1.2
   fluttertoast: ^8.0.9
   logger: ^1.1.0
   crypto: ^3.0.2
