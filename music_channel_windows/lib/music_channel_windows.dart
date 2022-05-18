@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:system_tray/system_tray.dart';
+import 'package:system_tray/system_tray.dart' as tray;
 import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
@@ -67,11 +67,11 @@ class MusicChannelWindows extends MusicPlatform {
 
   bool _first = true;
 
-  late SystemTray _systemTray;
+  late tray.SystemTray _systemTray;
 
   bool _isPlayNow = false;
 
-  late List<MenuItemBase> _menus;
+  late List<tray.MenuItemBase> _menus;
 
   @override
   Future<void> init(
@@ -92,15 +92,15 @@ class MusicChannelWindows extends MusicPlatform {
 
     DartVLC.initialize();
     _player = Player(id: 69420);
-    _systemTray = SystemTray();
+    _systemTray = tray.SystemTray();
 
     _menus = [
-      MenuItem(label: '云舒音乐', onClicked: () => windowManager.show()),
-      MenuSeparator(),
-      MenuItem(label: '上一曲', onClicked: () => skipToPrevious()),
-      MenuItem(label: '下一曲', onClicked: () => skipToNext()),
-      MenuSeparator(),
-      MenuItem(label: '退出', onClicked: () => exit(0)),
+      tray.MenuItem(label: '云舒音乐', onClicked: () => windowManager.show()),
+      tray.MenuSeparator(),
+      tray.MenuItem(label: '上一曲', onClicked: () => skipToPrevious()),
+      tray.MenuItem(label: '下一曲', onClicked: () => skipToNext()),
+      tray.MenuSeparator(),
+      tray.MenuItem(label: '退出', onClicked: () => exit(0)),
     ];
 
     _player.positionStream.listen((event) {
@@ -165,7 +165,7 @@ class MusicChannelWindows extends MusicPlatform {
     }
     _menus.insert(
         4,
-        MenuItem(
+        tray.MenuItem(
             label: _isPlayNow ? '暂停' : '播放',
             onClicked: () {
               _isPlayNow ? pause() : play();

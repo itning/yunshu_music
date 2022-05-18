@@ -116,7 +116,7 @@ class _LyricWidgetState extends State<LyricWidget>
       _lyricPainter.draggingLine = null;
       widget.controller.isDragging = false;
     };
-    WidgetsBinding.instance!.addPostFrameCallback((call) {
+    WidgetsBinding.instance.addPostFrameCallback((call) {
       totalHeight = computeScrollY(widget.lyrics.length - 1);
     });
     widget.controller.addListener(() {
