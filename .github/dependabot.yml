@@ -27,6 +27,6 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "pub"
-    directory: "/music_channel_interface"
+    directory: "/music_platform_interface"
     schedule:
       interval: "daily"
