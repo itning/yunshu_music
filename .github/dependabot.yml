@@ -6,7 +6,27 @@
 version: 2
 enable-beta-ecosystems: true
 updates:
-  - package-ecosystem: "pub" # See documentation for possible values
-    directory: "/yunshu_music" # Location of package manifests
+  - package-ecosystem: "pub"
+    directory: "/yunshu_music"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pub"
+    directory: "/music_channel"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pub"
+    directory: "/music_channel_macos"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pub"
+    directory: "/music_channel_web"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pub"
+    directory: "/music_channel_windows"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pub"
+    directory: "/music_channel_interface"
     schedule:
       interval: "daily"
