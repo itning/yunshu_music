@@ -1,10 +1,10 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
-import 'package:yunshu_music/route/app_route_delegate.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 class MusicSearchDelegate extends SearchDelegate {
@@ -97,7 +97,7 @@ class MusicSearchDelegate extends SearchDelegate {
 
   void _play(BuildContext context, String? musicId) {
     close(context, null);
-    AppRouterDelegate.of(context).push('/musicPlay');
+    context.go('/musicPlay');
     Provider.of<MusicDataModel>(context, listen: false)
         .setNowPlayMusicUseMusicId(musicId);
   }

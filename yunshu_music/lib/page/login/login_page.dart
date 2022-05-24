@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:yunshu_music/provider/login_model.dart';
-import 'package:yunshu_music/route/app_route_delegate.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -72,8 +72,8 @@ class _LoginPageState extends State<LoginPage> {
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
       } else {
-        AppRouterDelegate.of(context).remove('/login');
-        AppRouterDelegate.of(context).push('/');
+        context.pop();
+        context.go('/');
       }
     }
   }
