@@ -2,12 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_update_dialog/flutter_update_dialog.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
-import 'package:yunshu_music/route/app_route_delegate.dart';
 
 /// 应用设置页面
 class AppSettingPage extends StatelessWidget {
@@ -174,10 +174,11 @@ class AppSettingPage extends StatelessWidget {
                   updateContent: "点击升级按钮下载新版本",
                   updateButtonText: '升级',
                   onUpdate: () async {
-                    bool can = await canLaunch(
-                        'https://github.com/itning/yunshu_music');
+                    Uri uri =
+                        Uri.parse('https://github.com/itning/yunshu_music');
+                    bool can = await canLaunchUrl(uri);
                     if (can) {
-                      await launch('https://github.com/itning/yunshu_music');
+                      await launchUrl(uri);
                     } else {
                       Fluttertoast.showToast(msg: "无法升级");
                     }
@@ -223,10 +224,10 @@ class AppSettingPage extends StatelessWidget {
           ),
           InkWell(
             onTap: () async {
-              bool can =
-                  await canLaunch('https://github.com/itning/yunshu_music');
+              Uri uri = Uri.parse('https://github.com/itning/yunshu_music');
+              bool can = await canLaunchUrl(uri);
               if (can) {
-                await launch('https://github.com/itning/yunshu_music');
+                await launchUrl(uri);
               } else {
                 Fluttertoast.showToast(msg: "无法打开");
               }
@@ -260,7 +261,7 @@ class AppSettingPage extends StatelessWidget {
             ),
           ),
           InkWell(
-            onTap: () => AppRouterDelegate.of(context).push('/login'),
+            onTap: () => context.push('/login'),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [

@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:move_to_background/move_to_background.dart';
 import 'package:yunshu_music/page/music_list/component/music_list.dart';
 import 'package:yunshu_music/page/music_list/component/music_mini_play_controller_widget.dart';
 import 'package:yunshu_music/page/music_list/component/music_search_delegate.dart';
-import 'package:yunshu_music/route/app_route_delegate.dart';
 import 'package:yunshu_music/util/log_console.dart';
 
 /// 音乐列表
@@ -35,7 +35,7 @@ class MusicIndexPage extends StatelessWidget {
               tooltip: '菜单',
               onSelected: (value) {
                 if (value == '设置') {
-                  AppRouterDelegate.of(context).push('/setting');
+                  context.push('/setting');
                 } else {
                   LogConsole.openLogConsole(context);
                 }
