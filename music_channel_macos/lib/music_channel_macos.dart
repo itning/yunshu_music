@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-
-import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +28,7 @@ class MusicChannelMacOS extends MusicPlatform {
   static const String _playListKey = "PLAY_LIST";
 
   /// 播放实例
-  late Player _player;
+  late AudioPlayer _player;
 
   /// 播放元数据信息：歌曲信息，时长等。
   late StreamController<dynamic> _metadataEventController;
@@ -64,8 +63,6 @@ class MusicChannelMacOS extends MusicPlatform {
   /// 正在播放的音乐信息
   Music? _nowPlayMusic;
 
-  bool _first = true;
-
   late tray.SystemTray _systemTray;
 
   bool _isPlayNow = false;
@@ -78,7 +75,7 @@ class MusicChannelMacOS extends MusicPlatform {
       StreamController<dynamic> playbackStateController,
       StreamController<double> volumeController) async {
     setWindowTitle("云舒音乐");
-    setWindowMinSize(const Size(450, 900));
+    setWindowMinSize(const Size(350, 800));
 
     this._metadataEventController = metadataEventController;
     this._playbackStateController = playbackStateController;
@@ -89,8 +86,7 @@ class MusicChannelMacOS extends MusicPlatform {
         valueOf(_sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE');
     await windowManager.ensureInitialized();
 
-    DartVLC.initialize();
-    _player = Player(id: 69420);
+    _player = AudioPlayer();
     _systemTray = tray.SystemTray();
 
     _menus = [
@@ -102,42 +98,62 @@ class MusicChannelMacOS extends MusicPlatform {
       tray.MenuItem(label: '退出', onClicked: () => exit(0)),
     ];
 
-    _player.positionStream.listen((event) {
-      int position = event.position?.inMilliseconds ?? 0;
-      int duration = event.duration?.inMilliseconds ?? 0;
-      _playbackState.position = position;
-      _metaData.duration(duration);
+    // 播放状态
+    _player.playerStateStream.listen((event) {
+      print("${event.processingState} ${event.playing}");
+      switch (event.processingState) {
+        case ProcessingState.loading:
+          _playbackState.state = 8;
+          playbackStateController.sink.add(_playbackState.toMap());
+          _isPlayNow = event.playing;
+          _upContextMenu();
+          break;
+        case ProcessingState.idle:
+          break;
+        case ProcessingState.buffering:
+          break;
+        case ProcessingState.ready:
+          _playbackState.state = event.playing ? 3 : 2;
+          playbackStateController.sink.add(_playbackState.toMap());
+          _isPlayNow = event.playing;
+          _upContextMenu();
+          break;
+        case ProcessingState.completed:
+          _playbackState.state = 0;
+          playbackStateController.sink.add(_playbackState.toMap());
+          next(false);
+          initPlay(autoStart: true);
+          break;
+      }
+    });
 
+    // 缓冲进度
+    _player.bufferedPositionStream.listen((event) {
+      _playbackState.bufferedPosition = event.inMilliseconds;
       playbackStateController.sink.add(_playbackState.toMap());
+    });
+
+    // 持续时间
+    _player.durationStream.listen((event) {
+      _metaData.duration(event?.inMilliseconds ?? 0);
       metadataEventController.sink.add(_metaData.toMap());
     });
 
-    _player.playbackStream.listen((event) {
-      if (_first || _playbackState.state != 8 || event.isPlaying) {
-        if (_first) {
-          _first = false;
-        }
-        _playbackState.state = event.isPlaying ? 3 : 2;
-        playbackStateController.sink.add(_playbackState.toMap());
-        _isPlayNow = event.isPlaying;
-        _upContextMenu();
-      }
-      if (event.isCompleted) {
-        _playbackState.state = 0;
-        playbackStateController.sink.add(_playbackState.toMap());
-        next(false);
-        initPlay(autoStart: true);
-      }
+    // 播放位置
+    _player.positionStream.listen((event) {
+      _playbackState.position = event.inMilliseconds;
+      playbackStateController.sink.add(_playbackState.toMap());
     });
 
-    _player.generalStream.listen((event) {
-      volumeController.sink.add(event.volume);
+    // 音量
+    _player.volumeStream.listen((event) {
+      volumeController.sink.add(event);
     });
 
     _playbackState.state = 0;
 
     await _systemTray.initSystemTray(
-      title: "云舒音乐",
+      title: "",
       iconPath: "asserts/icon/app_icon.ico",
       toolTip: "云舒音乐",
     );
@@ -148,7 +164,7 @@ class MusicChannelMacOS extends MusicPlatform {
         _systemTray.popUpContextMenu();
       } else if (eventName == "leftMouseDown") {
         windowManager.isVisible().then(
-            (visible) => visible ? windowManager.hide() : windowManager.show());
+            (visible) => visible ? windowManager.minimize() : windowManager.show());
       }
     });
   }
@@ -167,7 +183,7 @@ class MusicChannelMacOS extends MusicPlatform {
     _systemTray.setContextMenu(_menus);
   }
 
-  void initPlay({bool autoStart = false}) {
+  void initPlay({bool autoStart = false}) async {
     if (_nowPlayMusic == null) {
       return;
     }
@@ -176,10 +192,15 @@ class MusicChannelMacOS extends MusicPlatform {
     }
     _playbackState.state = 8;
     _playbackStateController.sink.add(_playbackState.toMap());
-    _player.open(Media.network(_nowPlayMusic!.musicUri!), autoStart: autoStart);
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
-    _systemTray.setTitle('${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}');
+    // 请求头 x-no-304 是让服务器不返回304状态码
+    // 返回304 mac报错 无法打开文件
+    await _player
+        .setUrl(_nowPlayMusic!.musicUri!, headers: {"x-no-304": "yes"});
+    if (autoStart) {
+      await _player.play();
+    }
   }
 
   @override
