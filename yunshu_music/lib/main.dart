@@ -5,10 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yunshu_music/component/lyric/lyric_controller.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
+import 'package:yunshu_music/page/login/login_page.dart';
+import 'package:yunshu_music/page/music_list/music_index_page.dart';
+import 'package:yunshu_music/page/music_play/music_play_page.dart';
+import 'package:yunshu_music/page/setting/app_setting_page.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/login_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
@@ -16,8 +21,6 @@ import 'package:yunshu_music/provider/music_list_status_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 import 'package:yunshu_music/provider/volume_data_model.dart';
-import 'package:yunshu_music/route/app_route_delegate.dart';
-import 'package:yunshu_music/route/app_route_parser.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 void main() async {
@@ -75,7 +78,44 @@ class YunShuMusicApp extends StatefulWidget {
 }
 
 class _YunShuMusicAppState extends State<YunShuMusicApp> {
-  final delegate = AppRouterDelegate();
+  final GoRouter _router = GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (BuildContext context, GoRouterState state) {
+          return const MusicIndexPage();
+        },
+      ),
+      GoRoute(
+        path: '/musicPlay',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const MusicPlayPage(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
+        ),
+      ),
+      GoRoute(
+        path: '/setting',
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppSettingPage();
+        },
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (BuildContext context, GoRouterState state) {
+          return const LoginPage();
+        },
+      ),
+    ],
+    redirect: (GoRouterState state) {
+      if ('/login' != state.location && !LoginModel.get().isLogin()) {
+        return '/login';
+      }
+      return null;
+    },
+    debugLogDiagnostics: kDebugMode,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -104,8 +144,8 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
             themeMode: theme.themeMode,
             theme: ThemeData(fontFamily: 'LXGWWenKaiMono'),
             title: '云舒音乐',
-            routeInformationParser: AppRouteParser(),
-            routerDelegate: delegate,
+            routeInformationParser: _router.routeInformationParser,
+            routerDelegate: _router.routerDelegate,
           );
         },
       ),

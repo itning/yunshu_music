@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -12,7 +13,6 @@ import 'package:yunshu_music/page/music_list/component/music_list_item.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/music_list_status_model.dart';
-import 'package:yunshu_music/route/app_route_delegate.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 class MusicList extends StatefulWidget {
@@ -192,7 +192,7 @@ class _InnerListItem extends StatelessWidget {
       subTitle: singer,
       rightButtonIcon: Icons.more_vert,
       onTap: () {
-        AppRouterDelegate.of(context).push('/musicPlay');
+        context.push('/musicPlay');
         Provider.of<MusicDataModel>(context, listen: false)
             .setNowPlayMusicUseMusicId(musicId);
       },
@@ -288,9 +288,10 @@ class _InnerListItem extends StatelessWidget {
                       leading: const Icon(Icons.download),
                       title: const Text('下载歌曲到本地'),
                       onTap: () async {
-                        bool can = await canLaunch(musicUri);
+                        Uri url = Uri.parse(musicUri);
+                        bool can = await canLaunchUrl(url);
                         if (can) {
-                          await launch(musicUri);
+                          await launchUrl(url);
                         } else {
                           Fluttertoast.showToast(msg: "下载失败");
                         }
