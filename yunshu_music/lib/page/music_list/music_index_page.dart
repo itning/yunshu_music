@@ -35,7 +35,7 @@ class MusicIndexPage extends StatelessWidget {
               tooltip: '菜单',
               onSelected: (value) {
                 if (value == '设置') {
-                  context.go('/setting');
+                  context.push('/setting');
                 } else {
                   LogConsole.openLogConsole(context);
                 }
