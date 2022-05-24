@@ -111,6 +111,7 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
       }
       return null;
     },
+    debugLogDiagnostics: kDebugMode,
   );
 
   @override
