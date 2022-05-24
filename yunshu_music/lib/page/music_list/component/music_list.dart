@@ -192,7 +192,7 @@ class _InnerListItem extends StatelessWidget {
       subTitle: singer,
       rightButtonIcon: Icons.more_vert,
       onTap: () {
-        context.go('/musicPlay');
+        context.push('/musicPlay');
         Provider.of<MusicDataModel>(context, listen: false)
             .setNowPlayMusicUseMusicId(musicId);
       },

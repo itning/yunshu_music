@@ -97,7 +97,7 @@ class MusicSearchDelegate extends SearchDelegate {
 
   void _play(BuildContext context, String? musicId) {
     close(context, null);
-    context.go('/musicPlay');
+    context.push('/musicPlay');
     Provider.of<MusicDataModel>(context, listen: false)
         .setNowPlayMusicUseMusicId(musicId);
   }

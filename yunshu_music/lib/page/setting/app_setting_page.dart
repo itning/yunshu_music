@@ -261,7 +261,7 @@ class AppSettingPage extends StatelessWidget {
             ),
           ),
           InkWell(
-            onTap: () => context.go('/login'),
+            onTap: () => context.push('/login'),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [

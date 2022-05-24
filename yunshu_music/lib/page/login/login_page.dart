@@ -72,7 +72,6 @@ class _LoginPageState extends State<LoginPage> {
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
       } else {
-        context.pop();
         context.go('/');
       }
     }

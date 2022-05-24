@@ -31,7 +31,7 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
       child: SizedBox(
         height: 60.0,
         child: InkWell(
-          onTap: () => context.go('/musicPlay'),
+          onTap: () => context.push('/musicPlay'),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
