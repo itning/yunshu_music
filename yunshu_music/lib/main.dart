@@ -88,9 +88,12 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
       ),
       GoRoute(
         path: '/musicPlay',
-        builder: (BuildContext context, GoRouterState state) {
-          return const MusicPlayPage();
-        },
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const MusicPlayPage(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
+        ),
       ),
       GoRoute(
         path: '/setting',
