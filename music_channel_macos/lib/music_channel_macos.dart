@@ -165,8 +165,8 @@ class MusicChannelMacOS extends MusicPlatform {
       if (eventName == "rightMouseUp") {
         _systemTray.popUpContextMenu();
       } else if (eventName == "leftMouseDown") {
-        windowManager.isVisible().then((visible) =>
-            visible ? windowManager.minimize() : windowManager.show());
+        windowManager.isVisible().then(
+            (visible) => visible ? windowManager.hide() : windowManager.show());
       }
     });
   }
