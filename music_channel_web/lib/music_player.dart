@@ -3,6 +3,7 @@ import 'dart:html' as html;
 import 'package:music_channel_web/music_channel_web.dart';
 import 'package:music_channel_web/music_data.dart';
 import 'package:music_platform_interface/music_model.dart';
+import 'package:music_platform_interface/music_status.dart';
 
 class MusicPlayer {
   final html.AudioElement _audio = html.AudioElement();
@@ -16,7 +17,7 @@ class MusicPlayer {
 
   final PlaybackState _playbackState = PlaybackState();
 
-  final MetaData _metaData = MetaData();
+  final MusicMetaData _metaData = MusicMetaData();
 
   int numSecond2Millisecond(num second) {
     return (second * 1000).toInt();
@@ -47,7 +48,7 @@ class MusicPlayer {
     // 播放完成
     _audio.onEnded.listen((event) {
       html.window.console.info('onEnd');
-      _playbackState.state = 0;
+      _playbackState.state = MusicStatus.none;
       MusicChannel.get()
           .playbackStateController
           .sink
@@ -60,7 +61,7 @@ class MusicPlayer {
       if (_playNow) {
         onPlay();
       } else {
-        _playbackState.state = 2;
+        _playbackState.state = MusicStatus.paused;
         MusicChannel.get()
             .playbackStateController
             .sink
@@ -71,7 +72,7 @@ class MusicPlayer {
 
     _audio.onPlay.listen((event) {
       html.window.console.info('onPlayStream');
-      _playbackState.state = 3;
+      _playbackState.state = MusicStatus.playing;
       MusicChannel.get()
           .playbackStateController
           .sink
@@ -80,7 +81,7 @@ class MusicPlayer {
 
     _audio.onPause.listen((event) {
       html.window.console.info('onPauseStream');
-      _playbackState.state = 2;
+      _playbackState.state = MusicStatus.paused;
       MusicChannel.get()
           .playbackStateController
           .sink
@@ -105,7 +106,7 @@ class MusicPlayer {
       MusicChannel.get().volumeController.sink.add(_audio.volume.toDouble());
     });
 
-    _playbackState.state = 0;
+    _playbackState.state = MusicStatus.none;
     // Media Session API
     if (html.MediaStream.supported) {
       html.window.console.info('Support MediaStream And Add ActionHandler');
@@ -124,14 +125,14 @@ class MusicPlayer {
   void onPlay() {
     html.window.console.info('onPlay');
     _audio.play().then((value) {
-      _playbackState.state = 3;
+      _playbackState.state = MusicStatus.playing;
       MusicChannel.get()
           .playbackStateController
           .sink
           .add(_playbackState.toMap());
     }).catchError((error) {
       html.window.console.error(error);
-      _playbackState.state = 3;
+      _playbackState.state = MusicStatus.playing;
       MusicChannel.get()
           .playbackStateController
           .sink
@@ -142,7 +143,7 @@ class MusicPlayer {
   void onPause() {
     html.window.console.info('onPause');
     _audio.pause();
-    _playbackState.state = 2;
+    _playbackState.state = MusicStatus.paused;
     MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
   }
 
@@ -158,7 +159,7 @@ class MusicPlayer {
 
   void onSkipToPrevious(bool userTrigger) {
     html.window.console.info('onSkipToPrevious');
-    _playbackState.state = 9;
+    _playbackState.state = MusicStatus.skippingToPrevious;
     MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
     MusicData.get().previous(userTrigger);
     initPlay();
@@ -166,7 +167,7 @@ class MusicPlayer {
 
   void onSkipToNext(bool userTrigger) {
     html.window.console.info('onSkipToNext');
-    _playbackState.state = 10;
+    _playbackState.state = MusicStatus.skippingToNext;
     MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
     MusicData.get().next(userTrigger);
     initPlay();
@@ -185,14 +186,9 @@ class MusicPlayer {
     }
 
     _audio.src = nowPlayMusic.musicUri!;
-    _playbackState.state = 8;
+    _playbackState.state = MusicStatus.connecting;
     MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
-    _metaData.mediaId = nowPlayMusic.musicId ?? '';
-    _metaData.title = nowPlayMusic.name ?? '';
-    _metaData.subTitle = nowPlayMusic.singer ?? '';
-    _metaData.coverUri = nowPlayMusic.coverUri ?? '';
-    _metaData.musicUri = nowPlayMusic.musicUri ?? '';
-    _metaData.lyricUri = nowPlayMusic.lyricUri ?? '';
+    _metaData.from(nowPlayMusic);
     MusicChannel.get().metadataEventController.sink.add(_metaData.toMap());
     // Media Session API
     if (html.MediaStream.supported) {

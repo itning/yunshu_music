@@ -2,6 +2,7 @@ import 'dart:html' as html;
 import 'dart:math';
 
 import 'package:music_platform_interface/music_model.dart';
+import 'package:music_platform_interface/music_play_mode.dart';
 
 class MusicData {
   static const String _nowPlaymusicIdKey = "NOW_PLAY_MEDIA_ID_KEY";
@@ -222,35 +223,5 @@ class MusicData {
     } else {
       return musicListIndex - 1;
     }
-  }
-}
-
-enum MusicPlayMode { SEQUENCE, RANDOMLY, LOOP }
-
-extension MusicPlayModeExtension on MusicPlayMode {
-  String name() {
-    switch (index) {
-      case 0:
-        return 'SEQUENCE';
-      case 1:
-        return 'RANDOMLY';
-      case 2:
-        return 'LOOP';
-      default:
-        return 'SEQUENCE';
-    }
-  }
-}
-
-MusicPlayMode valueOf(String name) {
-  switch (name) {
-    case 'SEQUENCE':
-      return MusicPlayMode.SEQUENCE;
-    case 'RANDOMLY':
-      return MusicPlayMode.RANDOMLY;
-    case 'LOOP':
-      return MusicPlayMode.LOOP;
-    default:
-      return MusicPlayMode.SEQUENCE;
   }
 }

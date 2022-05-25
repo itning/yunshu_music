@@ -5,6 +5,7 @@ import 'package:music_channel_web/music_data.dart';
 import 'package:music_channel_web/music_player.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
+import 'package:music_platform_interface/music_play_mode.dart';
 
 class MusicChannel extends MusicPlatform {
   static MusicChannel? _instance;

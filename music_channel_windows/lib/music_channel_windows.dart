@@ -3,10 +3,12 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:dart_vlc/dart_vlc.dart';
+import 'package:dart_vlc/dart_vlc.dart' hide PlaybackState;
 import 'package:flutter/services.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
+import 'package:music_platform_interface/music_status.dart';
+import 'package:music_platform_interface/music_play_mode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_tray/system_tray.dart' as tray;
 import 'package:window_manager/window_manager.dart';
@@ -54,7 +56,7 @@ class MusicChannelWindows extends MusicPlatform {
   final List<Music> _playList = [];
 
   /// 元数据载体
-  final MetaData _metaData = MetaData();
+  final MusicMetaData _metaData = MusicMetaData();
 
   /// 播放状态载体
   final PlaybackState _playbackState = PlaybackState();
@@ -107,7 +109,7 @@ class MusicChannelWindows extends MusicPlatform {
       int position = event.position?.inMilliseconds ?? 0;
       int duration = event.duration?.inMilliseconds ?? 0;
       _playbackState.position = position;
-      _metaData.duration(duration);
+      _metaData.duration = duration;
 
       playbackStateController.sink.add(_playbackState.toMap());
       metadataEventController.sink.add(_metaData.toMap());
@@ -115,11 +117,14 @@ class MusicChannelWindows extends MusicPlatform {
     });
 
     _player.playbackStream.listen((event) {
-      if (_first || _playbackState.state != 8 || event.isPlaying) {
+      if (_first ||
+          _playbackState.state != MusicStatus.connecting ||
+          event.isPlaying) {
         if (_first) {
           _first = false;
         }
-        _playbackState.state = event.isPlaying ? 3 : 2;
+        _playbackState.state =
+            event.isPlaying ? MusicStatus.playing : MusicStatus.paused;
         playbackStateController.sink.add(_playbackState.toMap());
         WindowsTaskbar.setProgressMode(event.isPlaying
             ? TaskbarProgressMode.normal
@@ -128,7 +133,7 @@ class MusicChannelWindows extends MusicPlatform {
         _upContextMenu();
       }
       if (event.isCompleted) {
-        _playbackState.state = 0;
+        _playbackState.state = MusicStatus.none;
         playbackStateController.sink.add(_playbackState.toMap());
         WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
         next(false);
@@ -140,7 +145,7 @@ class MusicChannelWindows extends MusicPlatform {
       volumeController.sink.add(event.volume);
     });
 
-    _playbackState.state = 0;
+    _playbackState.state = MusicStatus.none;
 
     await _systemTray.initSystemTray(
       title: "云舒音乐",
@@ -180,7 +185,7 @@ class MusicChannelWindows extends MusicPlatform {
     if (_nowPlayMusic!.musicUri == null) {
       return;
     }
-    _playbackState.state = 8;
+    _playbackState.state = MusicStatus.connecting;
     _playbackStateController.sink.add(_playbackState.toMap());
     WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
     _player.open(Media.network(_nowPlayMusic!.musicUri!), autoStart: autoStart);
@@ -216,7 +221,7 @@ class MusicChannelWindows extends MusicPlatform {
 
   @override
   Future<void> skipToPrevious() async {
-    _playbackState.state = 9;
+    _playbackState.state = MusicStatus.skippingToPrevious;
     _playbackStateController.sink.add(_playbackState.toMap());
     previous(true);
     initPlay(autoStart: true);
@@ -224,7 +229,7 @@ class MusicChannelWindows extends MusicPlatform {
 
   @override
   Future<void> skipToNext() async {
-    _playbackState.state = 10;
+    _playbackState.state = MusicStatus.skippingToNext;
     _playbackStateController.sink.add(_playbackState.toMap());
     next(true);
     initPlay(autoStart: true);
@@ -446,83 +451,5 @@ class MusicChannelWindows extends MusicPlatform {
     } else {
       return musicListIndex - 1;
     }
-  }
-}
-
-class MetaData {
-  final Map<String, dynamic> _map = {
-    'duration': 0,
-    'title': '',
-    'subTitle': '',
-    'mediaId': '',
-    'musicUri': '',
-    'lyricUri': ''
-  };
-
-  void from(Music music) {
-    _map['title'] = music.name;
-    _map['subTitle'] = music.singer;
-    _map['mediaId'] = music.musicId;
-    _map['coverUri'] = music.coverUri;
-    _map['musicUri'] = music.musicUri;
-    _map['lyricUri'] = music.lyricUri;
-  }
-
-  void duration(int duration) {
-    _map['duration'] = duration;
-  }
-
-  int get durations => _map['duration'];
-
-  Map<String, dynamic> toMap() {
-    return _map;
-  }
-}
-
-class PlaybackState {
-  final Map<String, dynamic> _map = {
-    'bufferedPosition': 0,
-    'position': 0,
-    'state': -1
-  };
-  int bufferedPosition = 0;
-  int position = 0;
-  int state = -1;
-
-  Map<String, dynamic> toMap() {
-    _map['bufferedPosition'] = bufferedPosition;
-    _map['position'] = position;
-    _map['state'] = state;
-    return _map;
-  }
-}
-
-enum MusicPlayMode { SEQUENCE, RANDOMLY, LOOP }
-
-extension MusicPlayModeExtension on MusicPlayMode {
-  String name() {
-    switch (index) {
-      case 0:
-        return 'SEQUENCE';
-      case 1:
-        return 'RANDOMLY';
-      case 2:
-        return 'LOOP';
-      default:
-        return 'SEQUENCE';
-    }
-  }
-}
-
-MusicPlayMode valueOf(String name) {
-  switch (name) {
-    case 'SEQUENCE':
-      return MusicPlayMode.SEQUENCE;
-    case 'RANDOMLY':
-      return MusicPlayMode.RANDOMLY;
-    case 'LOOP':
-      return MusicPlayMode.LOOP;
-    default:
-      return MusicPlayMode.SEQUENCE;
   }
 }

@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
+import 'package:music_platform_interface/music_status.dart';
+import 'package:music_platform_interface/music_play_mode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_tray/system_tray.dart' as tray;
 import 'package:window_manager/window_manager.dart';
@@ -23,7 +25,7 @@ class MusicChannelMacOS extends MusicPlatform {
     return version;
   }
 
-  static const String _nowPlaymusicIdKey = "NOW_PLAY_MEDIA_ID_KEY";
+  static const String _nowPlayMusicIdKey = "NOW_PLAY_MEDIA_ID_KEY";
   static const String _playModeKey = "PLAY_MODE";
   static const String _playListKey = "PLAY_LIST";
 
@@ -52,7 +54,7 @@ class MusicChannelMacOS extends MusicPlatform {
   final List<Music> _playList = [];
 
   /// 元数据载体
-  final MetaData _metaData = MetaData();
+  final MusicMetaData _metaData = MusicMetaData();
 
   /// 播放状态载体
   final PlaybackState _playbackState = PlaybackState();
@@ -100,10 +102,9 @@ class MusicChannelMacOS extends MusicPlatform {
 
     // 播放状态
     _player.playerStateStream.listen((event) {
-      print("${event.processingState} ${event.playing}");
       switch (event.processingState) {
         case ProcessingState.loading:
-          _playbackState.state = 8;
+          _playbackState.state = MusicStatus.connecting;
           playbackStateController.sink.add(_playbackState.toMap());
           _isPlayNow = event.playing;
           _upContextMenu();
@@ -113,13 +114,14 @@ class MusicChannelMacOS extends MusicPlatform {
         case ProcessingState.buffering:
           break;
         case ProcessingState.ready:
-          _playbackState.state = event.playing ? 3 : 2;
+          _playbackState.state =
+              event.playing ? MusicStatus.playing : MusicStatus.paused;
           playbackStateController.sink.add(_playbackState.toMap());
           _isPlayNow = event.playing;
           _upContextMenu();
           break;
         case ProcessingState.completed:
-          _playbackState.state = 0;
+          _playbackState.state = MusicStatus.none;
           playbackStateController.sink.add(_playbackState.toMap());
           next(false);
           initPlay(autoStart: true);
@@ -135,7 +137,7 @@ class MusicChannelMacOS extends MusicPlatform {
 
     // 持续时间
     _player.durationStream.listen((event) {
-      _metaData.duration(event?.inMilliseconds ?? 0);
+      _metaData.duration = event?.inMilliseconds ?? 0;
       metadataEventController.sink.add(_metaData.toMap());
     });
 
@@ -150,7 +152,7 @@ class MusicChannelMacOS extends MusicPlatform {
       volumeController.sink.add(event);
     });
 
-    _playbackState.state = 0;
+    _playbackState.state = MusicStatus.none;
 
     await _systemTray.initSystemTray(
       title: "",
@@ -163,8 +165,8 @@ class MusicChannelMacOS extends MusicPlatform {
       if (eventName == "rightMouseUp") {
         _systemTray.popUpContextMenu();
       } else if (eventName == "leftMouseDown") {
-        windowManager.isVisible().then(
-            (visible) => visible ? windowManager.minimize() : windowManager.show());
+        windowManager.isVisible().then((visible) =>
+            visible ? windowManager.minimize() : windowManager.show());
       }
     });
   }
@@ -190,7 +192,7 @@ class MusicChannelMacOS extends MusicPlatform {
     if (_nowPlayMusic!.musicUri == null) {
       return;
     }
-    _playbackState.state = 8;
+    _playbackState.state = MusicStatus.connecting;
     _playbackStateController.sink.add(_playbackState.toMap());
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
@@ -230,7 +232,7 @@ class MusicChannelMacOS extends MusicPlatform {
 
   @override
   Future<void> skipToPrevious() async {
-    _playbackState.state = 9;
+    _playbackState.state = MusicStatus.skippingToPrevious;
     _playbackStateController.sink.add(_playbackState.toMap());
     previous(true);
     initPlay(autoStart: true);
@@ -238,7 +240,7 @@ class MusicChannelMacOS extends MusicPlatform {
 
   @override
   Future<void> skipToNext() async {
-    _playbackState.state = 10;
+    _playbackState.state = MusicStatus.skippingToNext;
     _playbackStateController.sink.add(_playbackState.toMap());
     next(true);
     initPlay(autoStart: true);
@@ -305,7 +307,7 @@ class MusicChannelMacOS extends MusicPlatform {
     }
     _playList.addAll(playList);
 
-    String? nowPlayMusicId = _sharedPreferences.getString(_nowPlaymusicIdKey);
+    String? nowPlayMusicId = _sharedPreferences.getString(_nowPlayMusicIdKey);
     if (null != nowPlayMusicId) {
       for (int i = 0; i < _playList.length; i++) {
         if (nowPlayMusicId == _playList[i].musicId) {
@@ -343,7 +345,7 @@ class MusicChannelMacOS extends MusicPlatform {
     }
     _sharedPreferences.setStringList(
         _playListKey, _playList.map((e) => e.musicId!).toList());
-    _sharedPreferences.setString(_nowPlaymusicIdKey, _nowPlayMusic!.musicId!);
+    _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 
   void previous(bool userTrigger) {
@@ -380,7 +382,7 @@ class MusicChannelMacOS extends MusicPlatform {
     }
     _sharedPreferences.setStringList(
         _playListKey, _playList.map((e) => e.musicId!).toList());
-    _sharedPreferences.setString(_nowPlaymusicIdKey, _nowPlayMusic!.musicId!);
+    _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 
   void next(bool userTrigger) {
@@ -417,7 +419,7 @@ class MusicChannelMacOS extends MusicPlatform {
     }
     _sharedPreferences.setStringList(
         _playListKey, _playList.map((e) => e.musicId!).toList());
-    _sharedPreferences.setString(_nowPlaymusicIdKey, _nowPlayMusic!.musicId!);
+    _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 
   int getRandom() {
@@ -460,83 +462,5 @@ class MusicChannelMacOS extends MusicPlatform {
     } else {
       return musicListIndex - 1;
     }
-  }
-}
-
-class MetaData {
-  final Map<String, dynamic> _map = {
-    'duration': 0,
-    'title': '',
-    'subTitle': '',
-    'mediaId': '',
-    'musicUri': '',
-    'lyricUri': ''
-  };
-
-  void from(Music music) {
-    _map['title'] = music.name;
-    _map['subTitle'] = music.singer;
-    _map['mediaId'] = music.musicId;
-    _map['coverUri'] = music.coverUri;
-    _map['musicUri'] = music.musicUri;
-    _map['lyricUri'] = music.lyricUri;
-  }
-
-  void duration(int duration) {
-    _map['duration'] = duration;
-  }
-
-  int get durations => _map['duration'];
-
-  Map<String, dynamic> toMap() {
-    return _map;
-  }
-}
-
-class PlaybackState {
-  final Map<String, dynamic> _map = {
-    'bufferedPosition': 0,
-    'position': 0,
-    'state': -1
-  };
-  int bufferedPosition = 0;
-  int position = 0;
-  int state = -1;
-
-  Map<String, dynamic> toMap() {
-    _map['bufferedPosition'] = bufferedPosition;
-    _map['position'] = position;
-    _map['state'] = state;
-    return _map;
-  }
-}
-
-enum MusicPlayMode { SEQUENCE, RANDOMLY, LOOP }
-
-extension MusicPlayModeExtension on MusicPlayMode {
-  String name() {
-    switch (index) {
-      case 0:
-        return 'SEQUENCE';
-      case 1:
-        return 'RANDOMLY';
-      case 2:
-        return 'LOOP';
-      default:
-        return 'SEQUENCE';
-    }
-  }
-}
-
-MusicPlayMode valueOf(String name) {
-  switch (name) {
-    case 'SEQUENCE':
-      return MusicPlayMode.SEQUENCE;
-    case 'RANDOMLY':
-      return MusicPlayMode.RANDOMLY;
-    case 'LOOP':
-      return MusicPlayMode.LOOP;
-    default:
-      return MusicPlayMode.SEQUENCE;
   }
 }
