@@ -1,3 +1,5 @@
+import 'package:music_platform_interface/music_status.dart';
+
 class Music {
   String? musicId;
   String? name;
@@ -40,7 +42,7 @@ class Music {
   int get hashCode => musicId.hashCode;
 }
 
-class MetaData {
+class MusicMetaData {
   final Map<String, dynamic> _map = {
     'duration': 0,
     'title': '',
@@ -57,6 +59,15 @@ class MetaData {
   String coverUri = '';
   String musicUri = '';
   String lyricUri = '';
+
+  void from(Music music) {
+    title = music.name ?? '';
+    subTitle = music.singer ?? '';
+    mediaId = music.musicId ?? '';
+    coverUri = music.coverUri ?? '';
+    musicUri = music.musicUri ?? '';
+    lyricUri = music.lyricUri ?? '';
+  }
 
   Map<String, dynamic> toMap() {
     _map['duration'] = duration;
@@ -78,12 +89,12 @@ class PlaybackState {
   };
   int bufferedPosition = 0;
   int position = 0;
-  int state = -1;
+  MusicStatus state = MusicStatus.none;
 
   Map<String, dynamic> toMap() {
     _map['bufferedPosition'] = bufferedPosition;
     _map['position'] = position;
-    _map['state'] = state;
+    _map['state'] = state.index;
     return _map;
   }
 }
