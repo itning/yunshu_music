@@ -7,8 +7,8 @@ import 'package:dart_vlc/dart_vlc.dart' hide PlaybackState;
 import 'package:flutter/services.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
-import 'package:music_platform_interface/music_status.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
+import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_tray/system_tray.dart' as tray;
 import 'package:window_manager/window_manager.dart';
@@ -102,7 +102,14 @@ class MusicChannelWindows extends MusicPlatform {
       tray.MenuItem(label: '上一曲', onClicked: () => skipToPrevious()),
       tray.MenuItem(label: '下一曲', onClicked: () => skipToNext()),
       tray.MenuSeparator(),
-      tray.MenuItem(label: '退出', onClicked: () => exit(0)),
+      tray.MenuItem(
+        label: '退出',
+        onClicked: () {
+          _player.stop();
+          _player.dispose();
+          exit(0);
+        },
+      ),
     ];
 
     _player.positionStream.listen((event) {
