@@ -157,7 +157,6 @@ class MusicChannelMacOS extends MusicPlatform {
     await _systemTray.initSystemTray(
       title: "",
       iconPath: "asserts/icon/app_icon.ico",
-      toolTip: "云舒音乐",
     );
 
     await _systemTray.setContextMenu(_menus);
