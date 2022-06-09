@@ -19,6 +19,10 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "pub"
+    directory: "/music_channel_ios"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pub"
     directory: "/music_channel_web"
     schedule:
       interval: "daily"
