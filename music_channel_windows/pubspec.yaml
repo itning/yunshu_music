@@ -23,7 +23,7 @@ dependencies:
     git:
       url: https://github.com/antler119/system_tray.git
       ref: main
-  window_manager: ^0.2.3
+  window_manager: ^0.2.5
 
 dev_dependencies:
   flutter_test:
