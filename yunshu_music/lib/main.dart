@@ -144,6 +144,7 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
             themeMode: theme.themeMode,
             theme: ThemeData(fontFamily: 'LXGWWenKaiMono'),
             title: '云舒音乐',
+            routeInformationProvider: _router.routeInformationProvider,
             routeInformationParser: _router.routeInformationParser,
             routerDelegate: _router.routerDelegate,
           );
