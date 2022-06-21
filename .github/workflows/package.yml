@@ -5,7 +5,10 @@ on:
     tags:
       - '*'
   workflow_dispatch:
-
+  
+env:
+  FLUTTER_VERSION: "3.0.2"
+  
 jobs:
   build_web:
     runs-on: ubuntu-latest
@@ -17,7 +20,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.0.2"
+          flutter-version: $FLUTTER_VERSION
 
       - name: Restore packages
         run: |
@@ -44,7 +47,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.0.2"
+          flutter-version: $FLUTTER_VERSION
 
       - name: Create the Keystore
         env:
@@ -77,7 +80,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.0.2"
+          flutter-version: $FLUTTER_VERSION
 
       - name: Restore packages
         run: |
