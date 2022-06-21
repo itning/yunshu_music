@@ -1,6 +1,9 @@
 name: Flutter Package
 
 on:
+  push:
+    tags:
+      - '*'
   workflow_dispatch:
 
 jobs:
