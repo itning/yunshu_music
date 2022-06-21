@@ -38,11 +38,11 @@ jobs:
          filename: 'web.zip'
          path: 'yunshu_music/build/web'
          
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+      - name: Create Github Release
+        uses: ncipollo/release-action@v1
         with:
-          path: web.zip
-          if-no-files-found: error
+          artifacts: "web.zip"
+          token: ${{ secrets.RELEASES_TOKEN }}
          
   build_android:
     runs-on: ubuntu-latest
@@ -81,11 +81,11 @@ jobs:
           cd yunshu_music
           flutter build apk --release --split-per-abi
       
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+      - name: Create Github Release
+        uses: ncipollo/release-action@v1
         with:
-          path: yunshu_music/build/app/outputs/apk/release/*.apk
-          if-no-files-found: error
+          artifacts: "yunshu_music/build/app/outputs/apk/release/*.apk"
+          token: ${{ secrets.RELEASES_TOKEN }}
 
   build_windows:
     runs-on: windows-latest
@@ -110,8 +110,8 @@ jobs:
           flutter build windows --release
           Compress-Archive -Path .\build\windows\runner\Release\* -DestinationPath windows.zip
           
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+      - name: Create Github Release
+        uses: ncipollo/release-action@v1
         with:
-          path: yunshu_music\windows.zip
-          if-no-files-found: error
+          artifacts: "yunshu_music/windows.zip"
+          token: ${{ secrets.RELEASES_TOKEN }}
