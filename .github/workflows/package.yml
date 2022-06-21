@@ -31,7 +31,20 @@ jobs:
         run: |
           cd yunshu_music
           flutter build web --web-renderer canvaskit --release
-
+          
+      - name: Zip
+        uses: thedoctor0/zip-release@master
+        with:
+         filename: 'release.zip'
+         path: 'yunshu_music/build/web'
+         
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: web
+          path: yunshu_music\build\web\release.zip
+          if-no-files-found: error
+         
   build_android:
     runs-on: ubuntu-latest
 
