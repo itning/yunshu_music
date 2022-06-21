@@ -70,7 +70,7 @@ jobs:
           flutter build apk --release --split-per-abi
       
       - name: Upload Artifact
-      - uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: android
           path: yunshu_music/build/app/outputs/apk/release/*.apk
@@ -100,7 +100,7 @@ jobs:
           Compress-Archive -Path .\build\windows\runner\Release\* -DestinationPath windows.zip
           
       - name: Upload Artifact
-      - uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: windows
           path: yunshu_music\build\windows\runner\Release\windows.zip
