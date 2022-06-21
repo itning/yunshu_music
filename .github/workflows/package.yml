@@ -42,7 +42,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: web
-          path: yunshu_music\build\web\release.zip
+          path: release.zip
           if-no-files-found: error
          
   build_android:
