@@ -116,5 +116,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: windows
-          path: yunshu_music\build\windows\runner\Release\windows.zip
+          path: yunshu_music\windows.zip
           if-no-files-found: error
