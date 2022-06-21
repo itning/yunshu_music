@@ -35,14 +35,13 @@ jobs:
       - name: Zip
         uses: thedoctor0/zip-release@master
         with:
-         filename: 'release.zip'
+         filename: 'web.zip'
          path: 'yunshu_music/build/web'
          
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: web
-          path: release.zip
+          path: web.zip
           if-no-files-found: error
          
   build_android:
@@ -85,7 +84,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: android
           path: yunshu_music/build/app/outputs/apk/release/*.apk
           if-no-files-found: error
 
@@ -115,6 +113,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: windows
           path: yunshu_music\windows.zip
           if-no-files-found: error
