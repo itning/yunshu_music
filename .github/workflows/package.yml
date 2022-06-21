@@ -43,6 +43,8 @@ jobs:
         with:
           artifacts: "web.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
+          allowUpdates: true
          
   build_android:
     runs-on: ubuntu-latest
@@ -86,6 +88,8 @@ jobs:
         with:
           artifacts: "yunshu_music/build/app/outputs/apk/release/*.apk"
           token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
+          allowUpdates: true
           
   build_windows:
     runs-on: windows-latest
@@ -115,3 +119,5 @@ jobs:
         with:
           artifacts: "yunshu_music/windows.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
+          allowUpdates: true
