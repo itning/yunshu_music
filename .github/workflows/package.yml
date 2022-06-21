@@ -14,7 +14,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "2.10.4"
+          flutter-version: "3.0.2"
 
       - name: Restore packages
         run: |
@@ -41,7 +41,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "2.10.4"
+          flutter-version: "3.0.2"
 
       - name: Create the Keystore
         env:
@@ -74,7 +74,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "2.10.4"
+          flutter-version: "3.0.2"
 
       - name: Restore packages
         run: |
