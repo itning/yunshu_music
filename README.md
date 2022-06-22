@@ -34,6 +34,8 @@
 | MacOS   | √    |
 | IOS     | √    |
 
+暂不提供apple platform release版本下载
+
 功能清单：[功能计划](https://github.com/itning/yunshu_music/projects/1)
 
 需求列表：[feat](https://github.com/itning/yunshu_music/issues)
