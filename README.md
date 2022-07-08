@@ -42,6 +42,59 @@
 
 依赖库：[dependencies](https://github.com/itning/yunshu_music/blob/master/yunshu_music/pubspec.yaml#L29)
 
+获取歌曲列表接口：
+
+其中歌曲类型`type`定义可以[在这里](https://github.com/itning/yunshu-nas/blob/master/nas-music/src/main/java/top/itning/yunshunas/music/constant/MusicType.java)找到
+
+```json
+{
+    "code": 200,
+    "msg": "查询成功",
+    "data": {
+        "content": [
+            {
+                "musicId": "音乐ID，不可重复",
+                "name": "音乐名称",
+                "singer": "歌手名",
+                "lyricId": "歌词ID，可以和音乐ID相同",
+                "type": 1, // 歌曲类型
+                "musicUri": "音乐URL路径，访问该URL即可拿到音乐数据",
+                "lyricUri": "LRC歌词URL路径，访问该URL即可拿到歌词数据",
+                "coverUri": "歌曲封面图片URL路径，访问该URL即可拿到歌曲封面图片数据"
+            },
+            ...
+        ],
+        "pageable": {
+            "sort": {
+                "empty": false,
+                "sorted": true,
+                "unsorted": false
+            },
+            "offset": 0,
+            "pageNumber": 0,
+            "pageSize": 100,
+            "paged": true,
+            "unpaged": false
+        },
+        "totalPages": 100,
+        "totalElements": 10000,
+        "last": false,
+        "size": 1
+        "number": 0,
+        "sort": {
+            "empty": false,
+            "sorted": true,
+            "unsorted": false
+        },
+        "numberOfElements": 1,
+        "first": true,
+        "empty": false
+    }
+}
+```
+
+
+
 <div  align="center">
 <img width="200" height="400" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/a.gif"/> 
 <img width="200" height="400" src="https://raw.githubusercontent.com/itning/yunshu_music/master/pic/b.gif"/> 
