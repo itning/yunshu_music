@@ -10,7 +10,7 @@ import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
 import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:system_tray/system_tray.dart' as tray;
+import 'package:system_tray/system_tray.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
@@ -69,11 +69,11 @@ class MusicChannelWindows extends MusicPlatform {
 
   bool _first = true;
 
-  late tray.SystemTray _systemTray;
+  late SystemTray _systemTray;
 
   bool _isPlayNow = false;
 
-  late List<tray.MenuItemBase> _menus;
+  late Menu _menu;
 
   @override
   Future<void> init(
@@ -94,23 +94,26 @@ class MusicChannelWindows extends MusicPlatform {
 
     DartVLC.initialize();
     _player = Player(id: 69420);
-    _systemTray = tray.SystemTray();
+    _systemTray = SystemTray();
 
-    _menus = [
-      tray.MenuItem(label: '云舒音乐', onClicked: () => windowManager.show()),
-      tray.MenuSeparator(),
-      tray.MenuItem(label: '上一曲', onClicked: () => skipToPrevious()),
-      tray.MenuItem(label: '下一曲', onClicked: () => skipToNext()),
-      tray.MenuSeparator(),
-      tray.MenuItem(
+    _menu = Menu();
+    await _menu.buildFrom([
+      MenuItemLable(label: '云舒音乐', onClicked: (_) => windowManager.show()),
+      MenuSeparator(),
+      MenuItemLable(label: '上一曲', onClicked: (_) => skipToPrevious()),
+      MenuItemLable(label: '下一曲', onClicked: (_) => skipToNext()),
+      MenuItemLable(
+          label: '播放', name: "PlayStatus", onClicked: (_) => skipToNext()),
+      MenuSeparator(),
+      MenuItemLable(
         label: '退出',
-        onClicked: () {
+        onClicked: (_) {
           _player.stop();
           _player.dispose();
           exit(0);
         },
       ),
-    ];
+    ]);
 
     _player.positionStream.listen((event) {
       int position = event.position?.inMilliseconds ?? 0;
@@ -160,7 +163,7 @@ class MusicChannelWindows extends MusicPlatform {
       toolTip: "云舒音乐",
     );
 
-    await _systemTray.setContextMenu(_menus);
+    await _systemTray.setContextMenu(_menu);
     _systemTray.registerSystemTrayEventHandler((eventName) {
       if (eventName == "rightMouseUp") {
         _systemTray.popUpContextMenu();
@@ -172,17 +175,9 @@ class MusicChannelWindows extends MusicPlatform {
   }
 
   void _upContextMenu() {
-    if (_menus.length != 6) {
-      _menus.removeAt(4);
-    }
-    _menus.insert(
-        4,
-        tray.MenuItem(
-            label: _isPlayNow ? '暂停' : '播放',
-            onClicked: () {
-              _isPlayNow ? pause() : play();
-            }));
-    _systemTray.setContextMenu(_menus);
+    _menu
+        .findItemByName<MenuItemLable>('PlayStatus')
+        ?.setLable(_isPlayNow ? '暂停' : '播放');
   }
 
   void initPlay({bool autoStart = false}) {

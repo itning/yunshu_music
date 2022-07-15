@@ -19,10 +19,7 @@ dependencies:
       path: plugins/window_size
   shared_preferences: ^2.0.15
   windows_taskbar: ^1.1.0+1
-  system_tray:
-    git:
-      url: https://github.com/antler119/system_tray.git
-      ref: main
+  system_tray: ^2.0.1
   window_manager: ^0.2.5
 
 dev_dependencies:
