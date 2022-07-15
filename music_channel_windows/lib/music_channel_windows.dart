@@ -103,7 +103,11 @@ class MusicChannelWindows extends MusicPlatform {
       MenuItemLable(label: '上一曲', onClicked: (_) => skipToPrevious()),
       MenuItemLable(label: '下一曲', onClicked: (_) => skipToNext()),
       MenuItemLable(
-          label: '播放', name: "PlayStatus", onClicked: (_) => skipToNext()),
+          label: '播放',
+          name: "PlayStatus",
+          onClicked: (_) {
+            _isPlayNow ? pause() : play();
+          }),
       MenuSeparator(),
       MenuItemLable(
         label: '退出',
@@ -165,9 +169,9 @@ class MusicChannelWindows extends MusicPlatform {
 
     await _systemTray.setContextMenu(_menu);
     _systemTray.registerSystemTrayEventHandler((eventName) {
-      if (eventName == "rightMouseUp") {
+      if (eventName == kSystemTrayEventRightClick) {
         _systemTray.popUpContextMenu();
-      } else if (eventName == "leftMouseDown") {
+      } else if (eventName == kSystemTrayEventClick) {
         windowManager.isVisible().then(
             (visible) => visible ? windowManager.hide() : windowManager.show());
       }
