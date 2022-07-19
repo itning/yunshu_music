@@ -47,6 +47,7 @@ class LyricUtil {
     List<Lyric> lyrics = [];
     List? list = matches?.toList();
     if (list != null) {
+      int offset = 0;
       for (int i = 0; i < list.length; i++) {
         var temp = list[i];
         var title = temp[1];
@@ -59,11 +60,15 @@ class LyricUtil {
           lyrics.add(
             Lyric(
               temp[3],
-              startTime: lyricTimeToDuration(
-                "$title:${temp[2]}",
-              ),
+              startTime: lyricTimeToDuration("$title:${temp[2]}", offset),
             ),
           );
+        } else if (title == "offset" && offset == 0) {
+          try {
+            offset = int.parse(temp[2]);
+          } on FormatException catch (e) {
+            LogHelper.get().warn('parse offset [${temp[2]}] to int error', e);
+          }
         }
       }
     }
@@ -82,7 +87,8 @@ class LyricUtil {
   /// 1、标准格式： [分钟:秒.毫秒] 歌词
   /// 2、其他格式①：[分钟:秒] 歌词；
   /// 3、其他格式②：[分钟:秒:毫秒] 歌词，与标准格式相比，秒后边的点号被改成了冒号。
-  static Duration lyricTimeToDuration(String time) {
+  /// offset 其单位是毫秒，正值表示整体提前，负值相反。
+  static Duration lyricTimeToDuration(String time, [int offset = 0]) {
     int minuteSeparatorIndex = time.indexOf(":");
     int secondSeparatorIndex = time.indexOf(".");
     if (secondSeparatorIndex == -1) {
@@ -95,19 +101,19 @@ class LyricUtil {
     var seconds =
         time.substring(minuteSeparatorIndex + 1, secondSeparatorIndex);
     // 微秒
-    var millsceconds = time.substring(secondSeparatorIndex + 1);
+    var milliseconds = time.substring(secondSeparatorIndex + 1);
     var microseconds = '0';
     // 判断是否存在微秒
-    if (millsceconds.length > 3) {
+    if (milliseconds.length > 3) {
       // 存在微秒 重新给予赋值
-      microseconds = millsceconds.substring(3);
-      millsceconds = millsceconds.substring(0, 3);
+      microseconds = milliseconds.substring(3);
+      milliseconds = milliseconds.substring(0, 3);
     }
-
-    return Duration(
+    Duration result = Duration(
         minutes: int.parse(minute),
         seconds: int.parse(seconds),
-        milliseconds: int.parse(millsceconds),
+        milliseconds: int.parse(milliseconds) - offset,
         microseconds: int.parse(microseconds));
+    return result.compareTo(Duration.zero) < 0 ? Duration.zero : result;
   }
 }
