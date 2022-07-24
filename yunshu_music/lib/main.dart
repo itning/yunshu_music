@@ -19,6 +19,7 @@ import 'package:yunshu_music/provider/login_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/music_list_status_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
+import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 import 'package:yunshu_music/provider/volume_data_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
@@ -51,6 +52,7 @@ void main() async {
   await MusicChannel.get().init();
   await MusicDataModel.get().init();
   await VolumeDataModel.get().init(sharedPreferences);
+  await SettingModel.get().init(sharedPreferences);
   runZonedGuarded(
     () {
       runApp(const YunShuMusicApp());
@@ -126,6 +128,7 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
         ChangeNotifierProvider(create: (_) => PlayStatusModel.get()),
         ChangeNotifierProvider(create: (_) => MusicDataModel.get()),
         ChangeNotifierProvider(create: (_) => VolumeDataModel.get()),
+        ChangeNotifierProvider(create: (_) => SettingModel.get()),
         ChangeNotifierProvider(create: (_) => MusicListStatusModel.get()),
         ChangeNotifierProvider(create: (_) => LyricController()),
       ],

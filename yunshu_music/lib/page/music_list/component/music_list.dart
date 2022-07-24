@@ -13,6 +13,7 @@ import 'package:yunshu_music/page/music_list/component/music_list_item.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/music_list_status_model.dart';
+import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 class MusicList extends StatefulWidget {
@@ -192,7 +193,9 @@ class _InnerListItem extends StatelessWidget {
       subTitle: singer,
       rightButtonIcon: Icons.more_vert,
       onTap: () {
-        context.push('/musicPlay');
+        if (context.read<SettingModel>().router2PlayPageWhenClickPlayListItem) {
+          context.push('/musicPlay');
+        }
         Provider.of<MusicDataModel>(context, listen: false)
             .setNowPlayMusicUseMusicId(musicId);
       },
