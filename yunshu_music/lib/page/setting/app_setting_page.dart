@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
+import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 
 /// 应用设置页面
@@ -281,6 +282,30 @@ class AppSettingPage extends StatelessWidget {
                 )
               ],
             ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  '点击列表中歌曲自动跳转到播放详情页',
+                  style: TextStyle(fontSize: 17.0),
+                ),
+              ),
+              Selector<SettingModel, bool>(
+                selector: (_, setting) {
+                  return setting.router2PlayPageWhenClickPlayListItem;
+                },
+                builder: (BuildContext context, enabled, _) {
+                  return Switch(
+                      value: enabled,
+                      onChanged: (value) => context
+                          .read<SettingModel>()
+                          .setRouter2PlayPageWhenClickPlayListItem(value));
+                },
+              ),
+            ],
           ),
         ],
       ),
