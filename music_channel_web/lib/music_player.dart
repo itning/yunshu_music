@@ -196,6 +196,10 @@ class MusicPlayer {
       html.MediaMetadata metadata = html.MediaMetadata();
       metadata.title = _metaData.title;
       metadata.artist = _metaData.subTitle;
+      if (nowPlayMusic.coverUri != null &&
+          nowPlayMusic.coverUri!.trim() != '') {
+        metadata.artwork = [ArtWork(nowPlayMusic.coverUri!)];
+      }
       html.window.navigator.mediaSession?.metadata = metadata;
     }
     _audio.load();
@@ -205,4 +209,12 @@ class MusicPlayer {
   void setVolume(double value) {
     _audio.volume = value;
   }
+}
+
+class ArtWork {
+  String src = '';
+  String? sizes;
+  String? type;
+
+  ArtWork(this.src, [this.sizes, this.type]);
 }
