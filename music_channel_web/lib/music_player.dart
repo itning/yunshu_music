@@ -1,5 +1,5 @@
 import 'dart:html' as html;
-
+import 'dart:js' as js;
 import 'package:music_channel_web/music_channel_web.dart';
 import 'package:music_channel_web/music_data.dart';
 import 'package:music_platform_interface/music_model.dart';
@@ -39,6 +39,8 @@ class MusicPlayer {
           .sink
           .add(_playbackState.toMap());
       MusicChannel.get().metadataEventController.sink.add(_metaData.toMap());
+      js.context.callMethod("setPositionStateFromDart",
+          [_audio.duration, 1.0, _audio.currentTime]);
     }
   }
 
@@ -108,8 +110,8 @@ class MusicPlayer {
 
     _playbackState.state = MusicStatus.none;
     // Media Session API
-    if (html.MediaStream.supported) {
-      html.window.console.info('Support MediaStream And Add ActionHandler');
+    if (html.window.navigator.mediaSession != null) {
+      html.window.console.info('Support MediaSession And Add ActionHandler');
       html.window.navigator.mediaSession
           ?.setActionHandler('previoustrack', () => onSkipToPrevious(true));
       html.window.navigator.mediaSession
@@ -191,17 +193,8 @@ class MusicPlayer {
     _metaData.from(nowPlayMusic);
     MusicChannel.get().metadataEventController.sink.add(_metaData.toMap());
     // Media Session API
-    if (html.MediaStream.supported) {
-      html.window.console.info('Support MediaStream');
-      html.MediaMetadata metadata = html.MediaMetadata();
-      metadata.title = _metaData.title;
-      metadata.artist = _metaData.subTitle;
-      if (nowPlayMusic.coverUri != null &&
-          nowPlayMusic.coverUri!.trim() != '') {
-        metadata.artwork = [ArtWork(nowPlayMusic.coverUri!)];
-      }
-      html.window.navigator.mediaSession?.metadata = metadata;
-    }
+    js.context.callMethod("setMediaMetadataInfoFromDart",
+        [_metaData.title, _metaData.subTitle, _metaData.coverUri]);
     _audio.load();
     _audio.pause();
   }
