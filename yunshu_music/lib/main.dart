@@ -114,6 +114,11 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
       if ('/login' != state.location && !LoginModel.get().isLogin()) {
         return '/login';
       }
+      if (kIsWeb &&
+          '/musicPlay' == state.location &&
+          MusicDataModel.get().nowMusicIndex == -1) {
+        return '/';
+      }
       return null;
     },
     debugLogDiagnostics: kDebugMode,
