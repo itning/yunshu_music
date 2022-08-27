@@ -230,7 +230,7 @@ packages:
       name: go_router
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "4.2.9"
+    version: "4.3.0"
   http:
     dependency: transitive
     description:
@@ -279,7 +279,7 @@ packages:
       name: just_audio
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.9.27"
+    version: "0.9.28"
   just_audio_platform_interface:
     dependency: transitive
     description:
@@ -655,7 +655,7 @@ packages:
       name: sqflite
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.3"
+    version: "2.0.3+1"
   sqflite_common:
     dependency: transitive
     description:
@@ -809,7 +809,7 @@ packages:
       name: window_manager
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.5"
+    version: "0.2.6"
   window_size:
     dependency: transitive
     description:
