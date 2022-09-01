@@ -25,6 +25,7 @@ import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_controller.dart';
 import 'package:yunshu_music/component/lyric/lyric_painter.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 class LyricWidget extends StatefulWidget {
   final List<Lyric> lyrics;
@@ -107,10 +108,22 @@ class _LyricWidgetState extends State<LyricWidget>
     with TickerProviderStateMixin {
   late LyricPainter _lyricPainter;
   double totalHeight = 0;
-  AnimationController? _animationController;
+  late AnimationController _animationController;
+  VoidCallback? _animationListenerVoidCallbackFunc;
 
   @override
   void initState() {
+    _animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
+    _animationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        if (null != _animationListenerVoidCallbackFunc) {
+          _animationController
+              .removeListener(_animationListenerVoidCallbackFunc!);
+          LogHelper.get().debug('移除动画监听器');
+        }
+      }
+    });
     widget.controller.draggingComplete = () {
       cancelTimer();
       widget.controller.progress = widget.controller.draggingProgress;
@@ -126,7 +139,7 @@ class _LyricWidgetState extends State<LyricWidget>
       if (widget.controller.oldLine != curLine) {
         _lyricPainter.currentLyricIndex = curLine;
         if (!widget.controller.isDragging) {
-          animationScrollY(curLine, this);
+          animationScrollY(curLine);
         }
         widget.controller.oldLine = curLine;
       }
@@ -136,9 +149,8 @@ class _LyricWidgetState extends State<LyricWidget>
 
   @override
   void dispose() {
-    if (_animationController != null) {
-      _animationController!.dispose();
-    }
+    LogHelper.get().debug('dispose LyricWidget');
+    _animationController.dispose();
     widget.controller.clear();
     super.dispose();
   }
@@ -184,7 +196,7 @@ class _LyricWidgetState extends State<LyricWidget>
         if (widget.controller.oldLine != curLine) {
           _lyricPainter.currentLyricIndex = curLine;
           if (!widget.controller.isDragging) {
-            animationScrollY(curLine, this);
+            animationScrollY(curLine);
           }
           widget.controller.oldLine = curLine;
         }
@@ -239,7 +251,7 @@ class _LyricWidgetState extends State<LyricWidget>
     _lyricPainter.currentLyricIndex =
         findLyricIndexByDuration(widget.controller.progress, widget.lyrics);
     widget.controller.previousRowOffset = -widget.controller.draggingOffset!;
-    animationScrollY(_lyricPainter.currentLyricIndex, this);
+    animationScrollY(_lyricPainter.currentLyricIndex);
     _lyricPainter.draggingLine = null;
     widget.controller.isDragging = false;
   }
@@ -266,19 +278,12 @@ class _LyricWidgetState extends State<LyricWidget>
     }
   }
 
-  animationScrollY(currentLyricIndex, TickerProvider tickerProvider) {
+  animationScrollY(currentLyricIndex) {
     if (!mounted) {
       return;
     }
-
-    _animationController = AnimationController(
-        vsync: tickerProvider, duration: const Duration(milliseconds: 300));
-    _animationController!.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _animationController?.dispose();
-        _animationController = null;
-      }
-    });
+    // 重置动画
+    _animationController.reset();
     // 计算当前行偏移量
     var currentRowOffset = computeScrollY(currentLyricIndex);
     //如果偏移量相同不执行动画
@@ -288,12 +293,15 @@ class _LyricWidgetState extends State<LyricWidget>
     // 起始为上一行，结束点为当前行
     Animation animation = Tween<double>(
             begin: widget.controller.previousRowOffset, end: currentRowOffset)
-        .animate(_animationController!);
+        .animate(_animationController);
     widget.controller.previousRowOffset = currentRowOffset;
-    _animationController!.addListener(() {
+    _animationListenerVoidCallbackFunc = () {
       _lyricPainter.offset = -animation.value;
-    });
-    _animationController!.forward();
+    };
+    // 动画执行监听
+    _animationController.addListener(_animationListenerVoidCallbackFunc!);
+    // 开始执行动画
+    _animationController.forward();
   }
 
   /// 根据当前时长获取歌词位置

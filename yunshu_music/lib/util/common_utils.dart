@@ -14,7 +14,8 @@ import 'package:yunshu_music/util/log_console.dart';
 class LogHelper {
   static final Logger _logger = Logger(
     output: LogConsole.wrap(
-        innerOutput: (!kIsWeb && (Platform.isWindows || Platform.isMacOS))
+        // 非web 并且 是 windows或者mac平台 并且不是debug模式
+        innerOutput: (!kIsWeb && (Platform.isWindows || Platform.isMacOS) && !kDebugMode)
             ? MultiOutput(
                 [ConsoleOutput(), FileOutput(file: File("./yunshu_music.log"))])
             : ConsoleOutput()),
@@ -29,7 +30,9 @@ class LogHelper {
   }
 
   void debug(dynamic message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.log(Level.debug, message, error, stackTrace);
+    if (kDebugMode) {
+      _logger.log(Level.debug, message, error, stackTrace);
+    }
   }
 
   void info(dynamic message, [dynamic error, StackTrace? stackTrace]) {
