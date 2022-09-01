@@ -107,6 +107,7 @@ class _LyricWidgetState extends State<LyricWidget>
     with TickerProviderStateMixin {
   late LyricPainter _lyricPainter;
   double totalHeight = 0;
+  AnimationController? _animationController;
 
   @override
   void initState() {
@@ -135,6 +136,9 @@ class _LyricWidgetState extends State<LyricWidget>
 
   @override
   void dispose() {
+    if (_animationController != null) {
+      _animationController!.dispose();
+    }
     widget.controller.clear();
     super.dispose();
   }
@@ -267,11 +271,12 @@ class _LyricWidgetState extends State<LyricWidget>
       return;
     }
 
-    AnimationController animationController = AnimationController(
+    _animationController = AnimationController(
         vsync: tickerProvider, duration: const Duration(milliseconds: 300));
-    animationController.addStatusListener((status) {
+    _animationController!.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        animationController.dispose();
+        _animationController?.dispose();
+        _animationController = null;
       }
     });
     // 计算当前行偏移量
@@ -283,12 +288,12 @@ class _LyricWidgetState extends State<LyricWidget>
     // 起始为上一行，结束点为当前行
     Animation animation = Tween<double>(
             begin: widget.controller.previousRowOffset, end: currentRowOffset)
-        .animate(animationController);
+        .animate(_animationController!);
     widget.controller.previousRowOffset = currentRowOffset;
-    animationController.addListener(() {
+    _animationController!.addListener(() {
       _lyricPainter.offset = -animation.value;
     });
-    animationController.forward();
+    _animationController!.forward();
   }
 
   /// 根据当前时长获取歌词位置
