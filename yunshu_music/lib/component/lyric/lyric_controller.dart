@@ -40,8 +40,15 @@ class LyricController extends ChangeNotifier {
     notifyListeners();
   }
 
-  clear() {
+  reset() {
+    progress = const Duration();
+    draggingTimer = null;
+    draggingTimerDuration = null;
     _isDragging = false;
+    draggingOffset = null;
+    previousRowOffset = 0;
+    oldLine = 0;
+    draggingLine = 0;
   }
 
   late Duration draggingProgress;
@@ -55,5 +62,4 @@ class LyricController extends ChangeNotifier {
 
   int oldLine = 0;
   int draggingLine = 0;
-
 }

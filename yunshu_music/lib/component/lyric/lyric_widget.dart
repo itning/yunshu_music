@@ -151,7 +151,7 @@ class _LyricWidgetState extends State<LyricWidget>
   void dispose() {
     LogHelper.get().debug('dispose LyricWidget');
     _animationController.dispose();
-    widget.controller.clear();
+    widget.controller.reset();
     super.dispose();
   }
 
