@@ -61,6 +61,7 @@ class MusicSearchDelegate extends SearchDelegate {
       }),
       child: Scrollbar(
         child: ListView.builder(
+            primary: true,
             itemCount: result.length,
             itemBuilder: (_, int index) {
               MusicDataContent music = result[index];
