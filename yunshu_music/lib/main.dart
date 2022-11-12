@@ -19,6 +19,7 @@ import 'package:yunshu_music/provider/login_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/music_list_status_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
+import 'package:yunshu_music/provider/search_model.dart';
 import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 import 'package:yunshu_music/provider/volume_data_model.dart';
@@ -136,6 +137,7 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
         ChangeNotifierProvider(create: (_) => SettingModel.get()),
         ChangeNotifierProvider(create: (_) => MusicListStatusModel.get()),
         ChangeNotifierProvider(create: (_) => LyricController()),
+        ChangeNotifierProvider(create: (_) => SearchModel.get()),
       ],
       child: Consumer<ThemeModel>(
         builder: (_, theme, __) {
