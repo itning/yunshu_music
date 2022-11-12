@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
+import 'package:yunshu_music/provider/search_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 class MusicSearchDelegate extends SearchDelegate {
@@ -39,21 +39,27 @@ class MusicSearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     final String keyword = query;
-    List<MusicDataContent> result =
-        context.read<MusicDataModel>().search(keyword);
-    return _buildWidget(context, result, keyword);
+    return _search(context, keyword);
   }
 
   @override
   Widget buildResults(BuildContext context) {
     final String keyword = query;
-    List<MusicDataContent> result =
-        context.read<MusicDataModel>().search(query);
-    return _buildWidget(context, result, keyword);
+    return _search(context, keyword);
+  }
+
+  Widget _search(BuildContext context, String keyword) {
+    context.read<SearchModel>().search(keyword);
+    return Selector<SearchModel, List<SearchResultItem>>(
+      selector: (_, m) => m.searchResults,
+      builder: (BuildContext context, list, Widget? child) {
+        return _buildWidget(context, list, keyword);
+      },
+    );
   }
 
   Widget _buildWidget(
-      BuildContext context, List<MusicDataContent> result, String keyword) {
+      BuildContext context, List<SearchResultItem> result, String keyword) {
     return ScrollConfiguration(
       behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
         PointerDeviceKind.touch,
@@ -64,7 +70,7 @@ class MusicSearchDelegate extends SearchDelegate {
             primary: true,
             itemCount: result.length,
             itemBuilder: (_, int index) {
-              MusicDataContent music = result[index];
+              SearchResultItem music = result[index];
               return InkWell(
                 onTap: () => _play(context, music.musicId),
                 onLongPress: () {
@@ -79,11 +85,17 @@ class MusicSearchDelegate extends SearchDelegate {
                 },
                 child: ListTile(
                   title: Text.rich(TextSpan(
-                      children: highlight(
-                          music.name!, search(music.name!, keyword)))),
-                  subtitle: Text.rich(TextSpan(
-                      children: highlight(
-                          music.singer!, search(music.singer!, keyword)))),
+                      children: music.fromLyric
+                          ? [TextSpan(text: '${music.name} - ${music.singer}')]
+                          : highlight(
+                              music.name!, search(music.name!, keyword)))),
+                  subtitle: Text.rich(
+                    TextSpan(
+                        children: music.fromLyric
+                            ? highlightEmTag(music.highlightFields?[0])
+                            : highlight(
+                                music.singer!, search(music.singer!, keyword))),
+                  ),
                   trailing: IconButton(
                     tooltip: '播放',
                     onPressed: () => _play(context, music.musicId),

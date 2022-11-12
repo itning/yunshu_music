@@ -144,13 +144,28 @@ class HttpHelper {
   }
 
   Future<SearchResultEntity?> search(String keyword) async {
-    Response<Map<String, dynamic>> response = await _dio.get<
-            Map<String, dynamic>>(
-        "${LoginModel.get().getBaseUrl()}/music/search_v2?size=5000&keyword=$keyword");
-    LogHelper.get().debug('搜索结果 ${response.statusCode}');
-    if (response.data == null) {
-      return null;
+    try {
+      Response<Map<String, dynamic>> response = await _dio.get<
+              Map<String, dynamic>>(
+          "${LoginModel.get().getBaseUrl()}/music/search_v2?size=5000&keyword=$keyword");
+      if (response.data == null) {
+        return null;
+      }
+      SearchResultEntity result = SearchResultEntity.fromJson(response.data!);
+      return result;
+    } on DioError catch (e) {
+      if (e.type == DioErrorType.cancel) {
+        LogHelper.get().info('搜索歌词请求取消 $keyword');
+      } else if (e.response?.statusCode == 404) {
+        LogHelper.get().info('搜索歌词返回404 $keyword');
+      } else {
+        Fluttertoast.showToast(msg: '搜索歌词网络异常');
+        LogHelper.get().warn('搜索歌词网络异常', e);
+      }
+    } catch (e) {
+      Fluttertoast.showToast(msg: '搜索歌词失败');
+      LogHelper.get().error('搜索歌词失败', e);
     }
-    return SearchResultEntity.fromJson(response.data!);
+    return null;
   }
 }

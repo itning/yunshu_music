@@ -15,7 +15,9 @@ class LogHelper {
   static final Logger _logger = Logger(
     output: LogConsole.wrap(
         // 非web 并且 是 windows或者mac平台 并且不是debug模式
-        innerOutput: (!kIsWeb && (Platform.isWindows || Platform.isMacOS) && !kDebugMode)
+        innerOutput: (!kIsWeb &&
+                (Platform.isWindows || Platform.isMacOS) &&
+                !kDebugMode)
             ? MultiOutput(
                 [ConsoleOutput(), FileOutput(file: File("./yunshu_music.log"))])
             : ConsoleOutput()),
@@ -131,10 +133,27 @@ List<TextSpan> highlight(
       result.add(TextSpan(text: start));
     }
     if (h != '') {
-      result.add(TextSpan(text: h, style: const TextStyle(color: Colors.red)));
+      result.add(TextSpan(
+          text: h.replaceAll(RegExp(r'<em>|</em>'), ''),
+          style: const TextStyle(color: Colors.red)));
     }
   }
   return result;
+}
+
+List<TextSpan> highlightEmTag(String? content) {
+  if (null == content) {
+    return [];
+  }
+  content = content.replaceAll(RegExp(r'\r\n|\n'), ' ');
+  RegExp exp = RegExp(r'<em.[^>]*>');
+  Iterable<Match> matchIterable = exp.allMatches(content);
+  return highlight(
+      content,
+      List.generate(matchIterable.length, (index) {
+        Match match = matchIterable.elementAt(index);
+        return Tuple2(match.start, match.end);
+      }));
 }
 
 /// 显示播放列表
