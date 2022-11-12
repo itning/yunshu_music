@@ -118,7 +118,7 @@ class CacheModel extends ChangeNotifier {
     if (list.isEmpty) {
       return [];
     }
-    return list.map((e) => MusicDataContent().fromJson(e)).toList();
+    return list.map((e) => MusicDataContent.fromJson(e)).toList();
   }
 
   Future<File?> cacheLyric(String lyricId, String? content) async {

@@ -1,12 +1,30 @@
-import 'package:yunshu_music/generated/json/base/json_convert_content.dart';
+import 'package:yunshu_music/generated/json/base/json_field.dart';
+import 'package:yunshu_music/generated/json/music_entity.g.dart';
 
-class MusicEntity with JsonConvert<MusicEntity> {
+
+@JsonSerializable()
+class MusicEntity {
+
+	MusicEntity();
+
+	factory MusicEntity.fromJson(Map<String, dynamic> json) => $MusicEntityFromJson(json);
+
+	Map<String, dynamic> toJson() => $MusicEntityToJson(this);
+
   int? code;
   String? msg;
   MusicData? data;
 }
 
-class MusicData with JsonConvert<MusicData> {
+@JsonSerializable()
+class MusicData {
+
+	MusicData();
+
+	factory MusicData.fromJson(Map<String, dynamic> json) => $MusicDataFromJson(json);
+
+	Map<String, dynamic> toJson() => $MusicDataToJson(this);
+
   List<MusicDataContent>? content;
   MusicDataPageable? pageable;
   bool? last;
@@ -20,7 +38,15 @@ class MusicData with JsonConvert<MusicData> {
   bool? empty;
 }
 
-class MusicDataContent with JsonConvert<MusicDataContent> {
+@JsonSerializable()
+class MusicDataContent {
+
+	MusicDataContent();
+
+	factory MusicDataContent.fromJson(Map<String, dynamic> json) => $MusicDataContentFromJson(json);
+
+	Map<String, dynamic> toJson() => $MusicDataContentToJson(this);
+
   String? musicId;
   String? name;
   String? singer;
@@ -56,7 +82,15 @@ class MusicDataContent with JsonConvert<MusicDataContent> {
       coverUri.hashCode;
 }
 
-class MusicDataPageable with JsonConvert<MusicDataPageable> {
+@JsonSerializable()
+class MusicDataPageable {
+
+	MusicDataPageable();
+
+	factory MusicDataPageable.fromJson(Map<String, dynamic> json) => $MusicDataPageableFromJson(json);
+
+	Map<String, dynamic> toJson() => $MusicDataPageableToJson(this);
+
   MusicDataPageableSort? sort;
   int? pageNumber;
   int? pageSize;
@@ -65,13 +99,29 @@ class MusicDataPageable with JsonConvert<MusicDataPageable> {
   bool? unpaged;
 }
 
-class MusicDataPageableSort with JsonConvert<MusicDataPageableSort> {
+@JsonSerializable()
+class MusicDataPageableSort {
+
+	MusicDataPageableSort();
+
+	factory MusicDataPageableSort.fromJson(Map<String, dynamic> json) => $MusicDataPageableSortFromJson(json);
+
+	Map<String, dynamic> toJson() => $MusicDataPageableSortToJson(this);
+
   bool? unsorted;
   bool? sorted;
   bool? empty;
 }
 
-class MusicDataSort with JsonConvert<MusicDataSort> {
+@JsonSerializable()
+class MusicDataSort {
+
+	MusicDataSort();
+
+	factory MusicDataSort.fromJson(Map<String, dynamic> json) => $MusicDataSortFromJson(json);
+
+	Map<String, dynamic> toJson() => $MusicDataSortToJson(this);
+
   bool? unsorted;
   bool? sorted;
   bool? empty;

@@ -78,7 +78,7 @@ class MusicDataModel extends ChangeNotifier {
       return '响应信息为空';
     }
     Map<String, dynamic> body = response.data!;
-    MusicEntity musicEntity = MusicEntity().fromJson(body);
+    MusicEntity musicEntity = MusicEntity.fromJson(body);
     if (musicEntity.data == null || musicEntity.data?.content == null) {
       return musicEntity.msg ?? '服务器错误';
     }

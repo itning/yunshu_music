@@ -6,6 +6,8 @@ import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/provider/login_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
+import 'model/search_result_entity.dart';
+
 class HttpHelper {
   static HttpHelper? _instance;
 
@@ -139,5 +141,16 @@ class HttpHelper {
       LogHelper.get().error('获取封面失败', e);
     }
     return const Tuple2(null, null);
+  }
+
+  Future<SearchResultEntity?> search(String keyword) async {
+    Response<Map<String, dynamic>> response = await _dio.get<
+            Map<String, dynamic>>(
+        "${LoginModel.get().getBaseUrl()}/music/search_v2?size=5000&keyword=$keyword");
+    LogHelper.get().debug('搜索结果 ${response.statusCode}');
+    if (response.data == null) {
+      return null;
+    }
+    return SearchResultEntity.fromJson(response.data!);
   }
 }
