@@ -144,6 +144,7 @@ class HttpHelper {
   }
 
   Future<SearchResultEntity?> search(String keyword) async {
+    keyword = Uri.encodeQueryComponent(keyword);
     try {
       Response<Map<String, dynamic>> response = await _dio.get<
               Map<String, dynamic>>(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
@@ -16,12 +18,22 @@ class SearchModel extends ChangeNotifier {
 
   List<SearchResultItem> get searchResults => _searchResults;
 
+  Timer? _debounce;
+
   void search(String keyword) async {
     if (keyword.trim() == '') {
       _searchResults = [];
       return;
     }
+    if (_debounce?.isActive ?? false) {
+      _debounce?.cancel();
+    }
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      await _innerSearch(keyword);
+    });
+  }
 
+  Future<void> _innerSearch(String keyword) async {
     List<MusicDataContent> result = MusicDataModel.get().search(keyword);
     SearchResultEntity? searchResultEntity =
         await HttpHelper.get().search(keyword);
