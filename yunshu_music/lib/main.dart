@@ -8,6 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:windows_single_instance/windows_single_instance.dart';
 import 'package:yunshu_music/component/lyric/lyric_controller.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/page/login/login_page.dart';
@@ -46,6 +47,12 @@ void main() async {
   };
 
   WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb && Platform.isWindows) {
+    await WindowsSingleInstance.ensureSingleInstance([], "instance_checker",
+        onSecondWindow: (args) {
+      LogHelper.get().info(args);
+    });
+  }
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
   await CacheModel.get().init(sharedPreferences);
   await ThemeModel.get().init(sharedPreferences);

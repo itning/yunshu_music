@@ -763,6 +763,13 @@ packages:
       url: "https://github.com/google/flutter-desktop-embedding.git"
     source: git
     version: "0.1.0"
+  windows_single_instance:
+    dependency: "direct main"
+    description:
+      name: windows_single_instance
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.5"
   windows_taskbar:
     dependency: transitive
     description:

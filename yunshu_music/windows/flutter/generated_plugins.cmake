@@ -4,13 +4,13 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   dart_vlc
-  flutter_native_view
   music_channel_windows
   screen_retriever
   system_tray
   url_launcher_windows
   window_manager
   window_size
+  windows_single_instance
   windows_taskbar
 )
 
