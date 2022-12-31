@@ -110,6 +110,7 @@ class _LyricWidgetState extends State<LyricWidget>
   double totalHeight = 0;
   late AnimationController _animationController;
   VoidCallback? _animationListenerVoidCallbackFunc;
+  int _animationHashCode = -1;
 
   @override
   void initState() {
@@ -120,7 +121,6 @@ class _LyricWidgetState extends State<LyricWidget>
         if (null != _animationListenerVoidCallbackFunc) {
           _animationController
               .removeListener(_animationListenerVoidCallbackFunc!);
-          LogHelper.get().debug('移除动画监听器');
         }
       }
     });
@@ -294,10 +294,18 @@ class _LyricWidgetState extends State<LyricWidget>
     Animation animation = Tween<double>(
             begin: widget.controller.previousRowOffset, end: currentRowOffset)
         .animate(_animationController);
+    _animationHashCode = animation.hashCode;
     widget.controller.previousRowOffset = currentRowOffset;
-    _animationListenerVoidCallbackFunc = () {
-      _lyricPainter.offset = -animation.value;
-    };
+    VoidCallback voidCallbackFunc(int hashcode) {
+      return () {
+        if (_animationHashCode != hashcode) {
+          return;
+        }
+        _lyricPainter.offset = -animation.value;
+      };
+    }
+
+    _animationListenerVoidCallbackFunc = voidCallbackFunc(animation.hashCode);
     // 动画执行监听
     _animationController.addListener(_animationListenerVoidCallbackFunc!);
     // 开始执行动画
