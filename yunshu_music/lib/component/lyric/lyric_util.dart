@@ -18,7 +18,6 @@ limitations under the License.
 2. 注释修改
 3. 歌词如果不是换行符结尾则添加换行符
 */
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
@@ -40,7 +39,7 @@ class LyricUtil {
     try {
       matches = reg.allMatches(lyricStr);
     } catch (e) {
-      Fluttertoast.showToast(msg: "歌词解析失败", toastLength: Toast.LENGTH_LONG);
+     // Fluttertoast.showToast(msg: "歌词解析失败", toastLength: Toast.LENGTH_LONG);
       LogHelper.get().error('歌词解析失败', e);
     }
 

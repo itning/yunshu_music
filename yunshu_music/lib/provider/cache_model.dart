@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -99,8 +97,8 @@ class CacheModel extends ChangeNotifier {
           });
         } catch (e) {
           LogHelper.get().error("插入数据库出错", e);
-          Fluttertoast.showToast(
-              msg: '缓存音乐列表出错', toastLength: Toast.LENGTH_LONG);
+          // Fluttertoast.showToast(
+          //     msg: '缓存音乐列表出错', toastLength: Toast.LENGTH_LONG);
           await txn.rawDelete('DELETE FROM list_cache');
           return 0;
         }

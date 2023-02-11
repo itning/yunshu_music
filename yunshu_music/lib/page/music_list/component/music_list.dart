@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -33,8 +33,8 @@ class _MusicListState extends State<MusicList> {
       return;
     }
     if (!mounted) {
-      Fluttertoast.showToast(
-          msg: "错误：$message", toastLength: Toast.LENGTH_LONG);
+      MotionToast.error(title: const Text("错误"), description: Text(message))
+          .show(context);
       return;
     }
     final snackBar = SnackBar(content: Text(message));
@@ -242,9 +242,9 @@ class _InnerListItem extends StatelessWidget {
                           if (value ?? false) {
                             CacheModel.get().deleteCover(musicId).then((value) {
                               if (value) {
-                                Fluttertoast.showToast(msg: "删除歌词缓存成功");
+                                // Fluttertoast.showToast(msg: "删除歌词缓存成功");
                               } else {
-                                Fluttertoast.showToast(msg: "缓存不存在");
+                                // Fluttertoast.showToast(msg: "缓存不存在");
                               }
                             });
                           }
@@ -259,9 +259,9 @@ class _InnerListItem extends StatelessWidget {
                           if (value ?? false) {
                             CacheModel.get().deleteLyric(lyricId).then((value) {
                               if (value) {
-                                Fluttertoast.showToast(msg: "删除歌词缓存成功");
+                                // Fluttertoast.showToast(msg: "删除歌词缓存成功");
                               } else {
-                                Fluttertoast.showToast(msg: "缓存不存在");
+                                // Fluttertoast.showToast(msg: "缓存不存在");
                               }
                             });
                           }
@@ -278,9 +278,9 @@ class _InnerListItem extends StatelessWidget {
                                 .deleteMusicCacheByMusicId(musicId, musicUri)
                                 .then((value) {
                               if (value) {
-                                Fluttertoast.showToast(msg: "删除歌曲缓存成功");
+                                // Fluttertoast.showToast(msg: "删除歌曲缓存成功");
                               } else {
-                                Fluttertoast.showToast(msg: "缓存不存在");
+                                // Fluttertoast.showToast(msg: "缓存不存在");
                               }
                             });
                           }
@@ -296,7 +296,7 @@ class _InnerListItem extends StatelessWidget {
                         if (can) {
                           await launchUrl(url);
                         } else {
-                          Fluttertoast.showToast(msg: "下载失败");
+                          // Fluttertoast.showToast(msg: "下载失败");
                         }
                       },
                     ),

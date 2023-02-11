@@ -12,8 +12,8 @@ dependencies:
     sdk: flutter
   music_platform_interface:
     path: ../music_platform_interface
-  just_audio: ^0.9.28
-  shared_preferences: ^2.0.15
+  just_audio: ^0.9.31
+  shared_preferences: ^2.0.17
 
 dev_dependencies:
   flutter_test:

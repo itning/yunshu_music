@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_update_dialog/flutter_update_dialog.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -182,7 +182,10 @@ class AppSettingPage extends StatelessWidget {
                       if (can) {
                         await launchUrl(uri);
                       } else {
-                        Fluttertoast.showToast(msg: "无法升级");
+                        MotionToast.error(
+                                title: const Text("错误"),
+                                description: const Text("无法升级"))
+                            .show(context);
                       }
                     },
                   );
@@ -232,7 +235,10 @@ class AppSettingPage extends StatelessWidget {
                 if (can) {
                   await launchUrl(uri);
                 } else {
-                  Fluttertoast.showToast(msg: "无法打开");
+                  MotionToast.error(
+                          title: const Text("错误"),
+                          description: const Text("无法打开"))
+                      .show(context);
                 }
               },
               child: Row(
