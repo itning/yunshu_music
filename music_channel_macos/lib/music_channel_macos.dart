@@ -93,18 +93,18 @@ class MusicChannelMacOS extends MusicPlatform {
 
     _menu = Menu();
     await _menu.buildFrom([
-      MenuItemLable(label: '云舒音乐', onClicked: (_) => windowManager.show()),
+      MenuItemLabel(label: '云舒音乐', onClicked: (_) => windowManager.show()),
       MenuSeparator(),
-      MenuItemLable(label: '上一曲', onClicked: (_) => skipToPrevious()),
-      MenuItemLable(label: '下一曲', onClicked: (_) => skipToNext()),
-      MenuItemLable(
+      MenuItemLabel(label: '上一曲', onClicked: (_) => skipToPrevious()),
+      MenuItemLabel(label: '下一曲', onClicked: (_) => skipToNext()),
+      MenuItemLabel(
           label: '播放',
           name: "PlayStatus",
           onClicked: (_) {
             _isPlayNow ? pause() : play();
           }),
       MenuSeparator(),
-      MenuItemLable(
+      MenuItemLabel(
         label: '退出',
         onClicked: (_) {
           _player.stop();
@@ -186,8 +186,8 @@ class MusicChannelMacOS extends MusicPlatform {
 
   void _upContextMenu() {
     _menu
-        .findItemByName<MenuItemLable>('PlayStatus')
-        ?.setLable(_isPlayNow ? '暂停' : '播放');
+        .findItemByName<MenuItemLabel>('PlayStatus')
+        ?.setLabel(_isPlayNow ? '暂停' : '播放');
   }
 
   void initPlay({bool autoStart = false}) async {
