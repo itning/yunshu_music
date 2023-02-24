@@ -24,7 +24,7 @@ dependencies:
   sqflite: ^2.2.4+1
   url_launcher: ^6.1.9
   #fluttertoast: ^8.1.1
-  logger: ^1.1.0
+  logger: ^1.2.2
   crypto: ^3.0.2
   path_provider: ^2.0.12
   mime_type: ^1.0.0
