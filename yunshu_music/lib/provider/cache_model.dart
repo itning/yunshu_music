@@ -60,7 +60,7 @@ class CacheModel extends ChangeNotifier {
               'CREATE TABLE list_cache (musicId TEXT PRIMARY KEY, lyricId TEXT, name TEXT, singer TEXT, type INTEGER, musicUri TEXT, lyricUri TEXT, coverUri TEXT)');
         },
         onUpgrade: (Database db, int oldVersion, int newVersion) async {
-          LogHelper()
+          LogHelper.get()
               .info('升级数据库：oldVersion：$oldVersion newVersion：$newVersion');
           if (oldVersion == 1 && newVersion == 2) {
             await db.execute('ALTER TABLE list_cache ADD COLUMN musicUri TEXT');
