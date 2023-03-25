@@ -315,6 +315,30 @@ class AppSettingPage extends StatelessWidget {
                 ),
               ],
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    '允许播放页自动切换大屏模式',
+                    style: TextStyle(fontSize: 17.0),
+                  ),
+                ),
+                Selector<SettingModel, bool>(
+                  selector: (_, setting) {
+                    return setting.playPageAutoChangeLargeMode;
+                  },
+                  builder: (BuildContext context, enabled, _) {
+                    return Switch(
+                        value: enabled,
+                        onChanged: (value) => context
+                            .read<SettingModel>()
+                            .setPlayPageAutoChangeLargeMode(value));
+                  },
+                ),
+              ],
+            ),
           ],
         ),
       ),
