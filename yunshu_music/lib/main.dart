@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 import 'package:yunshu_music/component/lyric/lyric_controller.dart';
+import 'package:yunshu_music/hotkey/intent.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/page/login/login_page.dart';
 import 'package:yunshu_music/page/music_list/music_index_page.dart';
@@ -148,22 +149,31 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
       ],
       child: Consumer<ThemeModel>(
         builder: (_, theme, __) {
-          return MaterialApp.router(
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [Locale.fromSubtags(languageCode: 'zh')],
-            // 与 ThemeData.dark() 相同
-            darkTheme: ThemeData(
-                brightness: Brightness.dark, fontFamily: 'LXGWWenKaiMono'),
-            themeMode: theme.themeMode,
-            theme: ThemeData(fontFamily: 'LXGWWenKaiMono'),
-            title: '云舒音乐',
-            routeInformationProvider: _router.routeInformationProvider,
-            routeInformationParser: _router.routeInformationParser,
-            routerDelegate: _router.routerDelegate,
+          return Shortcuts(
+            shortcuts: <LogicalKeySet, Intent>{
+              LogicalKeySet(LogicalKeyboardKey.space): const PlayPauseIntent(),
+              LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.arrowLeft): const PreviousIntent(),
+              LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.arrowRight): const NextIntent(),
+              LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowLeft): const SeekBackIntent(),
+              LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowRight): const SeekForwardIntent(),
+            },
+            child: MaterialApp.router(
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale.fromSubtags(languageCode: 'zh')],
+              // 与 ThemeData.dark() 相同
+              darkTheme: ThemeData(
+                  brightness: Brightness.dark, fontFamily: 'LXGWWenKaiMono'),
+              themeMode: theme.themeMode,
+              theme: ThemeData(fontFamily: 'LXGWWenKaiMono'),
+              title: '云舒音乐',
+              routeInformationProvider: _router.routeInformationProvider,
+              routeInformationParser: _router.routeInformationParser,
+              routerDelegate: _router.routerDelegate,
+            ),
           );
         },
       ),
