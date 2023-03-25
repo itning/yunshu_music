@@ -58,7 +58,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
 //                        .setCache(simpleCache)
 //                        .setUpstreamDataSourceFactory(httpDataSourceFactory);
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                .setContentType(C.CONTENT_TYPE_MUSIC)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                 //.setFlags()
                 .setAllowedCapturePolicy(C.ALLOW_CAPTURE_BY_ALL)
                 .setUsage(C.USAGE_MEDIA)
