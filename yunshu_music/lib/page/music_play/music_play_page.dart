@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/image_fade.dart';
+import 'package:yunshu_music/hotkey/action.dart';
+import 'package:yunshu_music/hotkey/intent.dart';
 import 'package:yunshu_music/page/music_play/component/cover_page.dart';
 import 'package:yunshu_music/page/music_play/component/lyric_page.dart';
 import 'package:yunshu_music/page/music_play/component/player_page_bottom_navigation_bar.dart';
@@ -21,30 +23,43 @@ class MusicPlayPage extends StatelessWidget {
   Widget build(BuildContext context) {
     const CoverPage _coverPage = CoverPage();
     const LyricPage _lyricPage = LyricPage();
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        ColorFiltered(
-          colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.modulate),
-          child: ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-            child: const BackgroundPicture(),
-          ),
+    return Actions(
+      actions: {
+        PlayPauseIntent: PlayPauseAction(),
+        PreviousIntent: PreviousAction(),
+        NextIntent: NextAction(),
+        SeekBackIntent: SeekBackAction(),
+        SeekForwardIntent: SeekForwardAction(),
+      },
+      child: Focus(
+        autofocus: true,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ColorFiltered(
+              colorFilter:
+                  const ColorFilter.mode(Colors.grey, BlendMode.modulate),
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+                child: const BackgroundPicture(),
+              ),
+            ),
+            Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                centerTitle: true,
+                title: const TitleMusicInfo(),
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+              ),
+              body: isLargeMode(context)
+                  ? buildLargeWidget(context, _coverPage, _lyricPage)
+                  : buildNormalWidget(context, _coverPage, _lyricPage),
+              bottomNavigationBar: const PlayerPageBottomNavigationBar(),
+            )
+          ],
         ),
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            centerTitle: true,
-            title: const TitleMusicInfo(),
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-          ),
-          body: isLargeMode(context)
-              ? buildLargeWidget(context, _coverPage, _lyricPage)
-              : buildNormalWidget(context, _coverPage, _lyricPage),
-          bottomNavigationBar: const PlayerPageBottomNavigationBar(),
-        )
-      ],
+      ),
     );
   }
 
