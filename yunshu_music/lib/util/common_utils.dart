@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
+import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/util/log_console.dart';
 
 class LogHelper {
@@ -341,6 +342,9 @@ void setTitle(String title) {
 
 /// 大屏模式
 bool isLargeMode(BuildContext context) {
-  return MediaQuery.of(context).size.width > 700 &&
-      (kIsWeb || Platform.isWindows || Platform.isMacOS);
+  bool sizeAllow = MediaQuery.of(context).size.width > 700;
+  if (sizeAllow && context.read<SettingModel>().playPageAutoChangeLargeMode) {
+    return true;
+  }
+  return sizeAllow && (kIsWeb || Platform.isWindows || Platform.isMacOS);
 }
