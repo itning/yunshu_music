@@ -12,12 +12,12 @@ dependencies:
     sdk: flutter
   music_platform_interface:
     path: ../music_platform_interface
-  just_audio: ^0.9.31
+  just_audio: ^0.9.32
   window_size:
     git:
       url: https://github.com/google/flutter-desktop-embedding.git
       path: plugins/window_size
-  shared_preferences: ^2.0.17
+  shared_preferences: ^2.0.20
   system_tray: ^2.0.2
   window_manager: ">=0.2.6 <0.4.0"
 
