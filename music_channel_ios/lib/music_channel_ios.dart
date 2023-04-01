@@ -70,6 +70,26 @@ class MusicChannelIos extends MusicPlatform {
     this._playbackStateController = playbackStateController;
     _sharedPreferences = await SharedPreferences.getInstance();
 
+    _channel.setMethodCallHandler((call) async {
+      switch (call.method) {
+        case 'playButtonTapped':
+          await play();
+          break;
+        case 'pauseButtonTapped':
+          await pause();
+          break;
+        case 'nextButtonTapped':
+          await skipToNext();
+          break;
+        case 'previousButtonTapped':
+          await skipToPrevious();
+          break;
+        default:
+      }
+    });
+
+    _channel.invokeMethod("init");
+
     _nowPlayIndex = -1;
     _playMode =
         valueOf(_sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE');
@@ -91,6 +111,8 @@ class MusicChannelIos extends MusicPlatform {
           _playbackState.state =
               event.playing ? MusicStatus.playing : MusicStatus.paused;
           playbackStateController.sink.add(_playbackState.toMap());
+          _channel.invokeMethod(
+              event.playing ? "changeToPlaying" : "changeToPaused");
           break;
         case ProcessingState.completed:
           _playbackState.state = MusicStatus.none;
@@ -111,12 +133,24 @@ class MusicChannelIos extends MusicPlatform {
     _player.durationStream.listen((event) {
       _metaData.duration = event?.inMilliseconds ?? 0;
       metadataEventController.sink.add(_metaData.toMap());
+
+      _channel.invokeMethod("setLockScreenDisplay", {
+        "name": _nowPlayMusic!.name,
+        "singer": _nowPlayMusic!.singer,
+        "coverUri": _nowPlayMusic!.coverUri,
+        "duration": event?.inSeconds ?? 0
+      });
     });
 
     // 播放位置
     _player.positionStream.listen((event) {
       _playbackState.position = event.inMilliseconds;
       playbackStateController.sink.add(_playbackState.toMap());
+
+      _channel.invokeMethod("setLockScreenDisplayTime", {
+        "duration": Duration(milliseconds: _metaData.duration).inSeconds,
+        "time": event.inSeconds
+      });
     });
 
     // 音量
@@ -140,6 +174,12 @@ class MusicChannelIos extends MusicPlatform {
     _metadataEventController.sink.add(_metaData.toMap());
     // 请求头 x-no-304 是让服务器不返回304状态码
     // 返回304 mac报错 无法打开文件
+    _channel.invokeMethod("setLockScreenDisplay", {
+      "name": _nowPlayMusic!.name,
+      "singer": _nowPlayMusic!.singer,
+      "coverUri": _nowPlayMusic!.coverUri,
+      "duration": 0
+    });
     await _player
         .setUrl(_nowPlayMusic!.musicUri!, headers: {"x-no-304": "yes"});
     if (autoStart) {
