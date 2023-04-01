@@ -9,8 +9,6 @@ PODS:
     - Flutter
   - move_to_background (0.0.1):
     - Flutter
-  - music_channel_ios (0.0.1):
-    - Flutter
   - package_info_plus (0.4.5):
     - Flutter
   - path_provider_foundation (0.0.1):
@@ -30,7 +28,6 @@ DEPENDENCIES:
   - Flutter (from `Flutter`)
   - just_audio (from `.symlinks/plugins/just_audio/ios`)
   - move_to_background (from `.symlinks/plugins/move_to_background/ios`)
-  - music_channel_ios (from `.symlinks/plugins/music_channel_ios/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/ios`)
@@ -50,8 +47,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/just_audio/ios"
   move_to_background:
     :path: ".symlinks/plugins/move_to_background/ios"
-  music_channel_ios:
-    :path: ".symlinks/plugins/music_channel_ios/ios"
   package_info_plus:
     :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider_foundation:
@@ -69,7 +64,6 @@ SPEC CHECKSUMS:
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   just_audio: baa7252489dbcf47a4c7cc9ca663e9661c99aafa
   move_to_background: 39a5b79b26d577b0372cbe8a8c55e7aa9fcd3a2d
-  music_channel_ios: 1d8db7ef624436903d31504c0bbe714b56445cf9
   package_info_plus: 6c92f08e1f853dc01228d6f553146438dafcd14e
   path_provider_foundation: c68054786f1b4f3343858c1e1d0caaded73f0be9
   shared_preferences_foundation: 986fc17f3d3251412d18b0265f9c64113a8c2472

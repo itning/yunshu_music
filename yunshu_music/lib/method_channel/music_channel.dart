@@ -154,7 +154,7 @@ class MusicChannel {
     if (supportMusicChannel()) {
       return await channel.setVolume(value);
     }
-    if (Platform.isMacOS) {
+    if (Platform.isMacOS || Platform.isIOS) {
       print("todo macos set volume");
       return;
     }
