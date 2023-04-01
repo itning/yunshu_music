@@ -42,6 +42,7 @@ post_install do |installer|
         '$(inherited)',
         'AUDIO_SESSION_MICROPHONE=0'
       ]
+    config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.4'
     end
   end
 end
