@@ -23,7 +23,7 @@ class MusicChannel {
   late Stream<double> volumeEvent;
 
   bool supportMusicChannel() {
-    return kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isIOS;
+    return kIsWeb || Platform.isWindows;
   }
 
   Future<void> init() async {
@@ -153,6 +153,10 @@ class MusicChannel {
     // 0.0 ~ 1.0
     if (supportMusicChannel()) {
       return await channel.setVolume(value);
+    }
+    if (Platform.isMacOS) {
+      print("todo macos set volume");
+      return;
     }
     throw UnimplementedError('android not impl set volume');
   }

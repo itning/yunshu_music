@@ -26,6 +26,11 @@
 		33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F22044A3C60003C045 /* Assets.xcassets */; };
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
+		88D913C229D7B2CA00247B91 /* MusicPlayDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D913C129D7B2CA00247B91 /* MusicPlayDataService.swift */; };
+		88D913C429D7B36F00247B91 /* MediaPlayerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D913C329D7B36F00247B91 /* MediaPlayerImpl.swift */; };
+		88D913C629D7B89700247B91 /* MusicPlayMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D913C529D7B89700247B91 /* MusicPlayMode.swift */; };
+		88D913C829D7D5C600247B91 /* Music.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D913C729D7D5C600247B91 /* Music.swift */; };
+		88D913CA29D7E55F00247B91 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D913C929D7E55F00247B91 /* Event.swift */; };
 		9F1B8994C0034DD27FD80497 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 560AB88895E42FDC63779357 /* Pods_Runner.framework */; };
 /* End PBXBuildFile section */
 
@@ -71,6 +76,11 @@
 		560AB88895E42FDC63779357 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		84460EEE3B631AC5D83151AC /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		88D913C129D7B2CA00247B91 /* MusicPlayDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayDataService.swift; sourceTree = "<group>"; };
+		88D913C329D7B36F00247B91 /* MediaPlayerImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlayerImpl.swift; sourceTree = "<group>"; };
+		88D913C529D7B89700247B91 /* MusicPlayMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayMode.swift; sourceTree = "<group>"; };
+		88D913C729D7D5C600247B91 /* Music.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Music.swift; sourceTree = "<group>"; };
+		88D913C929D7E55F00247B91 /* Event.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Event.swift; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		F84F2FAEA58610923F2EEB8D /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -148,6 +158,11 @@
 				33E51914231749380026EE4D /* Release.entitlements */,
 				33CC11242044D66E0003C045 /* Resources */,
 				33BA886A226E78AF003329D5 /* Configs */,
+				88D913C129D7B2CA00247B91 /* MusicPlayDataService.swift */,
+				88D913C329D7B36F00247B91 /* MediaPlayerImpl.swift */,
+				88D913C529D7B89700247B91 /* MusicPlayMode.swift */,
+				88D913C729D7D5C600247B91 /* Music.swift */,
+				88D913C929D7E55F00247B91 /* Event.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -337,9 +352,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				88D913CA29D7E55F00247B91 /* Event.swift in Sources */,
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
+				88D913C429D7B36F00247B91 /* MediaPlayerImpl.swift in Sources */,
+				88D913C629D7B89700247B91 /* MusicPlayMode.swift in Sources */,
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
+				88D913C829D7D5C600247B91 /* Music.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
+				88D913C229D7B2CA00247B91 /* MusicPlayDataService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

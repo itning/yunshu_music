@@ -21,7 +21,7 @@ class VolumeDataModel extends ChangeNotifier {
   double get volume => _volume;
 
   VolumeDataModel() {
-    if (!kIsWeb && Platform.isAndroid) {
+    if (!kIsWeb && (Platform.isAndroid || Platform.isMacOS || Platform.isIOS)) {
       return;
     }
     MusicChannel.get().volumeEvent.listen((event) {
