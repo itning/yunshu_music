@@ -31,7 +31,7 @@ dependencies:
   package_info_plus: ^3.0.3
   flutter_update_dialog: ^2.0.0
   flutter_windowmanager: ^0.2.0
-  go_router: ^6.5.3
+  go_router: ^6.5.5
   windows_single_instance: ^0.1.5
   motion_toast: ^2.6.6
 
