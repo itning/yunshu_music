@@ -63,7 +63,7 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                         },
                       ),
                     ),
-                    Selector<MusicDataModel, MusicDataContent?>(
+                    Selector<MusicDataModel, MusicData?>(
                       selector: (_, data) => data.getNowPlayMusic(),
                       builder: (_, music, __) {
                         if (null == music) {

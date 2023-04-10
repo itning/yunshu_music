@@ -45,7 +45,7 @@ class CacheModel extends ChangeNotifier {
     _enableMusicCache = sharedPreferences.getBool(_enableMusicCacheKey) ?? true;
     _enableCoverCache = sharedPreferences.getBool(_enableCoverCacheKey) ?? true;
     _enableLyricCache = sharedPreferences.getBool(_enableLyricCacheKey) ?? true;
-    if(kIsWeb){
+    if (kIsWeb) {
       // sqflite不支持web平台，并且web平台不支持Platform进行判断操作
       return;
     }
@@ -74,7 +74,7 @@ class CacheModel extends ChangeNotifier {
     }
   }
 
-  Future<int> cacheMusicList(List<MusicDataContent> list) async {
+  Future<int> cacheMusicList(List<MusicData> list) async {
     if (kIsWeb || Platform.isWindows) {
       return 0;
     }
@@ -83,7 +83,7 @@ class CacheModel extends ChangeNotifier {
       await txn.rawDelete('DELETE FROM list_cache');
       int change = 0;
       for (int i = 0; i < list.length; i++) {
-        MusicDataContent item = list[i];
+        MusicData item = list[i];
         try {
           change += await txn.insert('list_cache', {
             'musicId': item.musicId,
@@ -107,7 +107,7 @@ class CacheModel extends ChangeNotifier {
     });
   }
 
-  Future<List<MusicDataContent>> getMusicList() async {
+  Future<List<MusicData>> getMusicList() async {
     if (kIsWeb || Platform.isWindows) {
       return [];
     }
@@ -116,7 +116,7 @@ class CacheModel extends ChangeNotifier {
     if (list.isEmpty) {
       return [];
     }
-    return list.map((e) => MusicDataContent.fromJson(e)).toList();
+    return list.map((e) => MusicData.fromJson(e)).toList();
   }
 
   Future<File?> cacheLyric(String lyricId, String? content) async {

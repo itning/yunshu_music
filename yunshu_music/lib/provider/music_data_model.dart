@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -24,7 +23,7 @@ class MusicDataModel extends ChangeNotifier {
   }
 
   /// 所有音乐列表
-  List<MusicDataContent> _musicList = [];
+  List<MusicData> _musicList = [];
 
   /// 正在播放的音乐在_musicList里的索引
   int _nowMusicIndex = -1;
@@ -39,13 +38,13 @@ class MusicDataModel extends ChangeNotifier {
   String _playMode = 'sequence';
 
   /// 现在播放的音乐
-  MusicDataContent? _nowPlayMusic;
+  MusicData? _nowPlayMusic;
 
   /// 上一首歌曲ID
   String? lastMusicId;
 
   /// 获取音乐列表
-  List<MusicDataContent> get musicList => _musicList;
+  List<MusicData> get musicList => _musicList;
 
   /// 获取当前歌词信息
   List<Lyric>? get lyricList => _lyricList;
@@ -62,7 +61,7 @@ class MusicDataModel extends ChangeNotifier {
   /// 刷新音乐列表
   Future<String?> refreshMusicList({bool needInit = false}) async {
     if (needInit) {
-      List<MusicDataContent> list = await CacheModel.get().getMusicList();
+      List<MusicData> list = await CacheModel.get().getMusicList();
       if (list.isNotEmpty) {
         _musicList = list;
         await MusicChannel.get().initMethod();
@@ -79,10 +78,10 @@ class MusicDataModel extends ChangeNotifier {
     }
     Map<String, dynamic> body = response.data!;
     MusicEntity musicEntity = MusicEntity.fromJson(body);
-    if (musicEntity.data == null || musicEntity.data?.content == null) {
+    if (musicEntity.data == null) {
       return musicEntity.msg ?? '服务器错误';
     }
-    _musicList = musicEntity.data!.content!;
+    _musicList = musicEntity.data!;
     CacheModel.get().cacheMusicList(_musicList);
     if (needInit) {
       await MusicChannel.get().initMethod();
@@ -121,12 +120,12 @@ class MusicDataModel extends ChangeNotifier {
   }
 
   /// 搜索音乐和歌手
-  List<MusicDataContent> search(String keyword) {
+  List<MusicData> search(String keyword) {
     if (keyword.trim() == '') {
       return [];
     }
     String lowerCaseKeyword = keyword.toLowerCase();
-    List<MusicDataContent> searchResultList = _musicList.where((musicItem) {
+    List<MusicData> searchResultList = _musicList.where((musicItem) {
       bool containsName = false;
       bool containsSinger = false;
       if (musicItem.name != null) {
@@ -142,7 +141,7 @@ class MusicDataModel extends ChangeNotifier {
   }
 
   /// 获取现在正在播放的音乐信息
-  MusicDataContent? getNowPlayMusic() {
+  MusicData? getNowPlayMusic() {
     return _nowPlayMusic;
   }
 
@@ -171,7 +170,7 @@ class MusicDataModel extends ChangeNotifier {
       return;
     }
     lastMusicId = mediaId;
-    _nowPlayMusic = MusicDataContent();
+    _nowPlayMusic = MusicData();
     _nowPlayMusic!.musicId = mediaId;
     _nowPlayMusic!.name = title;
     _nowPlayMusic!.singer = subTitle;
