@@ -24,8 +24,7 @@ class SettingModel extends ChangeNotifier {
   bool get router2PlayPageWhenClickPlayListItem =>
       _router2PlayPageWhenClickPlayListItem;
 
-  bool get playPageAutoChangeLargeMode =>
-      _playPageAutoChangeLargeMode;
+  bool get playPageAutoChangeLargeMode => _playPageAutoChangeLargeMode;
 
   SettingModel() {}
 
@@ -35,8 +34,7 @@ class SettingModel extends ChangeNotifier {
         sharedPreferences.getBool(_router2PlayPageWhenClickPlayListItemKey) ??
             true;
     _playPageAutoChangeLargeMode =
-        sharedPreferences.getBool(_playPageAutoChangeLargeModeKey) ??
-            true;
+        sharedPreferences.getBool(_playPageAutoChangeLargeModeKey) ?? true;
   }
 
   Future<void> setRouter2PlayPageWhenClickPlayListItem(bool enabled) async {
@@ -47,8 +45,7 @@ class SettingModel extends ChangeNotifier {
   }
 
   Future<void> setPlayPageAutoChangeLargeMode(bool enabled) async {
-    await sharedPreferences.setBool(
-        _playPageAutoChangeLargeModeKey, enabled);
+    await sharedPreferences.setBool(_playPageAutoChangeLargeModeKey, enabled);
     _playPageAutoChangeLargeMode = enabled;
     notifyListeners();
   }

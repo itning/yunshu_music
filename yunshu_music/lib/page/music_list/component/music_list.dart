@@ -83,7 +83,7 @@ class _MusicListState extends State<MusicList> {
       }),
       child: Stack(
         children: [
-          Selector<MusicDataModel, List<MusicDataContent>>(
+          Selector<MusicDataModel, List<MusicData>>(
               selector: (_, model) => model.musicList,
               builder: (BuildContext context, musicList, Widget? child) {
                 if (musicList.isEmpty) {
@@ -102,7 +102,7 @@ class _MusicListState extends State<MusicList> {
                         itemExtent: 55.0,
                         itemCount: musicList.length,
                         itemBuilder: (BuildContext context, int index) {
-                          MusicDataContent music = musicList[index];
+                          MusicData music = musicList[index];
                           return _InnerListItem(
                             index: index,
                             name: music.name ?? '',

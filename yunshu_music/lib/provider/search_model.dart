@@ -34,7 +34,7 @@ class SearchModel extends ChangeNotifier {
   }
 
   Future<void> _innerSearch(String keyword) async {
-    List<MusicDataContent> result = MusicDataModel.get().search(keyword);
+    List<MusicData> result = MusicDataModel.get().search(keyword);
     SearchResultEntity? searchResultEntity =
         await HttpHelper.get().search(keyword);
     // 合并
@@ -76,8 +76,7 @@ class SearchResultItem {
       this.coverUri,
       this.highlightFields);
 
-  static SearchResultItem fromMusicDataContent(
-      MusicDataContent musicDataContent) {
+  static SearchResultItem fromMusicDataContent(MusicData musicDataContent) {
     return SearchResultItem(
         false,
         musicDataContent.musicId,

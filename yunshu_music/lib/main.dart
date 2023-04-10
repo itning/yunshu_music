@@ -152,10 +152,17 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
           return Shortcuts(
             shortcuts: <LogicalKeySet, Intent>{
               LogicalKeySet(LogicalKeyboardKey.space): const PlayPauseIntent(),
-              LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.arrowLeft): const PreviousIntent(),
-              LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.arrowRight): const NextIntent(),
-              LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowLeft): const SeekBackIntent(),
-              LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowRight): const SeekForwardIntent(),
+              LogicalKeySet(
+                      LogicalKeyboardKey.control, LogicalKeyboardKey.arrowLeft):
+                  const PreviousIntent(),
+              LogicalKeySet(LogicalKeyboardKey.control,
+                  LogicalKeyboardKey.arrowRight): const NextIntent(),
+              LogicalKeySet(
+                      LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowLeft):
+                  const SeekBackIntent(),
+              LogicalKeySet(
+                      LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowRight):
+                  const SeekForwardIntent(),
             },
             child: MaterialApp.router(
               localizationsDelegates: const [

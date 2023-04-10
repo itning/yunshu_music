@@ -8,7 +8,7 @@ class TitleMusicInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<MusicDataModel, MusicDataContent?>(
+    return Selector<MusicDataModel, MusicData?>(
       selector: (_, model) => model.getNowPlayMusic(),
       builder: (BuildContext context, value, Widget? child) {
         if (value == null) {
