@@ -50,8 +50,7 @@
 {
     "code": 200,
     "msg": "查询成功",
-    "data": {
-        "content": [
+    "data": [
             {
                 "musicId": "音乐ID，不可重复",
                 "name": "音乐名称",
@@ -63,33 +62,7 @@
                 "coverUri": "歌曲封面图片URL路径，访问该URL即可拿到歌曲封面图片数据"
             },
             ...
-        ],
-        "pageable": {
-            "sort": {
-                "empty": false,
-                "sorted": true,
-                "unsorted": false
-            },
-            "offset": 0,
-            "pageNumber": 0,
-            "pageSize": 100,
-            "paged": true,
-            "unpaged": false
-        },
-        "totalPages": 100,
-        "totalElements": 10000,
-        "last": false,
-        "size": 1
-        "number": 0,
-        "sort": {
-            "empty": false,
-            "sorted": true,
-            "unsorted": false
-        },
-        "numberOfElements": 1,
-        "first": true,
-        "empty": false
-    }
+        ]
 }
 ```
 
