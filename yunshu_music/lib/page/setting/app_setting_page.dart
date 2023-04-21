@@ -79,6 +79,30 @@ class AppSettingPage extends StatelessWidget {
                 ),
               ],
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    '使用Material3',
+                    style: TextStyle(fontSize: 17.0),
+                  ),
+                ),
+                Selector<SettingModel, bool>(
+                  selector: (_, setting) {
+                    return setting.useMaterial3Theme;
+                  },
+                  builder: (BuildContext context, useMaterial3Theme, _) {
+                    return Switch(
+                        value: useMaterial3Theme,
+                        onChanged: (value) => context
+                            .read<SettingModel>()
+                            .setUseMaterial3Theme(value));
+                  },
+                ),
+              ],
+            ),
             const Divider(),
             const Padding(
               padding: EdgeInsets.only(left: 16.0, top: 16.0),

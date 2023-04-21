@@ -29,7 +29,7 @@ class MusicListItem extends StatelessWidget {
       onLongPress: onLongPress,
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+        margin: const EdgeInsets.only(bottom: 7.0, top: 7.0),
         child: Flex(
           direction: Axis.horizontal,
           children: [

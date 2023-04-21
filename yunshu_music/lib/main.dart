@@ -147,8 +147,8 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
         ChangeNotifierProvider(create: (_) => LyricController()),
         ChangeNotifierProvider(create: (_) => SearchModel.get()),
       ],
-      child: Consumer<ThemeModel>(
-        builder: (_, theme, __) {
+      child: Consumer2<ThemeModel, SettingModel>(
+        builder: (_, theme, setting, __) {
           return Shortcuts(
             shortcuts: <LogicalKeySet, Intent>{
               LogicalKeySet(LogicalKeyboardKey.space): const PlayPauseIntent(),
@@ -173,7 +173,9 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
               supportedLocales: const [Locale.fromSubtags(languageCode: 'zh')],
               // 与 ThemeData.dark() 相同
               darkTheme: ThemeData(
-                  brightness: Brightness.dark, fontFamily: 'LXGWWenKaiMono'),
+                  useMaterial3: setting.useMaterial3Theme,
+                  brightness: Brightness.dark,
+                  fontFamily: 'LXGWWenKaiMono'),
               themeMode: theme.themeMode,
               theme: ThemeData(fontFamily: 'LXGWWenKaiMono'),
               title: '云舒音乐',
