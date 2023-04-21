@@ -8,6 +8,8 @@ class SettingModel extends ChangeNotifier {
   static const String _playPageAutoChangeLargeModeKey =
       "PLAY_PAGE_AUTO_CHANGE_LARGE_MODE";
 
+  static const String _useMaterial3ThemeKey = "USE_MATERIAL3_THEME";
+
   static SettingModel? _instance;
 
   static SettingModel get() {
@@ -21,10 +23,14 @@ class SettingModel extends ChangeNotifier {
 
   late bool _playPageAutoChangeLargeMode;
 
+  late bool _useMaterial3Theme;
+
   bool get router2PlayPageWhenClickPlayListItem =>
       _router2PlayPageWhenClickPlayListItem;
 
   bool get playPageAutoChangeLargeMode => _playPageAutoChangeLargeMode;
+
+  bool get useMaterial3Theme => _useMaterial3Theme;
 
   SettingModel() {}
 
@@ -35,6 +41,9 @@ class SettingModel extends ChangeNotifier {
             true;
     _playPageAutoChangeLargeMode =
         sharedPreferences.getBool(_playPageAutoChangeLargeModeKey) ?? true;
+
+    _useMaterial3Theme =
+        sharedPreferences.getBool(_useMaterial3ThemeKey) ?? false;
   }
 
   Future<void> setRouter2PlayPageWhenClickPlayListItem(bool enabled) async {
@@ -47,6 +56,12 @@ class SettingModel extends ChangeNotifier {
   Future<void> setPlayPageAutoChangeLargeMode(bool enabled) async {
     await sharedPreferences.setBool(_playPageAutoChangeLargeModeKey, enabled);
     _playPageAutoChangeLargeMode = enabled;
+    notifyListeners();
+  }
+
+  Future<void> setUseMaterial3Theme(bool enabled) async {
+    await sharedPreferences.setBool(_useMaterial3ThemeKey, enabled);
+    _useMaterial3Theme = enabled;
     notifyListeners();
   }
 }
