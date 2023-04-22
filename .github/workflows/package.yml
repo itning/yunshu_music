@@ -6,8 +6,8 @@ on:
       - '*'
   workflow_dispatch:
   
-env:
-  FLUTTER_VERSION: "3.7.10"
+#env:
+  #FLUTTER_VERSION: "3.7.12"
   
 jobs:
   build_web:
@@ -20,7 +20,8 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          #flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
 
       - name: Restore packages
         run: |
@@ -61,7 +62,8 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          #flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
       - name: Create the Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -101,7 +103,8 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          #flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
 
       - name: Restore packages
         run: |
