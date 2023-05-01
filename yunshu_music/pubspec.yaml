@@ -33,7 +33,7 @@ dependencies:
   flutter_windowmanager: ^0.2.0
   go_router: ^6.5.8
   windows_single_instance: ^0.1.5
-  motion_toast: ^2.6.6
+  motion_toast: ^2.6.7
 
 dev_dependencies:
   flutter_test:
