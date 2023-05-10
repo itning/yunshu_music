@@ -26,7 +26,7 @@ dependencies:
   #fluttertoast: ^8.1.1
   logger: ^1.3.0
   crypto: ^3.0.3
-  path_provider: ^2.0.14
+  path_provider: ^2.0.15
   mime_type: ^1.0.0
   package_info_plus: ^3.1.2
   flutter_update_dialog: ^2.0.0
