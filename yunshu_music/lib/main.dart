@@ -28,25 +28,6 @@ import 'package:yunshu_music/provider/volume_data_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 void main() async {
-  void reportErrorAndLog(FlutterErrorDetails details) {
-    final errorMsg = {
-      "exception": details.exceptionAsString(),
-      "stackTrace": details.stack.toString(),
-    };
-    // 上报错误
-    LogHelper.get().error("reportErrorAndLog : $errorMsg");
-  }
-
-  FlutterErrorDetails makeDetails(Object error, StackTrace stackTrace) {
-    // 构建错误信息
-    return FlutterErrorDetails(stack: stackTrace, exception: error);
-  }
-
-  FlutterError.onError = (FlutterErrorDetails details) {
-    // 获取 widget build 过程中出现的异常错误
-    reportErrorAndLog(details);
-  };
-
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb && Platform.isWindows) {
     await WindowsSingleInstance.ensureSingleInstance([], "instance_checker",
@@ -62,15 +43,7 @@ void main() async {
   await MusicDataModel.get().init();
   await VolumeDataModel.get().init(sharedPreferences);
   await SettingModel.get().init(sharedPreferences);
-  runZonedGuarded(
-    () {
-      runApp(const YunShuMusicApp());
-    },
-    (error, stackTrace) {
-      // 没被我们catch的异常
-      reportErrorAndLog(makeDetails(error, stackTrace));
-    },
-  );
+  runApp(const YunShuMusicApp());
   if (!kIsWeb && Platform.isAndroid) {
     // 沉浸式状态栏
     // 写在组件渲染之后，是为了在渲染后进行设置赋值，覆盖状态栏，写在渲染之前对MaterialApp组件会覆盖这个值。
