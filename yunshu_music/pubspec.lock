@@ -385,10 +385,10 @@ packages:
     dependency: "direct dev"
     description:
       name: msix
-      sha256: "254594e8ede1902122f5a98fe5c0623c531edb346fd35d91575546e8f7e93570"
+      sha256: "88ee83949d87dc635ffd51d7c17ef222390e5067693cc248046661b12a353d13"
       url: "https://pub.dev"
     source: hosted
-    version: "3.12.1"
+    version: "3.12.2"
   music_channel:
     dependency: "direct main"
     description:
