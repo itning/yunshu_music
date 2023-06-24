@@ -1,7 +1,7 @@
 name: yunshu_music
 description: YunShu Music
 publish_to: 'none'
-version: 1.2.0+50
+version: 1.2.1+51
 
 environment:
   sdk: ">=2.18.6 <3.0.0"
