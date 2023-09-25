@@ -18,12 +18,12 @@ class _WrappedOutput implements LogOutput {
   }
 
   @override
-  void destroy() {
+  Future<void> destroy() async {
     innerLogOutput.destroy();
   }
 
   @override
-  void init() {
+  Future<void> init() async {
     innerLogOutput.init();
   }
 }
@@ -171,11 +171,11 @@ class _LogConsoleState extends State<LogConsole> {
       theme: widget.dark
           ? ThemeData(
               brightness: Brightness.dark,
-             // accentColor: Colors.blueGrey,
+              // accentColor: Colors.blueGrey,
             )
           : ThemeData(
               brightness: Brightness.light,
-             // accentColor: Colors.lightBlueAccent,
+              // accentColor: Colors.lightBlueAccent,
             ),
       home: Scaffold(
         body: SafeArea(

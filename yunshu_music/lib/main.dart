@@ -93,11 +93,11 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
       ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
-      if ('/login' != state.location && !LoginModel.get().isLogin()) {
+      if ('/login' != state.matchedLocation && !LoginModel.get().isLogin()) {
         return '/login';
       }
       if (kIsWeb &&
-          '/musicPlay' == state.location &&
+          '/musicPlay' == state.matchedLocation &&
           MusicDataModel.get().nowMusicIndex == -1) {
         return '/';
       }

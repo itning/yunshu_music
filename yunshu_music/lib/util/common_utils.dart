@@ -34,20 +34,20 @@ class LogHelper {
 
   void debug(dynamic message, [dynamic error, StackTrace? stackTrace]) {
     if (kDebugMode) {
-      _logger.log(Level.debug, message, error, stackTrace);
+      _logger.log(Level.debug, message, error: error, stackTrace: stackTrace);
     }
   }
 
   void info(dynamic message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.log(Level.info, message, error, stackTrace);
+    _logger.log(Level.info, message, error: error, stackTrace: stackTrace);
   }
 
   void warn(dynamic message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.log(Level.warning, message, error, stackTrace);
+    _logger.log(Level.warning, message, error: error, stackTrace: stackTrace);
   }
 
   void error(dynamic message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.log(Level.error, message, error, stackTrace);
+    _logger.log(Level.error, message, error: error, stackTrace: stackTrace);
   }
 }
 
@@ -65,7 +65,7 @@ class FileOutput extends LogOutput {
   });
 
   @override
-  void init() {
+  Future<void> init() async {
     _sink = file.openWrite(
       mode: overrideExisting ? FileMode.writeOnly : FileMode.writeOnlyAppend,
       encoding: encoding,
@@ -79,7 +79,7 @@ class FileOutput extends LogOutput {
   }
 
   @override
-  void destroy() async {
+  Future<void> destroy() async {
     await _sink?.flush();
     await _sink?.close();
   }
