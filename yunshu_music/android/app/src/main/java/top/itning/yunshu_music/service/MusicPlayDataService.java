@@ -57,6 +57,9 @@ public class MusicPlayDataService {
     }
 
     public void delPlayListByMediaId(String mediaId) {
+        if (nowPlayMusic != null && mediaId.equals(nowPlayMusic.getMediaId())) {
+            return;
+        }
         PLAY_LIST.removeIf(it -> mediaId.equals(it.getMediaId()));
         String playListString = PLAY_LIST.stream().map(MediaBrowserCompat.MediaItem::getMediaId).collect(Collectors.joining("@"));
         kv.encode(PLAY_LIST_KEY, playListString);
@@ -64,8 +67,15 @@ public class MusicPlayDataService {
 
     public void clearPlayList() {
         PLAY_LIST.clear();
-        nowPlayIndex = -1;
-        kv.removeValueForKey(PLAY_LIST_KEY);
+        if (nowPlayMusic != null) {
+            PLAY_LIST.add(nowPlayMusic);
+            nowPlayIndex = 0;
+            String playListString = PLAY_LIST.stream().map(MediaBrowserCompat.MediaItem::getMediaId).collect(Collectors.joining("@"));
+            kv.encode(PLAY_LIST_KEY, playListString);
+        } else {
+            nowPlayIndex = -1;
+            kv.removeValueForKey(PLAY_LIST_KEY);
+        }
     }
 
     public void setPlayMode(MusicPlayMode playMode) {

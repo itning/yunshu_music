@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
-import 'package:music_platform_interface/music_status.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
+import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_tray/system_tray.dart';
 import 'package:window_manager/window_manager.dart';
@@ -280,6 +281,9 @@ class MusicChannelMacOS extends MusicPlatform {
 
   @override
   Future<void> delPlayListByMediaId(String mediaId) async {
+    if (_nowPlayMusic != null && _nowPlayMusic!.musicId == mediaId) {
+      return;
+    }
     _playList.removeWhere((element) => mediaId == element.musicId);
     _sharedPreferences.setStringList(
         _playListKey, _playList.map((e) => e.musicId!).toList());
@@ -288,8 +292,15 @@ class MusicChannelMacOS extends MusicPlatform {
   @override
   Future<void> clearPlayList() async {
     _playList.clear();
-    _nowPlayIndex = -1;
-    _sharedPreferences.remove(_playListKey);
+    if (_nowPlayMusic != null) {
+      _playList.add(_nowPlayMusic!);
+      _nowPlayIndex = 0;
+      _sharedPreferences.setStringList(
+          _playListKey, _playList.map((e) => e.musicId!).toList());
+    } else {
+      _nowPlayIndex = -1;
+      _sharedPreferences.remove(_playListKey);
+    }
   }
 
   @override

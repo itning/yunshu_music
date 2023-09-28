@@ -72,6 +72,9 @@ class MusicData {
   }
 
   void delPlayListByMediaId(String mediaId) {
+    if (_nowPlayMusic != null && _nowPlayMusic!.musicId == mediaId) {
+      return;
+    }
     _playList.removeWhere((element) => mediaId == element.musicId);
 
     String playListString = _playList.map((e) => e.musicId).join('@');
@@ -80,8 +83,15 @@ class MusicData {
 
   void clearPlayList() {
     _playList.clear();
-    _nowPlayIndex = -1;
-    _storage[_playListKey] = '';
+    if (_nowPlayMusic != null) {
+      _playList.add(_nowPlayMusic!);
+      _nowPlayIndex = 0;
+      String playListString = _playList.map((e) => e.musicId).join('@');
+      _storage[_playListKey] = playListString;
+    } else {
+      _nowPlayIndex = -1;
+      _storage[_playListKey] = '';
+    }
   }
 
   void playFromMusicId(String musicId) {
