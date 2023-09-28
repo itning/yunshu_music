@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:dart_vlc/dart_vlc.dart' hide PlaybackState;
 import 'package:flutter/services.dart';
@@ -271,6 +270,9 @@ class MusicChannelWindows extends MusicPlatform {
 
   @override
   Future<void> delPlayListByMediaId(String mediaId) async {
+    if (_nowPlayMusic != null && _nowPlayMusic!.musicId == mediaId) {
+      return;
+    }
     _playList.removeWhere((element) => mediaId == element.musicId);
     _sharedPreferences.setStringList(
         _playListKey, _playList.map((e) => e.musicId!).toList());
@@ -279,8 +281,15 @@ class MusicChannelWindows extends MusicPlatform {
   @override
   Future<void> clearPlayList() async {
     _playList.clear();
-    _nowPlayIndex = -1;
-    _sharedPreferences.remove(_playListKey);
+    if (_nowPlayMusic != null) {
+      _playList.add(_nowPlayMusic!);
+      _nowPlayIndex = 0;
+      _sharedPreferences.setStringList(
+          _playListKey, _playList.map((e) => e.musicId!).toList());
+    } else {
+      _nowPlayIndex = -1;
+      _sharedPreferences.remove(_playListKey);
+    }
   }
 
   @override
