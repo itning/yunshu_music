@@ -43,7 +43,7 @@ class SettingModel extends ChangeNotifier {
         sharedPreferences.getBool(_playPageAutoChangeLargeModeKey) ?? true;
 
     _useMaterial3Theme =
-        sharedPreferences.getBool(_useMaterial3ThemeKey) ?? false;
+        sharedPreferences.getBool(_useMaterial3ThemeKey) ?? true;
   }
 
   Future<void> setRouter2PlayPageWhenClickPlayListItem(bool enabled) async {
