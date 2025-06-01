@@ -10,6 +10,9 @@ class SettingModel extends ChangeNotifier {
 
   static const String _useMaterial3ThemeKey = "USE_MATERIAL3_THEME";
 
+  static const String _enableMusicCoverRotatingKey =
+      "ENABLE_MUSIC_COVER_ROTATING";
+
   static SettingModel? _instance;
 
   static SettingModel get() {
@@ -25,12 +28,16 @@ class SettingModel extends ChangeNotifier {
 
   late bool _useMaterial3Theme;
 
+  late bool _enableMusicCoverRotating;
+
   bool get router2PlayPageWhenClickPlayListItem =>
       _router2PlayPageWhenClickPlayListItem;
 
   bool get playPageAutoChangeLargeMode => _playPageAutoChangeLargeMode;
 
   bool get useMaterial3Theme => _useMaterial3Theme;
+
+  bool get enableMusicCoverRotating => _enableMusicCoverRotating;
 
   SettingModel() {}
 
@@ -44,6 +51,9 @@ class SettingModel extends ChangeNotifier {
 
     _useMaterial3Theme =
         sharedPreferences.getBool(_useMaterial3ThemeKey) ?? true;
+
+    _enableMusicCoverRotating =
+        sharedPreferences.getBool(_enableMusicCoverRotatingKey) ?? true;
   }
 
   Future<void> setRouter2PlayPageWhenClickPlayListItem(bool enabled) async {
@@ -62,6 +72,12 @@ class SettingModel extends ChangeNotifier {
   Future<void> setUseMaterial3Theme(bool enabled) async {
     await sharedPreferences.setBool(_useMaterial3ThemeKey, enabled);
     _useMaterial3Theme = enabled;
+    notifyListeners();
+  }
+
+  Future<void> setEnableMusicCoverRotating(bool enabled) async {
+    await sharedPreferences.setBool(_enableMusicCoverRotatingKey, enabled);
+    _enableMusicCoverRotating = enabled;
     notifyListeners();
   }
 }

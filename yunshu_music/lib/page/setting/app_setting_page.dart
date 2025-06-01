@@ -363,6 +363,30 @@ class AppSettingPage extends StatelessWidget {
                 ),
               ],
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    '音乐封面开启旋转效果',
+                    style: TextStyle(fontSize: 17.0),
+                  ),
+                ),
+                Selector<SettingModel, bool>(
+                  selector: (_, setting) {
+                    return setting.enableMusicCoverRotating;
+                  },
+                  builder: (BuildContext context, enabled, _) {
+                    return Switch(
+                        value: enabled,
+                        onChanged: (value) => context
+                            .read<SettingModel>()
+                            .setEnableMusicCoverRotating(value));
+                  },
+                ),
+              ],
+            ),
           ],
         ),
       ),
