@@ -2,6 +2,7 @@ package top.itning.yunshu_music.util;
 
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Call;
 import okhttp3.OkHttpClient;
 
 /**
@@ -22,5 +23,9 @@ public class HttpClient {
                 // 是否允许OkHttp自动执行失败重连，默认为true。当设置为true时，okhttp会在以下几种可能的请求失败的情况下恢复连接并重新请求：1.IP地址不可达；2.过久的池化连接；3.代理服务器不可达。
                 .retryOnConnectionFailure(true)
                 .build();
+    }
+
+    public static Call.Factory getCallFactory() {
+        return (Call.Factory) OK_HTTP_CLIENT;
     }
 }

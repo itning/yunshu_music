@@ -68,7 +68,7 @@ public class MediaPlayerImpl extends MediaSessionCompat.Callback implements Play
                 .setAudioAttributes(audioAttributes, true)
                 .setHandleAudioBecomingNoisy(true)
                 //.setMediaSourceFactory(new DefaultMediaSourceFactory(cacheDataSourceFactory))
-                .setMediaSourceFactory(new DefaultMediaSourceFactory(new OkHttpDataSource.Factory(HttpClient.OK_HTTP_CLIENT)))
+                .setMediaSourceFactory(new DefaultMediaSourceFactory(new OkHttpDataSource.Factory(HttpClient.getCallFactory())))
                 .build();
         player.addListener(this);
         updatePositionHandler = new Handler(player.getApplicationLooper());
