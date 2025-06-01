@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/image_fade.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 
+import '../provider/setting_model.dart';
+
 /// 可旋转的封面图Widget
 class RotateCoverImageWidget extends StatefulWidget {
   final double width;
@@ -44,7 +46,12 @@ class _RotateCoverImageWidgetState extends State<RotateCoverImageWidget>
   Widget build(BuildContext context) {
     return Selector<PlayStatusModel, bool>(
       builder: (_, value, Widget? child) {
-        value ? _coverController.repeat() : _coverController.stop();
+        final enableRotation = context.read<SettingModel>().enableMusicCoverRotating;
+        if (enableRotation) {
+          value ? _coverController.repeat() : _coverController.stop();
+        } else {
+          _coverController.stop(); // 强制停止旋转
+        }
         return child!;
       },
       selector: (_, model) => model.isPlayNow,
