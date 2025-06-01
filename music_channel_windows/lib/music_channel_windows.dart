@@ -26,7 +26,7 @@ class MusicChannelWindows extends MusicPlatform {
     return version;
   }
 
-  static const String _nowPlaymusicIdKey = "NOW_PLAY_MEDIA_ID_KEY";
+  static const String _nowPlayMusicIdKey = "NOW_PLAY_MEDIA_ID_KEY";
   static const String _playModeKey = "PLAY_MODE";
   static const String _playListKey = "PLAY_LIST";
 
@@ -60,7 +60,7 @@ class MusicChannelWindows extends MusicPlatform {
   /// 播放状态载体
   final PlaybackState _playbackState = PlaybackState();
 
-  /// 随即过的音乐信息
+  /// 随机过的音乐信息
   final Set<Music> _randomSet = {};
 
   /// 正在播放的音乐信息
@@ -311,7 +311,7 @@ class MusicChannelWindows extends MusicPlatform {
     }
     _playList.addAll(playList);
 
-    String? nowPlayMusicId = _sharedPreferences.getString(_nowPlaymusicIdKey);
+    String? nowPlayMusicId = _sharedPreferences.getString(_nowPlayMusicIdKey);
     if (null != nowPlayMusicId) {
       for (int i = 0; i < _playList.length; i++) {
         if (nowPlayMusicId == _playList[i].musicId) {
@@ -349,7 +349,7 @@ class MusicChannelWindows extends MusicPlatform {
     }
     _sharedPreferences.setStringList(
         _playListKey, _playList.map((e) => e.musicId!).toList());
-    _sharedPreferences.setString(_nowPlaymusicIdKey, _nowPlayMusic!.musicId!);
+    _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 
   void previous(bool userTrigger) {
@@ -386,7 +386,7 @@ class MusicChannelWindows extends MusicPlatform {
     }
     _sharedPreferences.setStringList(
         _playListKey, _playList.map((e) => e.musicId!).toList());
-    _sharedPreferences.setString(_nowPlaymusicIdKey, _nowPlayMusic!.musicId!);
+    _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 
   void next(bool userTrigger) {
@@ -423,7 +423,7 @@ class MusicChannelWindows extends MusicPlatform {
     }
     _sharedPreferences.setStringList(
         _playListKey, _playList.map((e) => e.musicId!).toList());
-    _sharedPreferences.setString(_nowPlaymusicIdKey, _nowPlayMusic!.musicId!);
+    _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 
   int getRandom() {
