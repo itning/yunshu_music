@@ -115,7 +115,7 @@ jobs:
         run: |
           cd yunshu_music
           flutter build windows --release
-          Compress-Archive -Path .\build\windows\x64\runner\Release\* -DestinationPath windows.zip
+          Compress-Archive -Path .\build\windows\runner\Release\* -DestinationPath windows.zip
           
       - name: Create Github Release
         uses: ncipollo/release-action@v1
