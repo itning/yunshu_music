@@ -31,7 +31,6 @@ class MusicSearchDelegate extends SearchDelegate {
       icon: AnimatedIcon(
         icon: AnimatedIcons.menu_arrow,
         progress: transitionAnimation,
-        color: Colors.white,
       ),
       onPressed: () => close(context, null),
     );
