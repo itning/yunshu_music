@@ -52,12 +52,12 @@ class MusicChannel {
           volumeEventController);
     } else {
       // android平台
-      EventChannel _playbackStateEventChannel =
+      EventChannel playbackStateEventChannel =
           const EventChannel('yunshu.music/playback_state_event_channel');
-      playbackStateEvent = _playbackStateEventChannel.receiveBroadcastStream();
-      EventChannel _metadataEventChannel =
+      playbackStateEvent = playbackStateEventChannel.receiveBroadcastStream();
+      EventChannel metadataEventChannel =
           const EventChannel('yunshu.music/metadata_event_channel');
-      metadataEvent = _metadataEventChannel.receiveBroadcastStream();
+      metadataEvent = metadataEventChannel.receiveBroadcastStream();
     }
   }
 

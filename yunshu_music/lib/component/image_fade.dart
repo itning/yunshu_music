@@ -32,7 +32,7 @@ class ImageFade extends StatefulWidget {
   /// Creates a widget that displays a [placeholder] widget while a specified [image] loads,
   /// then cross-fades to the loaded image.
   const ImageFade({
-    Key? key,
+    super.key,
     this.placeholder,
     this.image,
     this.fadeCurve = Curves.linear,
@@ -47,7 +47,7 @@ class ImageFade extends StatefulWidget {
     this.semanticLabel,
     this.loadingBuilder,
     this.errorBuilder,
-  }) : super(key: key);
+  });
 
   /// Widget layered behind the loaded images. Displayed when [image] is null or is loading initially.
   final Widget? placeholder;
@@ -251,20 +251,20 @@ class _ImageFadeState extends State<ImageFade> with TickerProviderStateMixin {
       _fadeFront = _front == null
           ? null
           : FadeTransition(
-              child: _front,
               opacity: CurvedAnimation(
                 parent: _controller,
                 curve: Interval(0.0, 2 / 3, curve: widget.fadeCurve),
-              ));
+              ),
+              child: _front);
     }
     _fadeBack = _back == null
         ? null
         : FadeTransition(
-            child: _back,
             opacity: Tween<double>(begin: 1.0, end: 0).animate(CurvedAnimation(
               parent: _controller,
               curve: Interval(out ? 0.0 : 2 / 3, 1.0, curve: Curves.linear),
-            )));
+            )),
+            child: _back);
     if (_front != null || _back != null) {
       _controller.forward(from: 0);
     }
@@ -308,8 +308,8 @@ class _ImageFadeState extends State<ImageFade> with TickerProviderStateMixin {
         width: widget.width,
         height: widget.height,
         child: Stack(
-          children: kids,
           fit: StackFit.passthrough,
+          children: kids,
         ));
 
     if (widget.excludeFromSemantics) {

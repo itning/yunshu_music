@@ -92,8 +92,8 @@ class HttpHelper {
           await _dio.get<String>(lyricUri, cancelToken: _lyricCancelToken);
       _lyricCancelToken = null;
       return response.data;
-    } on DioError catch (e) {
-      if (e.type == DioErrorType.cancel) {
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
         LogHelper.get().info('获取歌词请求取消 $lyricUri');
       } else if (e.response?.statusCode == 404) {
         LogHelper.get().info('该歌曲无歌词 $lyricUri');
@@ -126,8 +126,8 @@ class HttpHelper {
         contentType = contentTypes[0];
       }
       return Tuple2(contentType, response.data);
-    } on DioError catch (e) {
-      if (e.type == DioErrorType.cancel) {
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
         LogHelper.get().info('获取封面请求取消 $coverUri');
       } else if (e.response?.statusCode == 404) {
         LogHelper.get().info('该歌曲无封面 $coverUri');
@@ -153,8 +153,8 @@ class HttpHelper {
       }
       SearchResultEntity result = SearchResultEntity.fromJson(response.data!);
       return result;
-    } on DioError catch (e) {
-      if (e.type == DioErrorType.cancel) {
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
         LogHelper.get().info('搜索歌词请求取消 $keyword');
       } else if (e.response?.statusCode == 404) {
         LogHelper.get().info('搜索歌词返回404 $keyword');

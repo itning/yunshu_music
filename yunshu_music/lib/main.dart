@@ -54,7 +54,7 @@ void main() async {
 
 /// 主入口
 class YunShuMusicApp extends StatefulWidget {
-  const YunShuMusicApp({Key? key}) : super(key: key);
+  const YunShuMusicApp({super.key});
 
   @override
   State<YunShuMusicApp> createState() => _YunShuMusicAppState();
@@ -120,7 +120,7 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
         ChangeNotifierProvider(create: (_) => SearchModel.get()),
       ],
       child: Consumer2<ThemeModel, SettingModel>(
-        builder: (_, theme, setting, __) {
+        builder: (_, theme, setting, _) {
           return Shortcuts(
             shortcuts: <LogicalKeySet, Intent>{
               LogicalKeySet(LogicalKeyboardKey.space): const PlayPauseIntent(),

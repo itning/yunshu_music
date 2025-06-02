@@ -11,7 +11,7 @@ import 'package:yunshu_music/util/log_console.dart';
 
 /// 音乐列表
 class MusicIndexPage extends StatelessWidget {
-  const MusicIndexPage({Key? key}) : super(key: key);
+  const MusicIndexPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +38,9 @@ class MusicIndexPage extends StatelessWidget {
                   tooltip: '搜索',
                   onPressed: () {
                     showSearch(
-                        context: context, delegate: MusicSearchDelegate());
+                      context: context,
+                      delegate: MusicSearchDelegate(),
+                    );
                   },
                   icon: const Icon(Icons.search),
                 ),

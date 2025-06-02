@@ -210,8 +210,7 @@ class _PlayList extends StatelessWidget {
   final ScrollController? scrollController;
   final List<dynamic> data;
 
-  const _PlayList({Key? key, this.scrollController, required this.data})
-      : super(key: key);
+  const _PlayList({this.scrollController, required this.data});
 
   @override
   Widget build(BuildContext context) {

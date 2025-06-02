@@ -39,7 +39,7 @@ class SettingModel extends ChangeNotifier {
 
   bool get enableMusicCoverRotating => _enableMusicCoverRotating;
 
-  SettingModel() {}
+  SettingModel();
 
   Future<void> init(SharedPreferences sharedPreferences) async {
     this.sharedPreferences = sharedPreferences;

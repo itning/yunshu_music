@@ -14,10 +14,10 @@ import 'package:yunshu_music/util/common_utils.dart';
 
 /// 歌词页
 class LyricPage extends StatefulWidget {
-  const LyricPage({Key? key}) : super(key: key);
+  const LyricPage({super.key});
 
   @override
-  _LyricPageState createState() => _LyricPageState();
+  State<LyricPage> createState() => _LyricPageState();
 }
 
 class _LyricPageState extends State<LyricPage>
@@ -43,7 +43,7 @@ class _LyricPageState extends State<LyricPage>
               Center(
                 child: Selector<MusicDataModel, List<Lyric>?>(
                     selector: (_, data) => data.lyricList,
-                    builder: (_, value, __) {
+                    builder: (_, value, _) {
                       if (null == value || value.isEmpty) {
                         return const Text(
                           '该歌曲暂无歌词',

@@ -4,20 +4,20 @@ version: 0.0.1
 homepage:
 
 environment:
-  sdk: ">=2.16.1 <3.0.0"
-  flutter: ">=1.17.0"
+  sdk: ^3.8.1
+  flutter: '>=3.3.0'
 
 dependencies:
   flutter:
     sdk: flutter
   music_channel_web:
     path: ../music_channel_web
-  music_channel_windows:
-    path: ../music_channel_windows
-  music_channel_macos:
-    path: ../music_channel_macos
-  music_channel_ios:
-    path: ../music_channel_ios
+#  music_channel_windows:
+#    path: ../music_channel_windows
+#  music_channel_macos:
+#    path: ../music_channel_macos
+#  music_channel_ios:
+#    path: ../music_channel_ios
   music_platform_interface:
     path: ../music_platform_interface
 
@@ -34,9 +34,9 @@ flutter:
     platforms:
       web:
         default_package: music_channel_web
-      windows:
-        default_package: music_channel_windows
-      macos:
-        default_package: music_channel_macos
-      ios:
-        default_package: music_channel_ios
+#      windows:
+#        default_package: music_channel_windows
+#      macos:
+#        default_package: music_channel_macos
+#      ios:
+#        default_package: music_channel_ios

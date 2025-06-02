@@ -4,7 +4,7 @@ import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/provider/volume_data_model.dart';
 
 class VolumeSlider extends StatelessWidget {
-  const VolumeSlider({Key? key}) : super(key: key);
+  const VolumeSlider({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +17,7 @@ class VolumeSlider extends StatelessWidget {
           color: Colors.white,
         ),
         Selector<VolumeDataModel, double>(
-          builder: (_, value, __) {
+          builder: (_, value, _) {
             return Slider(
               activeColor: Colors.white,
               inactiveColor: Colors.grey,

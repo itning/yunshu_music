@@ -52,7 +52,7 @@ class LyricWidget extends StatefulWidget {
   double? lyricMaxWidth;
 
   LyricWidget(
-      {Key? key,
+      {super.key,
       required this.lyrics,
       this.remarkLyrics,
       required this.size,
@@ -67,8 +67,7 @@ class LyricWidget extends StatefulWidget {
       this.enableDrag = true,
       this.lyricMaxWidth,
       TextStyle? currRemarkLyricStyle})
-      : assert(lyrics.isNotEmpty),
-        super(key: key) {
+      : assert(lyrics.isNotEmpty) {
     this.lyricStyle = lyricStyle ??= const TextStyle(
         color: Colors.white70, fontSize: 16, fontFamily: 'LXGWWenKaiMono');
     this.remarkStyle = remarkStyle ??= const TextStyle(
@@ -101,7 +100,7 @@ class LyricWidget extends StatefulWidget {
   }
 
   @override
-  _LyricWidgetState createState() => _LyricWidgetState();
+  State<LyricWidget> createState() => _LyricWidgetState();
 }
 
 class _LyricWidgetState extends State<LyricWidget>
@@ -183,7 +182,7 @@ class _LyricWidgetState extends State<LyricWidget>
         findLyricIndexByDuration(widget.controller.progress, widget.lyrics);
     if (widget.controller.isDragging) {
       _lyricPainter.draggingLine = widget.controller.draggingLine;
-      _lyricPainter.offset = widget.controller.draggingOffset;
+      _lyricPainter.offset = widget.controller.draggingOffset!;
     } else {
       _lyricPainter.offset = -computeScrollY(_lyricPainter.currentLyricIndex);
     }
@@ -278,7 +277,7 @@ class _LyricWidgetState extends State<LyricWidget>
     }
   }
 
-  animationScrollY(currentLyricIndex) {
+  void animationScrollY(int currentLyricIndex) {
     if (!mounted) {
       return;
     }

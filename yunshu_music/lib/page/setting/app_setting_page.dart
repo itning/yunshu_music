@@ -12,7 +12,7 @@ import 'package:yunshu_music/provider/theme_model.dart';
 
 /// 应用设置页面
 class AppSettingPage extends StatelessWidget {
-  const AppSettingPage({Key? key}) : super(key: key);
+  const AppSettingPage({super.key});
 
   @override
   Widget build(BuildContext context) {

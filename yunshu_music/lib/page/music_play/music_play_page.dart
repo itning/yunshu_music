@@ -17,12 +17,12 @@ import 'package:yunshu_music/util/common_utils.dart';
 
 /// 音乐播放页面
 class MusicPlayPage extends StatelessWidget {
-  const MusicPlayPage({Key? key}) : super(key: key);
+  const MusicPlayPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const CoverPage _coverPage = CoverPage();
-    const LyricPage _lyricPage = LyricPage();
+    const CoverPage coverPage = CoverPage();
+    const LyricPage lyricPage = LyricPage();
     return Actions(
       actions: {
         PlayPauseIntent: PlayPauseAction(),
@@ -53,8 +53,8 @@ class MusicPlayPage extends StatelessWidget {
                 backgroundColor: Colors.transparent,
               ),
               body: isLargeMode(context)
-                  ? buildLargeWidget(context, _coverPage, _lyricPage)
-                  : buildNormalWidget(context, _coverPage, _lyricPage),
+                  ? buildLargeWidget(context, coverPage, lyricPage)
+                  : buildNormalWidget(context, coverPage, lyricPage),
               bottomNavigationBar: const PlayerPageBottomNavigationBar(),
             )
           ],
@@ -101,7 +101,7 @@ class MusicPlayPage extends StatelessWidget {
 }
 
 class BackgroundPicture extends StatelessWidget {
-  const BackgroundPicture({Key? key}) : super(key: key);
+  const BackgroundPicture({super.key});
 
   @override
   Widget build(BuildContext context) {

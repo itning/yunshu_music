@@ -42,19 +42,19 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
   /// 通过偏移量控制歌词滑动
   double _offset = 0;
 
-  set offset(value) {
+  set offset(double value) {
     _offset = value;
     notifyListeners();
   }
 
-  get offset => _offset;
+  double get offset => _offset;
 
   //歌词位置
   int _currentLyricIndex = 0;
 
-  get currentLyricIndex => _currentLyricIndex;
+  int get currentLyricIndex => _currentLyricIndex;
 
-  set currentLyricIndex(value) {
+  set currentLyricIndex(int value) {
     _currentLyricIndex = value;
     notifyListeners();
   }
@@ -80,9 +80,9 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
   /// 滑动到的行
   int? _draggingLine;
 
-  get draggingLine => _draggingLine;
+  int? get draggingLine => _draggingLine;
 
-  set draggingLine(value) {
+  set draggingLine(int? value) {
     _draggingLine = value;
     notifyListeners();
   }
