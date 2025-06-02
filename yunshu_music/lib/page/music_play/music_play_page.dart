@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/image_fade.dart';
 import 'package:yunshu_music/hotkey/action.dart';
@@ -88,11 +88,11 @@ class MusicPlayPage extends StatelessWidget {
       onPageChanged: (index) {
         if (!kIsWeb && Platform.isAndroid) {
           if (index == 0) {
-            FlutterWindowManager.clearFlags(
-                FlutterWindowManager.FLAG_KEEP_SCREEN_ON);
+            FlutterWindowManagerPlus.clearFlags(
+                FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON);
           } else {
-            FlutterWindowManager.addFlags(
-                FlutterWindowManager.FLAG_KEEP_SCREEN_ON);
+            FlutterWindowManagerPlus.addFlags(
+                FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON);
           }
         }
       },

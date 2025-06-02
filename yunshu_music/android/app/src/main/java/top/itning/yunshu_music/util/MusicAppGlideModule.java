@@ -27,6 +27,6 @@ public class MusicAppGlideModule extends AppGlideModule {
 
     @Override
     public void registerComponents(@NonNull Context context, @NonNull Glide glide, @NonNull Registry registry) {
-        registry.replace(GlideUrl.class, InputStream.class, new OkHttpUrlLoader.Factory(HttpClient.OK_HTTP_CLIENT));
+        registry.replace(GlideUrl.class, InputStream.class, new OkHttpUrlLoader.Factory(HttpClient.getCallFactory()));
     }
 }

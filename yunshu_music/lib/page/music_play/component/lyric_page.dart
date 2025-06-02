@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_controller.dart';
@@ -25,7 +25,7 @@ class _LyricPageState extends State<LyricPage>
   @override
   void dispose() {
     if (!kIsWeb && Platform.isAndroid) {
-      FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_KEEP_SCREEN_ON);
+      FlutterWindowManagerPlus.clearFlags(FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON);
     }
     super.dispose();
   }
