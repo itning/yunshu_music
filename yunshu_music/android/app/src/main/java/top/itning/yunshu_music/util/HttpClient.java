@@ -26,6 +26,6 @@ public class HttpClient {
     }
 
     public static Call.Factory getCallFactory() {
-        return (Call.Factory) OK_HTTP_CLIENT;
+        return OK_HTTP_CLIENT;
     }
 }
