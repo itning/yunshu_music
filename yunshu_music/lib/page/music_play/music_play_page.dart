@@ -49,6 +49,12 @@ class MusicPlayPage extends StatelessWidget {
             Scaffold(
               backgroundColor: Colors.transparent,
               appBar: AppBar(
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  tooltip: '返回',
+                  color: Colors.white,
+                  onPressed: Navigator.of(context).pop,
+                ),
                 centerTitle: true,
                 title: const TitleMusicInfo(),
                 elevation: 0,
