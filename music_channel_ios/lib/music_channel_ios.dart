@@ -75,6 +75,26 @@ class MusicChannelIos extends MusicPlatform {
     _volumeController = volumeController;
     _sharedPreferences = await SharedPreferences.getInstance();
 
+    _channel.setMethodCallHandler((call) async {
+      switch (call.method) {
+        case 'playButtonTapped':
+          await play();
+          break;
+        case 'pauseButtonTapped':
+          await pause();
+          break;
+        case 'nextButtonTapped':
+          await skipToNext();
+          break;
+        case 'previousButtonTapped':
+          await skipToPrevious();
+          break;
+        default:
+      }
+    });
+
+    _channel.invokeMethod("init");
+
     _nowPlayIndex = -1;
     _playMode = valueOf(
       _sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE',
@@ -88,6 +108,10 @@ class MusicChannelIos extends MusicPlatform {
       int position = event.inMilliseconds;
       _playbackState.position = position;
       playbackStateController.sink.add(_playbackState.toMap());
+      _channel.invokeMethod("setLockScreenDisplayTime", {
+        "duration": Duration(milliseconds: _metaData.duration).inSeconds,
+        "time": event.inSeconds
+      });
     });
 
     _player.onPlayerStateChanged.listen((PlayerState event) {
@@ -108,6 +132,12 @@ class MusicChannelIos extends MusicPlatform {
             int duration = event.duration!.inMilliseconds;
             _metaData.duration = duration;
             metadataEventController.sink.add(_metaData.toMap());
+            _channel.invokeMethod("setLockScreenDisplay", {
+              "name": _nowPlayMusic!.name,
+              "singer": _nowPlayMusic!.singer,
+              "coverUri": _nowPlayMusic!.coverUri,
+              "duration": event.duration!.inSeconds
+            });
           }
         case AudioEventType.seekComplete:
           break;
@@ -120,6 +150,7 @@ class MusicChannelIos extends MusicPlatform {
           if (event.isPrepared ?? false) {
             _playbackState.state = MusicStatus.paused;
             _playbackStateController.sink.add(_playbackState.toMap());
+            _channel.invokeMethod("changeToPaused");
           }
       }
     });
@@ -136,6 +167,12 @@ class MusicChannelIos extends MusicPlatform {
     }
     _playbackState.state = MusicStatus.connecting;
     _playbackStateController.sink.add(_playbackState.toMap());
+    _channel.invokeMethod("setLockScreenDisplay", {
+      "name": _nowPlayMusic!.name,
+      "singer": _nowPlayMusic!.singer,
+      "coverUri": _nowPlayMusic!.coverUri,
+      "duration": 0
+    });
     if (autoStart) {
       _player.play(UrlSource(_nowPlayMusic!.musicUri!));
     } else {
