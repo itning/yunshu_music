@@ -43,6 +43,10 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin {
         commandCenter.changePlaybackPositionCommand.isEnabled = true
         commandCenter.changePlaybackPositionCommand.addTarget(self, action: #selector(seekToTime(_:)))
 
+        // 监听播放/暂停切换事件
+        commandCenter.togglePlayPauseCommand.isEnabled = true
+        commandCenter.togglePlayPauseCommand.addTarget(self, action: #selector(togglePlayPauseButtonTapped))
+
         result(nil)
 
      case "setLockScreenDisplay":
@@ -146,5 +150,10 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin {
       let seekTime = Int(positionEvent.positionTime)
       SwiftMusicChannelIosPlugin.channel?.invokeMethod("seekTo", arguments: ["position": seekTime])
        return MPRemoteCommandHandlerStatus.success
+  }
+
+  @objc func togglePlayPauseButtonTapped(_ event: Any) -> MPRemoteCommandHandlerStatus {
+      SwiftMusicChannelIosPlugin.channel?.invokeMethod("togglePlayPause", arguments: nil)
+      return MPRemoteCommandHandlerStatus.success
   }
 }

@@ -87,6 +87,8 @@ class MusicChannelIos extends MusicPlatform {
           await skipToPrevious();
         case "seekTo":
           await seekTo(Duration(seconds: call.arguments["position"]));
+        case 'togglePlayPause':
+          PlayerState.playing == _player.state ? await pause() : await play();
       }
     });
 
