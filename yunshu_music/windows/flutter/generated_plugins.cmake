@@ -3,8 +3,15 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  audioplayers_windows
+  music_channel_windows
+  screen_retriever_windows
+  system_tray
   url_launcher_windows
+  window_manager
+  window_size
   windows_single_instance
+  windows_taskbar
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:dart_vlc/dart_vlc.dart' hide PlaybackState;
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
@@ -31,13 +31,16 @@ class MusicChannelWindows extends MusicPlatform {
   static const String _playListKey = "PLAY_LIST";
 
   /// 播放实例
-  late Player _player;
+  late AudioPlayer _player;
 
   /// 播放元数据信息：歌曲信息，时长等。
   late StreamController<dynamic> _metadataEventController;
 
   /// 播放状态信息：是否播放，播放进度，缓冲进度
   late StreamController<dynamic> _playbackStateController;
+
+  /// 音量信息
+  late StreamController<double> _volumeController;
 
   /// 数据落地
   late SharedPreferences _sharedPreferences;
@@ -66,8 +69,6 @@ class MusicChannelWindows extends MusicPlatform {
   /// 正在播放的音乐信息
   Music? _nowPlayMusic;
 
-  bool _first = true;
-
   late SystemTray _systemTray;
 
   bool _isPlayNow = false;
@@ -76,23 +77,28 @@ class MusicChannelWindows extends MusicPlatform {
 
   @override
   Future<void> init(
-      StreamController<dynamic> metadataEventController,
-      StreamController<dynamic> playbackStateController,
-      StreamController<double> volumeController) async {
+    StreamController<dynamic> metadataEventController,
+    StreamController<dynamic> playbackStateController,
+    StreamController<double> volumeController,
+  ) async {
     setWindowTitle("云舒音乐");
     setWindowMinSize(const Size(450, 900));
 
-    this._metadataEventController = metadataEventController;
-    this._playbackStateController = playbackStateController;
+    _metadataEventController = metadataEventController;
+    _playbackStateController = playbackStateController;
+    _volumeController = volumeController;
     _sharedPreferences = await SharedPreferences.getInstance();
 
     _nowPlayIndex = -1;
-    _playMode =
-        valueOf(_sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE');
+    _playMode = valueOf(
+      _sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE',
+    );
     await windowManager.ensureInitialized();
 
-    DartVLC.initialize();
-    _player = Player(id: 69420);
+    _player = AudioPlayer(playerId: "69420");
+    _player.setReleaseMode(ReleaseMode.stop);
+    _player.setPlayerMode(PlayerMode.mediaPlayer);
+
     _systemTray = SystemTray();
 
     _menu = Menu();
@@ -102,11 +108,12 @@ class MusicChannelWindows extends MusicPlatform {
       MenuItemLabel(label: '上一曲', onClicked: (_) => skipToPrevious()),
       MenuItemLabel(label: '下一曲', onClicked: (_) => skipToNext()),
       MenuItemLabel(
-          label: '播放',
-          name: "PlayStatus",
-          onClicked: (_) {
-            _isPlayNow ? pause() : play();
-          }),
+        label: '播放',
+        name: "PlayStatus",
+        onClicked: (_) {
+          _isPlayNow ? pause() : play();
+        },
+      ),
       MenuSeparator(),
       MenuItemLabel(
         label: '退出',
@@ -118,44 +125,52 @@ class MusicChannelWindows extends MusicPlatform {
       ),
     ]);
 
-    _player.positionStream.listen((event) {
-      int position = event.position?.inMilliseconds ?? 0;
-      int duration = event.duration?.inMilliseconds ?? 0;
+    _player.onPositionChanged.listen((Duration event) {
+      int position = event.inMilliseconds;
       _playbackState.position = position;
-      _metaData.duration = duration;
-
       playbackStateController.sink.add(_playbackState.toMap());
-      metadataEventController.sink.add(_metaData.toMap());
-      WindowsTaskbar.setProgress(position, duration);
+      WindowsTaskbar.setProgress(position, _metaData.duration);
     });
 
-    _player.playbackStream.listen((event) {
-      if (_first ||
-          _playbackState.state != MusicStatus.connecting ||
-          event.isPlaying) {
-        if (_first) {
-          _first = false;
-        }
-        _playbackState.state =
-            event.isPlaying ? MusicStatus.playing : MusicStatus.paused;
-        playbackStateController.sink.add(_playbackState.toMap());
-        WindowsTaskbar.setProgressMode(event.isPlaying
-            ? TaskbarProgressMode.normal
-            : TaskbarProgressMode.paused);
-        _isPlayNow = event.isPlaying;
-        _upContextMenu();
+    _player.onPlayerStateChanged.listen((PlayerState event) {
+      if (PlayerState.completed == event) {
+        return;
       }
-      if (event.isCompleted) {
-        _playbackState.state = MusicStatus.none;
-        playbackStateController.sink.add(_playbackState.toMap());
-        WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
-        next(false);
-        initPlay(autoStart: true);
-      }
+      bool playing = PlayerState.playing == event;
+      _playbackState.state = playing ? MusicStatus.playing : MusicStatus.paused;
+      playbackStateController.sink.add(_playbackState.toMap());
+      WindowsTaskbar.setProgressMode(
+        playing ? TaskbarProgressMode.normal : TaskbarProgressMode.paused,
+      );
+      _isPlayNow = playing;
+      _upContextMenu();
     });
 
-    _player.generalStream.listen((event) {
-      volumeController.sink.add(event.volume);
+    _player.eventStream.listen((AudioEvent event) {
+      switch (event.eventType) {
+        case AudioEventType.log:
+          break;
+        case AudioEventType.duration:
+          if (null != event.duration) {
+            int duration = event.duration!.inMilliseconds;
+            _metaData.duration = duration;
+            metadataEventController.sink.add(_metaData.toMap());
+            WindowsTaskbar.setProgress(_playbackState.position, duration);
+          }
+        case AudioEventType.seekComplete:
+          break;
+        case AudioEventType.complete:
+          _playbackState.state = MusicStatus.none;
+          playbackStateController.sink.add(_playbackState.toMap());
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
+          next(false);
+          initPlay(autoStart: true);
+        case AudioEventType.prepared:
+          if (event.isPrepared ?? false) {
+            _playbackState.state = MusicStatus.paused;
+            _playbackStateController.sink.add(_playbackState.toMap());
+          }
+      }
     });
 
     _playbackState.state = MusicStatus.none;
@@ -172,7 +187,8 @@ class MusicChannelWindows extends MusicPlatform {
         _systemTray.popUpContextMenu();
       } else if (eventName == kSystemTrayEventClick) {
         windowManager.isVisible().then(
-            (visible) => visible ? windowManager.hide() : windowManager.show());
+          (visible) => visible ? windowManager.hide() : windowManager.show(),
+        );
       }
     });
   }
@@ -193,9 +209,14 @@ class MusicChannelWindows extends MusicPlatform {
     _playbackState.state = MusicStatus.connecting;
     _playbackStateController.sink.add(_playbackState.toMap());
     WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
-    _player.open(Media.network(_nowPlayMusic!.musicUri!), autoStart: autoStart);
+    if (autoStart) {
+      _player.play(UrlSource(_nowPlayMusic!.musicUri!));
+    } else {
+      _player.setSourceUrl(_nowPlayMusic!.musicUri!);
+    }
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
+    setWindowTitle("${_metaData.title}-${_metaData.subTitle}");
     _systemTray.setToolTip('${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}');
   }
 
@@ -216,7 +237,7 @@ class MusicChannelWindows extends MusicPlatform {
 
   @override
   Future<void> play() async {
-    _player.play();
+    _player.resume();
   }
 
   @override
@@ -260,11 +281,13 @@ class MusicChannelWindows extends MusicPlatform {
   @override
   Future<List<dynamic>> getPlayList() async {
     return _playList
-        .map((e) => {
-              'title': e.name ?? '',
-              'subTitle': e.singer ?? '',
-              'mediaId': e.musicId ?? ''
-            })
+        .map(
+          (e) => {
+            'title': e.name ?? '',
+            'subTitle': e.singer ?? '',
+            'mediaId': e.musicId ?? '',
+          },
+        )
         .toList();
   }
 
@@ -275,7 +298,9 @@ class MusicChannelWindows extends MusicPlatform {
     }
     _playList.removeWhere((element) => mediaId == element.musicId);
     _sharedPreferences.setStringList(
-        _playListKey, _playList.map((e) => e.musicId!).toList());
+      _playListKey,
+      _playList.map((e) => e.musicId!).toList(),
+    );
   }
 
   @override
@@ -285,7 +310,9 @@ class MusicChannelWindows extends MusicPlatform {
       _playList.add(_nowPlayMusic!);
       _nowPlayIndex = 0;
       _sharedPreferences.setStringList(
-          _playListKey, _playList.map((e) => e.musicId!).toList());
+        _playListKey,
+        _playList.map((e) => e.musicId!).toList(),
+      );
     } else {
       _nowPlayIndex = -1;
       _sharedPreferences.remove(_playListKey);
@@ -294,7 +321,8 @@ class MusicChannelWindows extends MusicPlatform {
 
   @override
   Future<void> setVolume(double value) async {
-    _player.setVolume(value);
+    await _player.setVolume(value);
+    _volumeController.sink.add(_player.volume);
   }
 
   void addMusic(List<Music> data) {
@@ -348,7 +376,9 @@ class MusicChannelWindows extends MusicPlatform {
       _nowPlayIndex = playListIndex;
     }
     _sharedPreferences.setStringList(
-        _playListKey, _playList.map((e) => e.musicId!).toList());
+      _playListKey,
+      _playList.map((e) => e.musicId!).toList(),
+    );
     _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 
@@ -385,7 +415,9 @@ class MusicChannelWindows extends MusicPlatform {
       _nowPlayMusic = _playList[_nowPlayIndex];
     }
     _sharedPreferences.setStringList(
-        _playListKey, _playList.map((e) => e.musicId!).toList());
+      _playListKey,
+      _playList.map((e) => e.musicId!).toList(),
+    );
     _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 
@@ -422,7 +454,9 @@ class MusicChannelWindows extends MusicPlatform {
       _nowPlayMusic = _playList[_nowPlayIndex];
     }
     _sharedPreferences.setStringList(
-        _playListKey, _playList.map((e) => e.musicId!).toList());
+      _playListKey,
+      _playList.map((e) => e.musicId!).toList(),
+    );
     _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 
