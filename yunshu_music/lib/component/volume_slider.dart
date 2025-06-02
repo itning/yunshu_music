@@ -11,11 +11,7 @@ class VolumeSlider extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        const Icon(
-          Icons.volume_mute,
-          size: 20.0,
-          color: Colors.white,
-        ),
+        const Icon(Icons.volume_mute, size: 20.0, color: Colors.white),
         Selector<VolumeDataModel, double>(
           builder: (_, value, _) {
             return Slider(
@@ -31,11 +27,7 @@ class VolumeSlider extends StatelessWidget {
           },
           selector: (_, model) => model.volume,
         ),
-        const Icon(
-          Icons.volume_up,
-          size: 20.0,
-          color: Colors.white,
-        ),
+        const Icon(Icons.volume_up, size: 20.0, color: Colors.white),
       ],
     );
   }

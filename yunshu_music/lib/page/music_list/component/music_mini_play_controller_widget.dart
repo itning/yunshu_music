@@ -46,8 +46,8 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                           if (value == null) {
                             return RotateCoverImageWidget(
                               image: Image.asset(
-                                      'asserts/images/default_cover.jpg')
-                                  .image,
+                                'asserts/images/default_cover.jpg',
+                              ).image,
                               width: 52,
                               height: 52,
                               duration: const Duration(seconds: 20),
@@ -67,12 +67,16 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                       selector: (_, data) => data.getNowPlayMusic(),
                       builder: (_, music, _) {
                         if (null == music) {
-                          return const Text('云舒音乐',
-                              overflow: TextOverflow.ellipsis);
+                          return const Text(
+                            '云舒音乐',
+                            overflow: TextOverflow.ellipsis,
+                          );
                         }
                         return Expanded(
-                          child: Text('${music.name}-${music.singer}',
-                              overflow: TextOverflow.ellipsis),
+                          child: Text(
+                            '${music.name}-${music.singer}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         );
                       },
                     ),
@@ -104,8 +108,8 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                               icon: const Icon(Icons.pause),
                               tooltip: '暂停',
                               onPressed: () {
-                                PlayStatusModel playStatusModel =
-                                    context.read<PlayStatusModel>();
+                                PlayStatusModel playStatusModel = context
+                                    .read<PlayStatusModel>();
                                 playStatusModel.setPlay(false);
                               },
                             )
@@ -113,8 +117,8 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                               icon: const Icon(Icons.play_arrow),
                               tooltip: '播放',
                               onPressed: () {
-                                PlayStatusModel playStatusModel =
-                                    context.read<PlayStatusModel>();
+                                PlayStatusModel playStatusModel = context
+                                    .read<PlayStatusModel>();
                                 playStatusModel.setPlay(true);
                               },
                             );

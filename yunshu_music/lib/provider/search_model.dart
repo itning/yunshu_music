@@ -35,8 +35,9 @@ class SearchModel extends ChangeNotifier {
 
   Future<void> _innerSearch(String keyword) async {
     List<MusicData> result = MusicDataModel.get().search(keyword);
-    SearchResultEntity? searchResultEntity =
-        await HttpHelper.get().search(keyword);
+    SearchResultEntity? searchResultEntity = await HttpHelper.get().search(
+      keyword,
+    );
     // 合并
     List<SearchResultData> data = searchResultEntity?.data ?? [];
     List<SearchResultItem> list = [
@@ -45,7 +46,7 @@ class SearchModel extends ChangeNotifier {
           .toList()),
       ...(data
           .map((item) => SearchResultItem.fromSearchResultData(item))
-          .toList())
+          .toList()),
     ];
     _searchResults = list;
     notifyListeners();
@@ -65,43 +66,47 @@ class SearchResultItem {
   List<String>? highlightFields;
 
   SearchResultItem(
-      this.fromLyric,
-      this.musicId,
-      this.name,
-      this.singer,
-      this.lyricId,
-      this.type,
-      this.musicUri,
-      this.lyricUri,
-      this.coverUri,
-      this.highlightFields);
+    this.fromLyric,
+    this.musicId,
+    this.name,
+    this.singer,
+    this.lyricId,
+    this.type,
+    this.musicUri,
+    this.lyricUri,
+    this.coverUri,
+    this.highlightFields,
+  );
 
   static SearchResultItem fromMusicDataContent(MusicData musicDataContent) {
     return SearchResultItem(
-        false,
-        musicDataContent.musicId,
-        musicDataContent.name,
-        musicDataContent.singer,
-        musicDataContent.lyricId,
-        musicDataContent.type,
-        musicDataContent.musicUri,
-        musicDataContent.lyricUri,
-        musicDataContent.coverUri,
-        null);
+      false,
+      musicDataContent.musicId,
+      musicDataContent.name,
+      musicDataContent.singer,
+      musicDataContent.lyricId,
+      musicDataContent.type,
+      musicDataContent.musicUri,
+      musicDataContent.lyricUri,
+      musicDataContent.coverUri,
+      null,
+    );
   }
 
   static SearchResultItem fromSearchResultData(
-      SearchResultData searchResultData) {
+    SearchResultData searchResultData,
+  ) {
     return SearchResultItem(
-        true,
-        searchResultData.musicId,
-        searchResultData.name,
-        searchResultData.singer,
-        searchResultData.lyricId,
-        searchResultData.type,
-        searchResultData.musicUri,
-        searchResultData.lyricUri,
-        searchResultData.coverUri,
-        searchResultData.highlightFields);
+      true,
+      searchResultData.musicId,
+      searchResultData.name,
+      searchResultData.singer,
+      searchResultData.lyricId,
+      searchResultData.type,
+      searchResultData.musicUri,
+      searchResultData.lyricUri,
+      searchResultData.coverUri,
+      searchResultData.highlightFields,
+    );
   }
 }

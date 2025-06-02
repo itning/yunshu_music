@@ -45,7 +45,7 @@ class SettingModel extends ChangeNotifier {
     this.sharedPreferences = sharedPreferences;
     _router2PlayPageWhenClickPlayListItem =
         sharedPreferences.getBool(_router2PlayPageWhenClickPlayListItemKey) ??
-            true;
+        true;
     _playPageAutoChangeLargeMode =
         sharedPreferences.getBool(_playPageAutoChangeLargeModeKey) ?? true;
 
@@ -58,7 +58,9 @@ class SettingModel extends ChangeNotifier {
 
   Future<void> setRouter2PlayPageWhenClickPlayListItem(bool enabled) async {
     await sharedPreferences.setBool(
-        _router2PlayPageWhenClickPlayListItemKey, enabled);
+      _router2PlayPageWhenClickPlayListItemKey,
+      enabled,
+    );
     _router2PlayPageWhenClickPlayListItem = enabled;
     notifyListeners();
   }

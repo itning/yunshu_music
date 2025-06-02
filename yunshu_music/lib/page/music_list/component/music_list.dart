@@ -33,8 +33,10 @@ class _MusicListState extends State<MusicList> {
       return;
     }
     if (!mounted) {
-      MotionToast.error(title: const Text("错误"), description: Text(message))
-          .show(context);
+      MotionToast.error(
+        title: const Text("错误"),
+        description: Text(message),
+      ).show(context);
       return;
     }
     final snackBar = SnackBar(content: Text(message));
@@ -58,9 +60,9 @@ class _MusicListState extends State<MusicList> {
         .refreshMusicList(needInit: true)
         .then(message)
         .onError((error, stackTrace) {
-      message(error.toString());
-      LogHelper.get().error('刷新歌曲列表失败', error, stackTrace);
-    });
+          message(error.toString());
+          LogHelper.get().error('刷新歌曲列表失败', error, stackTrace);
+        });
   }
 
   @override
@@ -78,43 +80,46 @@ class _MusicListState extends State<MusicList> {
           .refreshMusicList()
           .then(message)
           .onError((error, stackTrace) {
-        message(error.toString());
-        LogHelper.get().error(error, stackTrace);
-      }),
+            message(error.toString());
+            LogHelper.get().error(error, stackTrace);
+          }),
       child: Stack(
         children: [
           Selector<MusicDataModel, List<MusicData>>(
-              selector: (_, model) => model.musicList,
-              builder: (BuildContext context, musicList, Widget? child) {
-                if (musicList.isEmpty) {
-                  return const _InnerShimmer();
-                }
-                return ScrollConfiguration(
-                  behavior:
-                      ScrollConfiguration.of(context).copyWith(dragDevices: {
+            selector: (_, model) => model.musicList,
+            builder: (BuildContext context, musicList, Widget? child) {
+              if (musicList.isEmpty) {
+                return const _InnerShimmer();
+              }
+              return ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  dragDevices: {
                     PointerDeviceKind.touch,
                     PointerDeviceKind.mouse,
-                  }),
-                  child: Scrollbar(
+                  },
+                ),
+                child: Scrollbar(
+                  controller: _scrollController,
+                  child: ListView.builder(
                     controller: _scrollController,
-                    child: ListView.builder(
-                        controller: _scrollController,
-                        itemExtent: 55.0,
-                        itemCount: musicList.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          MusicData music = musicList[index];
-                          return _InnerListItem(
-                            index: index,
-                            name: music.name ?? '',
-                            singer: music.singer ?? '',
-                            musicId: music.musicId ?? '',
-                            lyricId: music.lyricId ?? '',
-                            musicUri: music.musicUri ?? '',
-                          );
-                        }),
+                    itemExtent: 55.0,
+                    itemCount: musicList.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      MusicData music = musicList[index];
+                      return _InnerListItem(
+                        index: index,
+                        name: music.name ?? '',
+                        singer: music.singer ?? '',
+                        musicId: music.musicId ?? '',
+                        lyricId: music.lyricId ?? '',
+                        musicUri: music.musicUri ?? '',
+                      );
+                    },
                   ),
-                );
-              }),
+                ),
+              );
+            },
+          ),
           Positioned(
             right: 16.0,
             bottom: 16.0,
@@ -122,23 +127,24 @@ class _MusicListState extends State<MusicList> {
               selector: (_, model) => model.visible,
               builder: (BuildContext context, visible, Widget? child) =>
                   AnimatedOpacity(
-                duration: const Duration(milliseconds: 300),
-                opacity: visible ? 1.0 : 0.0,
-                child: FloatingActionButton.small(
-                  tooltip: '定位歌曲位置',
-                  onPressed: () {
-                    if (visible) {
-                      _scrollController.animateTo(
-                          MusicDataModel.get().nowMusicIndex * 55.0,
-                          duration: const Duration(seconds: 1),
-                          curve: Curves.easeOut);
-                    }
-                  },
-                  child: const Icon(Icons.gps_fixed),
-                ),
-              ),
+                    duration: const Duration(milliseconds: 300),
+                    opacity: visible ? 1.0 : 0.0,
+                    child: FloatingActionButton.small(
+                      tooltip: '定位歌曲位置',
+                      onPressed: () {
+                        if (visible) {
+                          _scrollController.animateTo(
+                            MusicDataModel.get().nowMusicIndex * 55.0,
+                            duration: const Duration(seconds: 1),
+                            curve: Curves.easeOut,
+                          );
+                        }
+                      },
+                      child: const Icon(Icons.gps_fixed),
+                    ),
+                  ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -153,13 +159,14 @@ class _InnerListItem extends StatelessWidget {
   final String lyricId;
   final String musicUri;
 
-  const _InnerListItem(
-      {required this.index,
-      required this.name,
-      required this.singer,
-      required this.musicId,
-      required this.lyricId,
-      required this.musicUri});
+  const _InnerListItem({
+    required this.index,
+    required this.name,
+    required this.singer,
+    required this.musicId,
+    required this.lyricId,
+    required this.musicUri,
+  });
 
   Future<bool?> showDeleteConfirmDialog(BuildContext context) {
     return showDialog<bool>(
@@ -194,22 +201,30 @@ class _InnerListItem extends StatelessWidget {
         if (context.read<SettingModel>().router2PlayPageWhenClickPlayListItem) {
           context.push('/musicPlay');
         }
-        Provider.of<MusicDataModel>(context, listen: false)
-            .setNowPlayMusicUseMusicId(musicId);
+        Provider.of<MusicDataModel>(
+          context,
+          listen: false,
+        ).setNowPlayMusicUseMusicId(musicId);
       },
       onLongPress: () {
-        Clipboard.setData(ClipboardData(text: "$name-$singer")).then((_) =>
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content:
-                  Text('复制成功', style: TextStyle(fontFamily: 'LXGWWenKaiMono')),
+        Clipboard.setData(ClipboardData(text: "$name-$singer")).then(
+          (_) => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                '复制成功',
+                style: TextStyle(fontFamily: 'LXGWWenKaiMono'),
+              ),
               duration: Duration(seconds: 1),
-            )));
+            ),
+          ),
+        );
       },
       rightButtonTap: () {
         showModalBottomSheet(
           context: context,
           shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          ),
           isScrollControlled: true, // set this to true
           builder: (_) {
             return DraggableScrollableSheet(
@@ -275,12 +290,12 @@ class _InnerListItem extends StatelessWidget {
                             CacheModel.get()
                                 .deleteMusicCacheByMusicId(musicId, musicUri)
                                 .then((value) {
-                              if (value) {
-                                // Fluttertoast.showToast(msg: "删除歌曲缓存成功");
-                              } else {
-                                // Fluttertoast.showToast(msg: "缓存不存在");
-                              }
-                            });
+                                  if (value) {
+                                    // Fluttertoast.showToast(msg: "删除歌曲缓存成功");
+                                  } else {
+                                    // Fluttertoast.showToast(msg: "缓存不存在");
+                                  }
+                                });
                           }
                         });
                       },
@@ -323,7 +338,8 @@ class _InnerShimmer extends StatelessWidget {
         children: <Widget>[
           Expanded(
             child: Shimmer.fromColors(
-              baseColor: Theme.of(context).dialogTheme.backgroundColor ?? Colors.black,
+              baseColor:
+                  Theme.of(context).dialogTheme.backgroundColor ?? Colors.black,
               highlightColor: Theme.of(context).highlightColor,
               child: ListView.builder(
                 physics: const NeverScrollableScrollPhysics(),

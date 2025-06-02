@@ -37,8 +37,10 @@ class MusicPlayPage extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             ColorFiltered(
-              colorFilter:
-                  const ColorFilter.mode(Colors.grey, BlendMode.modulate),
+              colorFilter: const ColorFilter.mode(
+                Colors.grey,
+                BlendMode.modulate,
+              ),
               child: ImageFiltered(
                 imageFilter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
                 child: const BackgroundPicture(),
@@ -56,7 +58,7 @@ class MusicPlayPage extends StatelessWidget {
                   ? buildLargeWidget(context, coverPage, lyricPage)
                   : buildNormalWidget(context, coverPage, lyricPage),
               bottomNavigationBar: const PlayerPageBottomNavigationBar(),
-            )
+            ),
           ],
         ),
       ),
@@ -64,19 +66,27 @@ class MusicPlayPage extends StatelessWidget {
   }
 
   Widget buildLargeWidget(
-      BuildContext context, CoverPage coverPage, LyricPage lyricPage) {
+    BuildContext context,
+    CoverPage coverPage,
+    LyricPage lyricPage,
+  ) {
     return Row(
-      children: [Expanded(child: coverPage), Expanded(child: lyricPage)],
+      children: [
+        Expanded(child: coverPage),
+        Expanded(child: lyricPage),
+      ],
     );
   }
 
   Widget buildNormalWidget(
-      BuildContext context, CoverPage coverPage, LyricPage lyricPage) {
+    BuildContext context,
+    CoverPage coverPage,
+    LyricPage lyricPage,
+  ) {
     return PageView.builder(
-      scrollBehavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-      }),
+      scrollBehavior: ScrollConfiguration.of(context).copyWith(
+        dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+      ),
       itemCount: 2,
       itemBuilder: (BuildContext context, int index) {
         if (index == 0) {
@@ -89,10 +99,12 @@ class MusicPlayPage extends StatelessWidget {
         if (!kIsWeb && Platform.isAndroid) {
           if (index == 0) {
             FlutterWindowManagerPlus.clearFlags(
-                FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON);
+              FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON,
+            );
           } else {
             FlutterWindowManagerPlus.addFlags(
-                FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON);
+              FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON,
+            );
           }
         }
       },
@@ -105,8 +117,9 @@ class BackgroundPicture extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Uint8List? coverBase64 = context
-        .select<MusicDataModel, Uint8List?>((value) => value.coverBase64);
+    Uint8List? coverBase64 = context.select<MusicDataModel, Uint8List?>(
+      (value) => value.coverBase64,
+    );
     return ImageFade(
       excludeFromSemantics: true,
       fit: BoxFit.cover,

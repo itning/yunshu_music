@@ -12,12 +12,13 @@ class RotateCoverImageWidget extends StatefulWidget {
   final ImageProvider image;
   final Duration duration;
 
-  const RotateCoverImageWidget(
-      {super.key,
-      required this.width,
-      required this.height,
-      required this.image,
-      required this.duration});
+  const RotateCoverImageWidget({
+    super.key,
+    required this.width,
+    required this.height,
+    required this.image,
+    required this.duration,
+  });
 
   @override
   State<RotateCoverImageWidget> createState() => _RotateCoverImageWidgetState();
@@ -31,8 +32,10 @@ class _RotateCoverImageWidgetState extends State<RotateCoverImageWidget>
   @override
   void initState() {
     super.initState();
-    _coverController =
-        AnimationController(duration: widget.duration, vsync: this);
+    _coverController = AnimationController(
+      duration: widget.duration,
+      vsync: this,
+    );
   }
 
   @override
@@ -45,7 +48,9 @@ class _RotateCoverImageWidgetState extends State<RotateCoverImageWidget>
   Widget build(BuildContext context) {
     return Selector<PlayStatusModel, bool>(
       builder: (_, value, Widget? child) {
-        final enableRotation = context.read<SettingModel>().enableMusicCoverRotating;
+        final enableRotation = context
+            .read<SettingModel>()
+            .enableMusicCoverRotating;
         if (enableRotation) {
           value ? _coverController.repeat() : _coverController.stop();
         } else {

@@ -11,8 +11,9 @@ MusicEntity $MusicEntityFromJson(Map<String, dynamic> json) {
   if (msg != null) {
     musicEntity.msg = msg;
   }
-  final List<MusicData>? data =
-      jsonConvert.convertListNotNull<MusicData>(json['data']);
+  final List<MusicData>? data = jsonConvert.convertListNotNull<MusicData>(
+    json['data'],
+  );
   if (data != null) {
     musicEntity.data = data;
   }

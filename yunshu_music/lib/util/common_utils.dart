@@ -14,13 +14,15 @@ import 'package:yunshu_music/util/log_console.dart';
 class LogHelper {
   static final Logger _logger = Logger(
     output: LogConsole.wrap(
-        // 非web 并且 是 windows或者mac平台 并且不是debug模式
-        innerOutput: (!kIsWeb &&
-                (Platform.isWindows || Platform.isMacOS) &&
-                !kDebugMode)
-            ? MultiOutput(
-                [ConsoleOutput(), FileOutput(file: File("./yunshu_music.log"))])
-            : ConsoleOutput()),
+      // 非web 并且 是 windows或者mac平台 并且不是debug模式
+      innerOutput:
+          (!kIsWeb && (Platform.isWindows || Platform.isMacOS) && !kDebugMode)
+          ? MultiOutput([
+              ConsoleOutput(),
+              FileOutput(file: File("./yunshu_music.log")),
+            ])
+          : ConsoleOutput(),
+    ),
     filter: ProductionFilter(),
     printer: SimplePrinter(printTime: true),
   );
@@ -106,8 +108,9 @@ Route createRoute(Widget page) {
 
 /// 根据[keyword]搜索[rawString]中存在的字符串索引，返回值item1指起始位置；item2指结束位置
 List<Tuple2<int, int>> search(String rawString, String keyword) {
-  Iterable<Match> matchIterable =
-      keyword.toLowerCase().allMatches(rawString.toLowerCase());
+  Iterable<Match> matchIterable = keyword.toLowerCase().allMatches(
+    rawString.toLowerCase(),
+  );
   return List.generate(matchIterable.length, (index) {
     Match match = matchIterable.elementAt(index);
     return Tuple2(match.start, match.end);
@@ -116,7 +119,9 @@ List<Tuple2<int, int>> search(String rawString, String keyword) {
 
 /// 高亮显示（红色）字符在字符串中的文字
 List<TextSpan> highlight(
-    String rawString, List<Tuple2<int, int>> highlightList) {
+  String rawString,
+  List<Tuple2<int, int>> highlightList,
+) {
   List<TextSpan> result = [];
   int nextIndex = 0;
   for (int i = 0; i <= highlightList.length; i++) {
@@ -133,9 +138,12 @@ List<TextSpan> highlight(
       result.add(TextSpan(text: start));
     }
     if (h != '') {
-      result.add(TextSpan(
+      result.add(
+        TextSpan(
           text: h.replaceAll(RegExp(r'<em>|</em>'), ''),
-          style: const TextStyle(color: Colors.red)));
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
     }
   }
   return result;
@@ -149,11 +157,12 @@ List<TextSpan> highlightEmTag(String? content) {
   RegExp exp = RegExp(r'<em.[^>]*>');
   Iterable<Match> matchIterable = exp.allMatches(content);
   return highlight(
-      content,
-      List.generate(matchIterable.length, (index) {
-        Match match = matchIterable.elementAt(index);
-        return Tuple2(match.start, match.end);
-      }));
+    content,
+    List.generate(matchIterable.length, (index) {
+      Match match = matchIterable.elementAt(index);
+      return Tuple2(match.start, match.end);
+    }),
+  );
 }
 
 /// 显示播放列表
@@ -161,7 +170,8 @@ void showPlayList(BuildContext context) {
   showModalBottomSheet(
     context: context,
     shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+    ),
     isScrollControlled: true, // set this to true
     builder: (_) {
       return FutureBuilder(
@@ -173,9 +183,7 @@ void showPlayList(BuildContext context) {
                 maxChildSize: 0.5,
                 expand: false,
                 builder: (_, controller) {
-                  return const Center(
-                    child: Text('播放列表为空'),
-                  );
+                  return const Center(child: Text('播放列表为空'));
                 },
               );
             }
@@ -194,9 +202,7 @@ void showPlayList(BuildContext context) {
             maxChildSize: 0.5,
             expand: false,
             builder: (_, controller) {
-              return const Center(
-                child: Text('加载中...'),
-              );
+              return const Center(child: Text('加载中...'));
             },
           );
         },
@@ -215,120 +221,124 @@ class _PlayList extends StatelessWidget {
   Widget build(BuildContext context) {
     List<dynamic> reversed = data.reversed.toList();
     return ListView.builder(
-        controller: scrollController,
-        itemCount: reversed.length + 1,
-        itemBuilder: (BuildContext context, int index) {
-          if (index == 0) {
-            return Column(
-              children: [
-                Container(
-                  alignment: AlignmentDirectional.center,
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: const Text('播放列表'),
-                ),
-                Container(
-                  padding: const EdgeInsetsDirectional.only(end: 18.0),
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: IconButton(
-                    tooltip: '清空播放列表',
-                    icon: const Icon(Icons.delete_forever),
-                    onPressed: () async {
-                      bool status = await showDialog(
-                        barrierDismissible: false,
-                        context: context,
-                        builder: (_) {
-                          return AlertDialog(
-                              title: const Text('提示'),
-                              content: const Text('确定清空播放列表？'),
-                              actions: <Widget>[
-                                TextButton(
-                                  child: const Text('取消'),
-                                  onPressed: () {
-                                    Navigator.pop(context, false);
-                                  },
-                                ),
-                                TextButton(
-                                  child: const Text('确认'),
-                                  onPressed: () {
-                                    MusicChannel.get().clearPlayList();
-                                    Navigator.pop(context, true);
-                                  },
-                                ),
-                              ]);
-                        },
-                      );
-                      if (status) {
-                        Navigator.pop(context);
-                      }
-                    },
-                  ),
-                ),
-              ],
-            );
-          }
-          index -= 1;
-          return Dismissible(
-            key: Key(reversed[index]['mediaId']),
-            onDismissed: (DismissDirection direction) {
-              MusicChannel.get()
-                  .delPlayListByMediaId(reversed[index]['mediaId']);
-            },
-            child: InkWell(
-              onTap: () {
-                context
-                    .read<MusicDataModel>()
-                    .setNowPlayMusicUseMusicId(reversed[index]['mediaId']);
-                Navigator.pop(context);
-              },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                child: Flex(
-                  direction: Axis.horizontal,
-                  children: [
-                    Expanded(
-                        flex: 2,
-                        child: Selector<MusicDataModel, String?>(
-                          builder:
-                              (BuildContext context, musicId, Widget? child) {
-                            if (musicId != reversed[index]['mediaId']) {
-                              return Text(
-                                '${reversed.length - index}',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.grey),
-                              );
-                            } else {
-                              return const Icon(Icons.equalizer,
-                                  color: Colors.black);
-                            }
-                          },
-                          selector: (_, model) =>
-                              model.getNowPlayMusic()?.musicId,
-                        )),
-                    Expanded(
-                      flex: 13,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${reversed[index]['title']}',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 16.0),
-                          ),
-                          Text(
-                            '${reversed[index]['subTitle']}',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 12.0, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+      controller: scrollController,
+      itemCount: reversed.length + 1,
+      itemBuilder: (BuildContext context, int index) {
+        if (index == 0) {
+          return Column(
+            children: [
+              Container(
+                alignment: AlignmentDirectional.center,
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: const Text('播放列表'),
+              ),
+              Container(
+                padding: const EdgeInsetsDirectional.only(end: 18.0),
+                alignment: AlignmentDirectional.centerEnd,
+                child: IconButton(
+                  tooltip: '清空播放列表',
+                  icon: const Icon(Icons.delete_forever),
+                  onPressed: () async {
+                    bool status = await showDialog(
+                      barrierDismissible: false,
+                      context: context,
+                      builder: (_) {
+                        return AlertDialog(
+                          title: const Text('提示'),
+                          content: const Text('确定清空播放列表？'),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('取消'),
+                              onPressed: () {
+                                Navigator.pop(context, false);
+                              },
+                            ),
+                            TextButton(
+                              child: const Text('确认'),
+                              onPressed: () {
+                                MusicChannel.get().clearPlayList();
+                                Navigator.pop(context, true);
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                    if (status) {
+                      Navigator.pop(context);
+                    }
+                  },
                 ),
               ),
-            ),
+            ],
           );
-        });
+        }
+        index -= 1;
+        return Dismissible(
+          key: Key(reversed[index]['mediaId']),
+          onDismissed: (DismissDirection direction) {
+            MusicChannel.get().delPlayListByMediaId(reversed[index]['mediaId']);
+          },
+          child: InkWell(
+            onTap: () {
+              context.read<MusicDataModel>().setNowPlayMusicUseMusicId(
+                reversed[index]['mediaId'],
+              );
+              Navigator.pop(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+              child: Flex(
+                direction: Axis.horizontal,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Selector<MusicDataModel, String?>(
+                      builder: (BuildContext context, musicId, Widget? child) {
+                        if (musicId != reversed[index]['mediaId']) {
+                          return Text(
+                            '${reversed.length - index}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.grey),
+                          );
+                        } else {
+                          return const Icon(
+                            Icons.equalizer,
+                            color: Colors.black,
+                          );
+                        }
+                      },
+                      selector: (_, model) => model.getNowPlayMusic()?.musicId,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 13,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${reversed[index]['title']}',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 16.0),
+                        ),
+                        Text(
+                          '${reversed[index]['subTitle']}',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12.0,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
