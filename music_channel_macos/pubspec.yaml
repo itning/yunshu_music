@@ -4,27 +4,27 @@ version: 0.0.1
 homepage:
 
 environment:
-  sdk: ">=2.16.2 <3.0.0"
-  flutter: ">=2.5.0"
+  sdk: ^3.8.1
+  flutter: '>=3.3.0'
 
 dependencies:
   flutter:
     sdk: flutter
   music_platform_interface:
     path: ../music_platform_interface
-  just_audio: ^0.9.32
   window_size:
     git:
       url: https://github.com/google/flutter-desktop-embedding.git
       path: plugins/window_size
-  shared_preferences: ^2.0.20
+  shared_preferences: ^2.5.3
   system_tray: ^2.0.3
-  window_manager: 0.3.7
+  window_manager: ^0.5.0
+  audioplayers: ^6.4.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.1
+  flutter_lints: ^6.0.0
 
 flutter:
   plugin:
