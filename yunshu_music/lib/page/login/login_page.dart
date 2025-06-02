@@ -18,9 +18,7 @@ class _LoginPageState extends State<LoginPage> {
     String? baseUrl = LoginModel.get().getBaseUrl();
     _controller.text = baseUrl ?? '';
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('设置音乐源'),
-      ),
+      appBar: AppBar(title: const Text('设置音乐源')),
       body: Form(
         key: _formKey,
         autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -49,8 +47,11 @@ class _LoginPageState extends State<LoginPage> {
               },
             ),
             Padding(
-              padding:
-                  const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0),
+              padding: const EdgeInsets.only(
+                top: 12.0,
+                left: 12.0,
+                right: 12.0,
+              ),
               child: SizedBox(
                 height: 35,
                 width: double.infinity,
@@ -59,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: const Text('设置'),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

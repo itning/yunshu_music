@@ -11,8 +11,8 @@ SearchResultEntity $SearchResultEntityFromJson(Map<String, dynamic> json) {
   if (msg != null) {
     searchResultEntity.msg = msg;
   }
-  final List<SearchResultData>? data =
-      jsonConvert.convertListNotNull<SearchResultData>(json['data']);
+  final List<SearchResultData>? data = jsonConvert
+      .convertListNotNull<SearchResultData>(json['data']);
   if (data != null) {
     searchResultEntity.data = data;
   }
@@ -61,8 +61,9 @@ SearchResultData $SearchResultDataFromJson(Map<String, dynamic> json) {
   if (coverUri != null) {
     searchResultData.coverUri = coverUri;
   }
-  final List<String>? highlightFields =
-      jsonConvert.convertListNotNull<String>(json['highlightFields']);
+  final List<String>? highlightFields = jsonConvert.convertListNotNull<String>(
+    json['highlightFields'],
+  );
   if (highlightFields != null) {
     searchResultData.highlightFields = highlightFields;
   }

@@ -18,12 +18,12 @@ class TitleMusicInfo extends StatelessWidget {
           children: [
             Text(
               value.name ?? '',
-              style: const TextStyle(fontSize: 18.0),
+              style: const TextStyle(fontSize: 18.0, color: Colors.white),
               overflow: TextOverflow.ellipsis,
             ),
             Text(
               value.singer ?? '',
-              style: const TextStyle(fontSize: 10.0),
+              style: const TextStyle(fontSize: 10.0, color: Colors.white),
               overflow: TextOverflow.ellipsis,
             ),
           ],

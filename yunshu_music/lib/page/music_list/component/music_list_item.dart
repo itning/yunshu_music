@@ -12,15 +12,16 @@ class MusicListItem extends StatelessWidget {
   final GestureLongPressCallback? onLongPress;
   final VoidCallback? rightButtonTap;
 
-  const MusicListItem(
-      {super.key,
-      required this.index,
-      this.title,
-      this.subTitle,
-      this.rightButtonIcon,
-      this.onTap,
-      this.onLongPress,
-      this.rightButtonTap});
+  const MusicListItem({
+    super.key,
+    required this.index,
+    this.title,
+    this.subTitle,
+    this.rightButtonIcon,
+    this.onTap,
+    this.onLongPress,
+    this.rightButtonTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +33,7 @@ class MusicListItem extends StatelessWidget {
         child: Flex(
           direction: Axis.horizontal,
           children: [
-            Expanded(
-              flex: 2,
-              child: _MusicListItemIndex(index: index),
-            ),
+            Expanded(flex: 2, child: _MusicListItemIndex(index: index)),
             Expanded(
               flex: 11,
               child: Column(

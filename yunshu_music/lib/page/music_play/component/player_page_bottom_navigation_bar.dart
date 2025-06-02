@@ -11,10 +11,7 @@ class PlayerPageBottomNavigationBar extends StatelessWidget {
       height: 112.0,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          PlayerPageProgress(),
-          PlayerPageController(),
-        ],
+        children: const [PlayerPageProgress(), PlayerPageController()],
       ),
     );
   }

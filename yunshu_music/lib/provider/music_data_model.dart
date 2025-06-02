@@ -130,8 +130,9 @@ class MusicDataModel extends ChangeNotifier {
         containsName = musicItem.name!.toLowerCase().contains(lowerCaseKeyword);
       }
       if (musicItem.singer != null) {
-        containsSinger =
-            musicItem.singer!.toLowerCase().contains(lowerCaseKeyword);
+        containsSinger = musicItem.singer!.toLowerCase().contains(
+          lowerCaseKeyword,
+        );
       }
       return containsName || containsSinger;
     }).toList();
@@ -173,8 +174,9 @@ class MusicDataModel extends ChangeNotifier {
     _nowPlayMusic!.name = title;
     _nowPlayMusic!.singer = subTitle;
     _nowPlayMusic!.lyricId = mediaId;
-    _nowMusicIndex =
-        musicList.indexWhere((element) => element.musicId == mediaId);
+    _nowMusicIndex = musicList.indexWhere(
+      (element) => element.musicId == mediaId,
+    );
     notifyListeners();
     await _initCover(mediaId, coverUri);
     await _initLyric(mediaId, lyricUri);
@@ -224,8 +226,9 @@ class MusicDataModel extends ChangeNotifier {
         return;
       }
     }
-    Tuple2<String?, List<int>?> coverBytes =
-        await HttpHelper.get().getCover(coverUri);
+    Tuple2<String?, List<int>?> coverBytes = await HttpHelper.get().getCover(
+      coverUri,
+    );
     if (coverBytes.item2 == null) {
       _coverBase64 = await CacheModel.get().getDefaultCover();
       notifyListeners();

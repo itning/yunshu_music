@@ -98,11 +98,8 @@ class ImageFade extends StatefulWidget {
 
 /// Signature used by [ImageFader.errorBuilder] to build the widget that will
 /// be displayed if an error occurs while loading an image.
-typedef ImageFadeErrorBuilder = Widget Function(
-  BuildContext context,
-  Widget? child,
-  dynamic exception,
-);
+typedef ImageFadeErrorBuilder =
+    Widget Function(BuildContext context, Widget? child, dynamic exception);
 
 class _ImageResolver {
   bool success = false;
@@ -117,17 +114,25 @@ class _ImageResolver {
   late ImageStreamListener _listener;
   ImageInfo? _imageInfo;
 
-  _ImageResolver(ImageProvider provider, BuildContext context,
-      {this.onComplete,
-      this.onError,
-      this.onProgress,
-      double? width,
-      double? height}) {
+  _ImageResolver(
+    ImageProvider provider,
+    BuildContext context, {
+    this.onComplete,
+    this.onError,
+    this.onProgress,
+    double? width,
+    double? height,
+  }) {
     Size? size = width != null && height != null ? Size(width, height) : null;
-    ImageConfiguration config =
-        createLocalImageConfiguration(context, size: size);
-    _listener = ImageStreamListener(_handleComplete,
-        onChunk: _handleProgress, onError: _handleError);
+    ImageConfiguration config = createLocalImageConfiguration(
+      context,
+      size: size,
+    );
+    _listener = ImageStreamListener(
+      _handleComplete,
+      onChunk: _handleProgress,
+      onError: _handleError,
+    );
     _stream = provider.resolve(config);
     _stream.addListener(_listener); // Called sync if already completed.
   }
@@ -191,7 +196,8 @@ class _ImageFadeState extends State<ImageFade> with TickerProviderStateMixin {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _update(
-        context); // Can't call this in initState because createLocalImageConfiguration throws errors.
+      context,
+    ); // Can't call this in initState because createLocalImageConfiguration throws errors.
   }
 
   @override
@@ -217,12 +223,15 @@ class _ImageFadeState extends State<ImageFade> with TickerProviderStateMixin {
     _front = null;
     _resolver = image == null
         ? null
-        : _ImageResolver(image, context,
+        : _ImageResolver(
+            image,
+            context,
             onError: _handleComplete,
             onProgress: _handleProgress,
             onComplete: _handleComplete,
             width: widget.width,
-            height: widget.height);
+            height: widget.height,
+          );
 
     if (_back != null && _resolver == null) {
       _buildTransition();
@@ -242,7 +251,8 @@ class _ImageFadeState extends State<ImageFade> with TickerProviderStateMixin {
 
   void _buildTransition() {
     bool out = _front == null;
-    _controller.duration = widget.fadeDuration *
+    _controller.duration =
+        widget.fadeDuration *
         (out ? 1 : 3 / 2); // Fade in for fadeDuration, out for 1/2 as long.
     // 修改：如果第一次进入则不需要动画
     if (_back == null) {
@@ -255,16 +265,20 @@ class _ImageFadeState extends State<ImageFade> with TickerProviderStateMixin {
                 parent: _controller,
                 curve: Interval(0.0, 2 / 3, curve: widget.fadeCurve),
               ),
-              child: _front);
+              child: _front,
+            );
     }
     _fadeBack = _back == null
         ? null
         : FadeTransition(
-            opacity: Tween<double>(begin: 1.0, end: 0).animate(CurvedAnimation(
-              parent: _controller,
-              curve: Interval(out ? 0.0 : 2 / 3, 1.0, curve: Curves.linear),
-            )),
-            child: _back);
+            opacity: Tween<double>(begin: 1.0, end: 0).animate(
+              CurvedAnimation(
+                parent: _controller,
+                curve: Interval(out ? 0.0 : 2 / 3, 1.0, curve: Curves.linear),
+              ),
+            ),
+            child: _back,
+          );
     if (_front != null || _back != null) {
       _controller.forward(from: 0);
     }
@@ -305,12 +319,10 @@ class _ImageFadeState extends State<ImageFade> with TickerProviderStateMixin {
     }
 
     Widget content = SizedBox(
-        width: widget.width,
-        height: widget.height,
-        child: Stack(
-          fit: StackFit.passthrough,
-          children: kids,
-        ));
+      width: widget.width,
+      height: widget.height,
+      child: Stack(fit: StackFit.passthrough, children: kids),
+    );
 
     if (widget.excludeFromSemantics) {
       return content;

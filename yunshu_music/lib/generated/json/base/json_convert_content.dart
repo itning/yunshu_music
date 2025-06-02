@@ -35,8 +35,10 @@ class JsonConvert {
     }
   }
 
-  List<T?>? convertList<T>(List<dynamic>? value,
-      {EnumConvertFunction? enumConvert}) {
+  List<T?>? convertList<T>(
+    List<dynamic>? value, {
+    EnumConvertFunction? enumConvert,
+  }) {
     if (value == null) {
       return null;
     }
@@ -50,8 +52,10 @@ class JsonConvert {
     }
   }
 
-  List<T>? convertListNotNull<T>(dynamic value,
-      {EnumConvertFunction? enumConvert}) {
+  List<T>? convertListNotNull<T>(
+    dynamic value, {
+    EnumConvertFunction? enumConvert,
+  }) {
     if (value == null) {
       return null;
     }
@@ -65,8 +69,10 @@ class JsonConvert {
     }
   }
 
-  T? _asT<T extends Object?>(dynamic value,
-      {EnumConvertFunction? enumConvert}) {
+  T? _asT<T extends Object?>(
+    dynamic value, {
+    EnumConvertFunction? enumConvert,
+  }) {
     final String type = T.toString();
     final String valueS = value.toString();
     if (enumConvert != null) {
@@ -104,25 +110,33 @@ class JsonConvert {
   static M? _getListChildType<M>(List<Map<String, dynamic>> data) {
     if (<MusicEntity>[] is M) {
       return data
-          .map<MusicEntity>((Map<String, dynamic> e) => MusicEntity.fromJson(e))
-          .toList() as M;
+              .map<MusicEntity>(
+                (Map<String, dynamic> e) => MusicEntity.fromJson(e),
+              )
+              .toList()
+          as M;
     }
     if (<MusicData>[] is M) {
       return data
-          .map<MusicData>((Map<String, dynamic> e) => MusicData.fromJson(e))
-          .toList() as M;
+              .map<MusicData>((Map<String, dynamic> e) => MusicData.fromJson(e))
+              .toList()
+          as M;
     }
     if (<SearchResultEntity>[] is M) {
       return data
-          .map<SearchResultEntity>(
-              (Map<String, dynamic> e) => SearchResultEntity.fromJson(e))
-          .toList() as M;
+              .map<SearchResultEntity>(
+                (Map<String, dynamic> e) => SearchResultEntity.fromJson(e),
+              )
+              .toList()
+          as M;
     }
     if (<SearchResultData>[] is M) {
       return data
-          .map<SearchResultData>(
-              (Map<String, dynamic> e) => SearchResultData.fromJson(e))
-          .toList() as M;
+              .map<SearchResultData>(
+                (Map<String, dynamic> e) => SearchResultData.fromJson(e),
+              )
+              .toList()
+          as M;
     }
 
     debugPrint("${M.toString()} not found");
@@ -133,7 +147,8 @@ class JsonConvert {
   static M? fromJsonAsT<M>(dynamic json) {
     if (json is List) {
       return _getListChildType<M>(
-          json.map((e) => e as Map<String, dynamic>).toList());
+        json.map((e) => e as Map<String, dynamic>).toList(),
+      );
     } else {
       return jsonConvert.convert<M>(json);
     }

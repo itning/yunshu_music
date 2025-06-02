@@ -78,8 +78,8 @@ class PlayerPageController extends StatelessWidget {
                     iconSize: 35,
                     icon: const Icon(Icons.pause),
                     onPressed: () {
-                      PlayStatusModel playStatusModel =
-                          context.read<PlayStatusModel>();
+                      PlayStatusModel playStatusModel = context
+                          .read<PlayStatusModel>();
                       playStatusModel.setPlay(false);
                     },
                   )
@@ -89,8 +89,8 @@ class PlayerPageController extends StatelessWidget {
                     iconSize: 35,
                     icon: const Icon(Icons.play_arrow),
                     onPressed: () {
-                      PlayStatusModel playStatusModel =
-                          context.read<PlayStatusModel>();
+                      PlayStatusModel playStatusModel = context
+                          .read<PlayStatusModel>();
                       playStatusModel.setPlay(true);
                     },
                   );

@@ -25,7 +25,9 @@ class _LyricPageState extends State<LyricPage>
   @override
   void dispose() {
     if (!kIsWeb && Platform.isAndroid) {
-      FlutterWindowManagerPlus.clearFlags(FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON);
+      FlutterWindowManagerPlus.clearFlags(
+        FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON,
+      );
     }
     super.dispose();
   }
@@ -42,24 +44,25 @@ class _LyricPageState extends State<LyricPage>
             children: <Widget>[
               Center(
                 child: Selector<MusicDataModel, List<Lyric>?>(
-                    selector: (_, data) => data.lyricList,
-                    builder: (_, value, _) {
-                      if (null == value || value.isEmpty) {
-                        return const Text(
-                          '该歌曲暂无歌词',
-                          style: TextStyle(color: Colors.white),
-                        );
-                      } else {
-                        return RepaintBoundary(
-                          child: LyricWidget(
-                            key: UniqueKey(),
-                            size: const Size(double.infinity, double.infinity),
-                            lyrics: value,
-                            controller: context.read<LyricController>(),
-                          ),
-                        );
-                      }
-                    }),
+                  selector: (_, data) => data.lyricList,
+                  builder: (_, value, _) {
+                    if (null == value || value.isEmpty) {
+                      return const Text(
+                        '该歌曲暂无歌词',
+                        style: TextStyle(color: Colors.white),
+                      );
+                    } else {
+                      return RepaintBoundary(
+                        child: LyricWidget(
+                          key: UniqueKey(),
+                          size: const Size(double.infinity, double.infinity),
+                          lyrics: value,
+                          controller: context.read<LyricController>(),
+                        ),
+                      );
+                    }
+                  },
+                ),
               ),
               Selector<LyricController, bool>(
                 selector: (_, c) => c.isDragging,
@@ -72,29 +75,25 @@ class _LyricPageState extends State<LyricPage>
                         context.read<LyricController>().draggingComplete();
                         //当前进度
                         LogHelper.get().debug(
-                            "进度:${context.read<LyricController>().draggingProgress}");
+                          "进度:${context.read<LyricController>().draggingProgress}",
+                        );
                         context.read<PlayStatusModel>().seek(
-                            context.read<LyricController>().draggingProgress);
+                          context.read<LyricController>().draggingProgress,
+                        );
                       },
                       child: Row(
                         children: const [
-                          Icon(
-                            Icons.play_arrow,
-                            color: Colors.white,
-                          ),
-                          Expanded(
-                              child: Divider(
-                            color: Colors.grey,
-                          )),
+                          Icon(Icons.play_arrow, color: Colors.white),
+                          Expanded(child: Divider(color: Colors.grey)),
                         ],
                       ),
                     ),
                   );
                 },
-              )
+              ),
             ],
           ),
-        )
+        ),
       ],
     );
   }
