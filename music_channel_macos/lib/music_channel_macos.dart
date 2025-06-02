@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
@@ -38,6 +38,9 @@ class MusicChannelMacOS extends MusicPlatform {
   /// 播放状态信息：是否播放，播放进度，缓冲进度
   late StreamController<dynamic> _playbackStateController;
 
+  /// 音量信息
+  late StreamController<double> _volumeController;
+
   /// 数据落地
   late SharedPreferences _sharedPreferences;
 
@@ -59,7 +62,7 @@ class MusicChannelMacOS extends MusicPlatform {
   /// 播放状态载体
   final PlaybackState _playbackState = PlaybackState();
 
-  /// 随即过的音乐信息
+  /// 随机过的音乐信息
   final Set<Music> _randomSet = {};
 
   /// 正在播放的音乐信息
@@ -73,22 +76,28 @@ class MusicChannelMacOS extends MusicPlatform {
 
   @override
   Future<void> init(
-      StreamController<dynamic> metadataEventController,
-      StreamController<dynamic> playbackStateController,
-      StreamController<double> volumeController) async {
+    StreamController<dynamic> metadataEventController,
+    StreamController<dynamic> playbackStateController,
+    StreamController<double> volumeController,
+  ) async {
     setWindowTitle("云舒音乐");
-    setWindowMinSize(const Size(350, 800));
+    setWindowMinSize(const Size(450, 900));
 
-    this._metadataEventController = metadataEventController;
-    this._playbackStateController = playbackStateController;
+    _metadataEventController = metadataEventController;
+    _playbackStateController = playbackStateController;
+    _volumeController = volumeController;
     _sharedPreferences = await SharedPreferences.getInstance();
 
     _nowPlayIndex = -1;
-    _playMode =
-        valueOf(_sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE');
+    _playMode = valueOf(
+      _sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE',
+    );
     await windowManager.ensureInitialized();
 
-    _player = AudioPlayer();
+    _player = AudioPlayer(playerId: "69420");
+    _player.setReleaseMode(ReleaseMode.stop);
+    _player.setPlayerMode(PlayerMode.mediaPlayer);
+
     _systemTray = SystemTray();
 
     _menu = Menu();
@@ -98,11 +107,12 @@ class MusicChannelMacOS extends MusicPlatform {
       MenuItemLabel(label: '上一曲', onClicked: (_) => skipToPrevious()),
       MenuItemLabel(label: '下一曲', onClicked: (_) => skipToNext()),
       MenuItemLabel(
-          label: '播放',
-          name: "PlayStatus",
-          onClicked: (_) {
-            _isPlayNow ? pause() : play();
-          }),
+        label: '播放',
+        name: "PlayStatus",
+        onClicked: (_) {
+          _isPlayNow ? pause() : play();
+        },
+      ),
       MenuSeparator(),
       MenuItemLabel(
         label: '退出',
@@ -114,63 +124,54 @@ class MusicChannelMacOS extends MusicPlatform {
       ),
     ]);
 
-    // 播放状态
-    _player.playerStateStream.listen((event) {
-      switch (event.processingState) {
-        case ProcessingState.loading:
-          _playbackState.state = MusicStatus.connecting;
-          playbackStateController.sink.add(_playbackState.toMap());
-          _isPlayNow = event.playing;
-          _upContextMenu();
+    _player.onPositionChanged.listen((Duration event) {
+      int position = event.inMilliseconds;
+      _playbackState.position = position;
+      playbackStateController.sink.add(_playbackState.toMap());
+    });
+
+    _player.onPlayerStateChanged.listen((PlayerState event) {
+      if (PlayerState.completed == event) {
+        return;
+      }
+      bool playing = PlayerState.playing == event;
+      _playbackState.state = playing ? MusicStatus.playing : MusicStatus.paused;
+      playbackStateController.sink.add(_playbackState.toMap());
+      _isPlayNow = playing;
+      _upContextMenu();
+    });
+
+    _player.eventStream.listen((AudioEvent event) {
+      switch (event.eventType) {
+        case AudioEventType.log:
           break;
-        case ProcessingState.idle:
+        case AudioEventType.duration:
+          if (null != event.duration) {
+            int duration = event.duration!.inMilliseconds;
+            _metaData.duration = duration;
+            metadataEventController.sink.add(_metaData.toMap());
+          }
+        case AudioEventType.seekComplete:
           break;
-        case ProcessingState.buffering:
-          break;
-        case ProcessingState.ready:
-          _playbackState.state =
-              event.playing ? MusicStatus.playing : MusicStatus.paused;
-          playbackStateController.sink.add(_playbackState.toMap());
-          _isPlayNow = event.playing;
-          _upContextMenu();
-          break;
-        case ProcessingState.completed:
+        case AudioEventType.complete:
           _playbackState.state = MusicStatus.none;
           playbackStateController.sink.add(_playbackState.toMap());
           next(false);
           initPlay(autoStart: true);
-          break;
+        case AudioEventType.prepared:
+          if (event.isPrepared ?? false) {
+            _playbackState.state = MusicStatus.paused;
+            _playbackStateController.sink.add(_playbackState.toMap());
+          }
       }
-    });
-
-    // 缓冲进度
-    _player.bufferedPositionStream.listen((event) {
-      _playbackState.bufferedPosition = event.inMilliseconds;
-      playbackStateController.sink.add(_playbackState.toMap());
-    });
-
-    // 持续时间
-    _player.durationStream.listen((event) {
-      _metaData.duration = event?.inMilliseconds ?? 0;
-      metadataEventController.sink.add(_metaData.toMap());
-    });
-
-    // 播放位置
-    _player.positionStream.listen((event) {
-      _playbackState.position = event.inMilliseconds;
-      playbackStateController.sink.add(_playbackState.toMap());
-    });
-
-    // 音量
-    _player.volumeStream.listen((event) {
-      volumeController.sink.add(event);
     });
 
     _playbackState.state = MusicStatus.none;
 
     await _systemTray.initSystemTray(
-      title: "",
+      title: "云舒音乐",
       iconPath: "asserts/icon/app_icon.ico",
+      toolTip: "云舒音乐",
     );
 
     await _systemTray.setContextMenu(_menu);
@@ -179,7 +180,8 @@ class MusicChannelMacOS extends MusicPlatform {
         _systemTray.popUpContextMenu();
       } else if (eventName == kSystemTrayEventClick) {
         windowManager.isVisible().then(
-            (visible) => visible ? windowManager.hide() : windowManager.show());
+          (visible) => visible ? windowManager.hide() : windowManager.show(),
+        );
       }
     });
   }
@@ -190,7 +192,7 @@ class MusicChannelMacOS extends MusicPlatform {
         ?.setLabel(_isPlayNow ? '暂停' : '播放');
   }
 
-  void initPlay({bool autoStart = false}) async {
+  void initPlay({bool autoStart = false}) {
     if (_nowPlayMusic == null) {
       return;
     }
@@ -199,15 +201,15 @@ class MusicChannelMacOS extends MusicPlatform {
     }
     _playbackState.state = MusicStatus.connecting;
     _playbackStateController.sink.add(_playbackState.toMap());
+    if (autoStart) {
+      _player.play(UrlSource(_nowPlayMusic!.musicUri!));
+    } else {
+      _player.setSourceUrl(_nowPlayMusic!.musicUri!);
+    }
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
-    // 请求头 x-no-304 是让服务器不返回304状态码
-    // 返回304 mac报错 无法打开文件
-    await _player
-        .setUrl(_nowPlayMusic!.musicUri!, headers: {"x-no-304": "yes"});
-    if (autoStart) {
-      await _player.play();
-    }
+    setWindowTitle("${_metaData.title}-${_metaData.subTitle}");
+    _systemTray.setToolTip('${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}');
   }
 
   @override
@@ -227,7 +229,7 @@ class MusicChannelMacOS extends MusicPlatform {
 
   @override
   Future<void> play() async {
-    _player.play();
+    _player.resume();
   }
 
   @override
@@ -271,11 +273,13 @@ class MusicChannelMacOS extends MusicPlatform {
   @override
   Future<List<dynamic>> getPlayList() async {
     return _playList
-        .map((e) => {
-              'title': e.name ?? '',
-              'subTitle': e.singer ?? '',
-              'mediaId': e.musicId ?? ''
-            })
+        .map(
+          (e) => {
+            'title': e.name ?? '',
+            'subTitle': e.singer ?? '',
+            'mediaId': e.musicId ?? '',
+          },
+        )
         .toList();
   }
 
@@ -286,7 +290,9 @@ class MusicChannelMacOS extends MusicPlatform {
     }
     _playList.removeWhere((element) => mediaId == element.musicId);
     _sharedPreferences.setStringList(
-        _playListKey, _playList.map((e) => e.musicId!).toList());
+      _playListKey,
+      _playList.map((e) => e.musicId!).toList(),
+    );
   }
 
   @override
@@ -296,7 +302,9 @@ class MusicChannelMacOS extends MusicPlatform {
       _playList.add(_nowPlayMusic!);
       _nowPlayIndex = 0;
       _sharedPreferences.setStringList(
-          _playListKey, _playList.map((e) => e.musicId!).toList());
+        _playListKey,
+        _playList.map((e) => e.musicId!).toList(),
+      );
     } else {
       _nowPlayIndex = -1;
       _sharedPreferences.remove(_playListKey);
@@ -305,7 +313,8 @@ class MusicChannelMacOS extends MusicPlatform {
 
   @override
   Future<void> setVolume(double value) async {
-    _player.setVolume(value);
+    await _player.setVolume(value);
+    _volumeController.sink.add(_player.volume);
   }
 
   void addMusic(List<Music> data) {
@@ -359,7 +368,9 @@ class MusicChannelMacOS extends MusicPlatform {
       _nowPlayIndex = playListIndex;
     }
     _sharedPreferences.setStringList(
-        _playListKey, _playList.map((e) => e.musicId!).toList());
+      _playListKey,
+      _playList.map((e) => e.musicId!).toList(),
+    );
     _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 
@@ -396,7 +407,9 @@ class MusicChannelMacOS extends MusicPlatform {
       _nowPlayMusic = _playList[_nowPlayIndex];
     }
     _sharedPreferences.setStringList(
-        _playListKey, _playList.map((e) => e.musicId!).toList());
+      _playListKey,
+      _playList.map((e) => e.musicId!).toList(),
+    );
     _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 
@@ -433,7 +446,9 @@ class MusicChannelMacOS extends MusicPlatform {
       _nowPlayMusic = _playList[_nowPlayIndex];
     }
     _sharedPreferences.setStringList(
-        _playListKey, _playList.map((e) => e.musicId!).toList());
+      _playListKey,
+      _playList.map((e) => e.musicId!).toList(),
+    );
     _sharedPreferences.setString(_nowPlayMusicIdKey, _nowPlayMusic!.musicId!);
   }
 

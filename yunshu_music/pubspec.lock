@@ -420,6 +420,20 @@ packages:
       relative: true
     source: path
     version: "0.0.1"
+  music_channel_ios:
+    dependency: transitive
+    description:
+      path: "../music_channel_ios"
+      relative: true
+    source: path
+    version: "0.0.1"
+  music_channel_macos:
+    dependency: transitive
+    description:
+      path: "../music_channel_macos"
+      relative: true
+    source: path
+    version: "0.0.1"
   music_channel_web:
     dependency: transitive
     description:
