@@ -38,6 +38,11 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin {
         commandCenter.nextTrackCommand.addTarget(self, action: #selector(nextButtonTapped))
         commandCenter.previousTrackCommand.isEnabled = true
         commandCenter.previousTrackCommand.addTarget(self, action: #selector(previousButtonTapped))
+
+        // 监听进度条拖动事件
+        commandCenter.changePlaybackPositionCommand.isEnabled = true
+        commandCenter.changePlaybackPositionCommand.addTarget(self, action: #selector(seekToTime(_:)))
+
         result(nil)
 
      case "setLockScreenDisplay":
@@ -131,5 +136,15 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin {
   @objc func previousButtonTapped(_ event: Any) -> MPRemoteCommandHandlerStatus {
       SwiftMusicChannelIosPlugin.channel?.invokeMethod("previousButtonTapped",  arguments: nil)
       return MPRemoteCommandHandlerStatus.success
+  }
+
+  @objc func seekToTime(_ event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
+      guard let positionEvent = event as? MPChangePlaybackPositionCommandEvent else {
+          return MPRemoteCommandHandlerStatus.commandFailed
+      }
+      // 获取用户拖动到的时间点（秒）
+      let seekTime = Int(positionEvent.positionTime)
+      SwiftMusicChannelIosPlugin.channel?.invokeMethod("seekTo", arguments: ["position": seekTime])
+       return MPRemoteCommandHandlerStatus.success
   }
 }

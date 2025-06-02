@@ -79,17 +79,14 @@ class MusicChannelIos extends MusicPlatform {
       switch (call.method) {
         case 'playButtonTapped':
           await play();
-          break;
         case 'pauseButtonTapped':
           await pause();
-          break;
         case 'nextButtonTapped':
           await skipToNext();
-          break;
         case 'previousButtonTapped':
           await skipToPrevious();
-          break;
-        default:
+        case "seekTo":
+          await seekTo(Duration(seconds: call.arguments["position"]));
       }
     });
 
@@ -110,7 +107,7 @@ class MusicChannelIos extends MusicPlatform {
       playbackStateController.sink.add(_playbackState.toMap());
       _channel.invokeMethod("setLockScreenDisplayTime", {
         "duration": Duration(milliseconds: _metaData.duration).inSeconds,
-        "time": event.inSeconds
+        "time": event.inSeconds,
       });
     });
 
@@ -136,7 +133,7 @@ class MusicChannelIos extends MusicPlatform {
               "name": _nowPlayMusic!.name,
               "singer": _nowPlayMusic!.singer,
               "coverUri": _nowPlayMusic!.coverUri,
-              "duration": event.duration!.inSeconds
+              "duration": event.duration!.inSeconds,
             });
           }
         case AudioEventType.seekComplete:
@@ -171,7 +168,7 @@ class MusicChannelIos extends MusicPlatform {
       "name": _nowPlayMusic!.name,
       "singer": _nowPlayMusic!.singer,
       "coverUri": _nowPlayMusic!.coverUri,
-      "duration": 0
+      "duration": 0,
     });
     if (autoStart) {
       _player.play(UrlSource(_nowPlayMusic!.musicUri!));
