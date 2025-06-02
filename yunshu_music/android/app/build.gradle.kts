@@ -60,12 +60,12 @@ flutter {
 }
 
 dependencies {
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.android.exoplayer:exoplayer-core:2.19.1")
     implementation("com.google.android.exoplayer:extension-okhttp:2.19.1")
-    implementation("androidx.media2:media2-session:1.2.1")
-    implementation("com.tencent:mmkv-static:1.2.15")
-    implementation("com.github.bumptech.glide:glide:4.15.1")
-    implementation("com.github.bumptech.glide:okhttp3-integration:4.15.1")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.15.1")
+    implementation("androidx.media2:media2-session:1.3.0")
+    implementation("com.tencent:mmkv-static:2.2.2")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.github.bumptech.glide:okhttp3-integration:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 }
