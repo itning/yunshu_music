@@ -20,8 +20,8 @@ class PlayerPageProgress extends StatelessWidget {
         builder: (context, value, _) => ProgressBar(
           timeLabelLocation: TimeLabelLocation.sides,
           progressBarColor: Colors.white,
-          baseBarColor: Colors.white.withValues(alpha: 255.0 * 0.24),
-          bufferedBarColor: Colors.white.withValues(alpha: 255 * 0.24),
+          baseBarColor: Colors.white.withAlpha((255.0 * 0.24).round()),
+          bufferedBarColor: Colors.white.withAlpha((255 * 0.24).round()),
           thumbColor: Colors.white,
           thumbGlowColor: Colors.white,
           timeLabelTextStyle: const TextStyle(color: Colors.white),
