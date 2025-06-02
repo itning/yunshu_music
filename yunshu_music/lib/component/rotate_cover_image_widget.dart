@@ -13,15 +13,14 @@ class RotateCoverImageWidget extends StatefulWidget {
   final Duration duration;
 
   const RotateCoverImageWidget(
-      {Key? key,
+      {super.key,
       required this.width,
       required this.height,
       required this.image,
-      required this.duration})
-      : super(key: key);
+      required this.duration});
 
   @override
-  _RotateCoverImageWidgetState createState() => _RotateCoverImageWidgetState();
+  State<RotateCoverImageWidget> createState() => _RotateCoverImageWidgetState();
 }
 
 class _RotateCoverImageWidgetState extends State<RotateCoverImageWidget>

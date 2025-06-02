@@ -53,7 +53,7 @@ class LyricUtil {
         if (!tags.contains(title)) {
           try {
             int.parse(title);
-          } on FormatException catch (_, __) {
+          } on FormatException catch (_) {
             continue;
           }
           lyrics.add(

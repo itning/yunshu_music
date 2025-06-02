@@ -32,11 +32,11 @@ class LogConsole extends StatefulWidget {
   final bool dark;
   final bool showCloseButton;
 
-  static ListQueue<OutputEvent> _outputEventBuffer = ListQueue();
+  static final ListQueue<OutputEvent> _outputEventBuffer = ListQueue();
   static bool _initialized = false;
   static final _newLogs = ChangeNotifier();
 
-  LogConsole({this.dark = false, this.showCloseButton = false})
+  LogConsole({super.key, this.dark = false, this.showCloseButton = false})
       : assert(_initialized, 'Please call LogConsole.init() first.');
 
   /// Attach this LogOutput to your logger instance:
@@ -70,7 +70,7 @@ class LogConsole extends StatefulWidget {
   }
 
   @override
-  _LogConsoleState createState() => _LogConsoleState();
+  State<LogConsole> createState() => _LogConsoleState();
 
   static void openLogConsole(BuildContext context) async {
     var logConsole = LogConsole(
@@ -99,7 +99,7 @@ class _LogConsoleState extends State<LogConsole> {
   final _scrollController = ScrollController();
   final _filterController = TextEditingController();
 
-  Level _filterLevel = Level.verbose;
+  Level _filterLevel = Level.trace;
   double _logFontSize = 10;
 
   var _currentId = 0;
@@ -198,11 +198,11 @@ class _LogConsoleState extends State<LogConsole> {
             child: FloatingActionButton(
               mini: true,
               clipBehavior: Clip.antiAlias,
+              onPressed: _scrollToBottom,
               child: Icon(
                 Icons.arrow_downward,
                 color: widget.dark ? Colors.white : Colors.lightBlue[900],
               ),
-              onPressed: _scrollToBottom,
             ),
           ),
         ),
@@ -212,10 +212,10 @@ class _LogConsoleState extends State<LogConsole> {
 
   Widget _buildLogContent() {
     final text = StringBuffer();
-    _filteredBuffer.forEach((e) {
+    for (var e in _filteredBuffer) {
       text.write(e.text);
       text.write('\n');
-    });
+    }
 
     return Container(
       color: widget.dark ? Colors.black : Colors.grey[150],
@@ -300,28 +300,28 @@ class _LogConsoleState extends State<LogConsole> {
             value: _filterLevel,
             items: [
               DropdownMenuItem(
-                child: Text('VERBOSE'),
-                value: Level.verbose,
+                value: Level.trace,
+                child: Text('TRACE'),
               ),
               DropdownMenuItem(
-                child: Text('DEBUG'),
                 value: Level.debug,
+                child: Text('DEBUG'),
               ),
               DropdownMenuItem(
-                child: Text('INFO'),
                 value: Level.info,
+                child: Text('INFO'),
               ),
               DropdownMenuItem(
-                child: Text('WARNING'),
                 value: Level.warning,
+                child: Text('WARNING'),
               ),
               DropdownMenuItem(
-                child: Text('ERROR'),
                 value: Level.error,
+                child: Text('ERROR'),
               ),
               DropdownMenuItem(
-                child: Text('WTF'),
-                value: Level.wtf,
+                value: Level.fatal,
+                child: Text('FATAL'),
               )
             ],
             onChanged: (value) {
@@ -371,7 +371,7 @@ class LogBar extends StatelessWidget {
   final bool dark;
   final Widget child;
 
-  LogBar({this.dark = false, required this.child});
+  const LogBar({super.key, this.dark = false, required this.child});
 
   @override
   Widget build(BuildContext context) {

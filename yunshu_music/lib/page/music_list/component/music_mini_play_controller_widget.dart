@@ -12,7 +12,7 @@ import 'package:yunshu_music/util/common_utils.dart';
 
 /// 小型音乐控制器Widget
 class MusicMiniPlayControllerWidget extends StatelessWidget {
-  const MusicMiniPlayControllerWidget({Key? key}) : super(key: key);
+  const MusicMiniPlayControllerWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
         color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey.withValues(alpha: 255.0 * 0.5),
             spreadRadius: 2,
             blurRadius: 2,
             offset: const Offset(0, 3),
@@ -42,7 +42,7 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                       padding: const EdgeInsets.only(left: 16.0, right: 16.0),
                       child: Selector<MusicDataModel, Uint8List?>(
                         selector: (_, model) => model.coverBase64,
-                        builder: (_, value, __) {
+                        builder: (_, value, _) {
                           if (value == null) {
                             return RotateCoverImageWidget(
                               image: Image.asset(
@@ -65,7 +65,7 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                     ),
                     Selector<MusicDataModel, MusicData?>(
                       selector: (_, data) => data.getNowPlayMusic(),
-                      builder: (_, music, __) {
+                      builder: (_, music, _) {
                         if (null == music) {
                           return const Text('云舒音乐',
                               overflow: TextOverflow.ellipsis);
@@ -85,7 +85,7 @@ class MusicMiniPlayControllerWidget extends StatelessWidget {
                   Selector<PlayStatusModel, Tuple2<bool, bool>>(
                     selector: (_, status) =>
                         Tuple2(status.isPlayNow, status.processingState),
-                    builder: (context, status, __) {
+                    builder: (context, status, _) {
                       if (status.item2) {
                         return Container(
                           margin: const EdgeInsets.all(16.0),

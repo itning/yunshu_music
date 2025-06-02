@@ -17,10 +17,10 @@ import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 class MusicList extends StatefulWidget {
-  const MusicList({Key? key}) : super(key: key);
+  const MusicList({super.key});
 
   @override
-  _MusicListState createState() => _MusicListState();
+  State<MusicList> createState() => _MusicListState();
 }
 
 class _MusicListState extends State<MusicList> {
@@ -154,14 +154,12 @@ class _InnerListItem extends StatelessWidget {
   final String musicUri;
 
   const _InnerListItem(
-      {Key? key,
-      required this.index,
+      {required this.index,
       required this.name,
       required this.singer,
       required this.musicId,
       required this.lyricId,
-      required this.musicUri})
-      : super(key: key);
+      required this.musicUri});
 
   Future<bool?> showDeleteConfirmDialog(BuildContext context) {
     return showDialog<bool>(
@@ -313,7 +311,7 @@ class _InnerListItem extends StatelessWidget {
 
 /// 加载时占位图
 class _InnerShimmer extends StatelessWidget {
-  const _InnerShimmer({Key? key}) : super(key: key);
+  const _InnerShimmer();
 
   @override
   Widget build(BuildContext context) {
@@ -325,11 +323,11 @@ class _InnerShimmer extends StatelessWidget {
         children: <Widget>[
           Expanded(
             child: Shimmer.fromColors(
-              baseColor: Theme.of(context).dialogBackgroundColor,
+              baseColor: Theme.of(context).dialogTheme.backgroundColor ?? Colors.black,
               highlightColor: Theme.of(context).highlightColor,
               child: ListView.builder(
                 physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (_, __) => Container(
+                itemBuilder: (_, _) => Container(
                   margin: const EdgeInsets.only(bottom: 8.0, top: 8.0),
                   child: Flex(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,

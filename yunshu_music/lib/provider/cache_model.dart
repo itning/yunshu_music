@@ -197,7 +197,7 @@ class CacheModel extends ChangeNotifier {
     File cacheFile = File(joinAll([
       (Directory(join((await getTemporaryDirectory()).path, 'cover_cache')))
           .path,
-      musicId + "." + ext
+      "$musicId.$ext"
     ]));
     if (!extFile.existsSync()) {
       extFile = await extFile.create(recursive: true);
@@ -229,7 +229,7 @@ class CacheModel extends ChangeNotifier {
     File cacheFile = File(joinAll([
       (Directory(join((await getTemporaryDirectory()).path, 'cover_cache')))
           .path,
-      musicId + "." + ext
+      "$musicId.$ext"
     ]));
     return cacheFile;
   }
@@ -279,7 +279,7 @@ class CacheModel extends ChangeNotifier {
     File cacheFile = File(joinAll([
       (Directory(join((await getTemporaryDirectory()).path, 'cover_cache')))
           .path,
-      musicId + "." + ext
+      "$musicId.$ext"
     ]));
     if (cacheFile.existsSync()) {
       await cacheFile.delete();

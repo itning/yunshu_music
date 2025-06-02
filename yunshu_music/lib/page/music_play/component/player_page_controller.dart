@@ -6,7 +6,7 @@ import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 class PlayerPageController extends StatelessWidget {
-  const PlayerPageController({Key? key}) : super(key: key);
+  const PlayerPageController({super.key});
 
   @override
   Widget build(BuildContext context) {
