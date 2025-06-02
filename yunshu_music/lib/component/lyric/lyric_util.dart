@@ -53,7 +53,7 @@ class LyricUtil {
         if (!tags.contains(title)) {
           try {
             int.parse(title);
-          } on FormatException catch (_, __) {
+          } on FormatException catch (_) {
             continue;
           }
           lyrics.add(
@@ -97,8 +97,10 @@ class LyricUtil {
     // 分
     var minute = time.substring(0, minuteSeparatorIndex);
     // 秒
-    var seconds =
-        time.substring(minuteSeparatorIndex + 1, secondSeparatorIndex);
+    var seconds = time.substring(
+      minuteSeparatorIndex + 1,
+      secondSeparatorIndex,
+    );
     // 微秒
     var milliseconds = time.substring(secondSeparatorIndex + 1);
     var microseconds = '0';
@@ -109,10 +111,11 @@ class LyricUtil {
       milliseconds = milliseconds.substring(0, 3);
     }
     Duration result = Duration(
-        minutes: int.parse(minute),
-        seconds: int.parse(seconds),
-        milliseconds: int.parse(milliseconds) - offset,
-        microseconds: int.parse(microseconds));
+      minutes: int.parse(minute),
+      seconds: int.parse(seconds),
+      milliseconds: int.parse(milliseconds) - offset,
+      microseconds: int.parse(microseconds),
+    );
     return result.compareTo(Duration.zero) < 0 ? Duration.zero : result;
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:html' as html;
 import 'dart:js' as js;
+import 'package:flutter/services.dart';
 import 'package:music_channel_web/music_channel_web.dart';
 import 'package:music_channel_web/music_data.dart';
 import 'package:music_platform_interface/music_model.dart';
@@ -195,6 +196,8 @@ class MusicPlayer {
     // Media Session API
     js.context.callMethod("setMediaMetadataInfoFromDart",
         [_metaData.title, _metaData.subTitle, _metaData.coverUri]);
+    SystemChrome.setApplicationSwitcherDescription(
+        ApplicationSwitcherDescription(label: '${_metaData.title}-${_metaData.subTitle}'));
     _audio.load();
     _audio.pause();
   }

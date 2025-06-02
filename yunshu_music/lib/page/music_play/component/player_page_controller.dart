@@ -6,7 +6,7 @@ import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
 class PlayerPageController extends StatelessWidget {
-  const PlayerPageController({Key? key}) : super(key: key);
+  const PlayerPageController({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +78,8 @@ class PlayerPageController extends StatelessWidget {
                     iconSize: 35,
                     icon: const Icon(Icons.pause),
                     onPressed: () {
-                      PlayStatusModel playStatusModel =
-                          context.read<PlayStatusModel>();
+                      PlayStatusModel playStatusModel = context
+                          .read<PlayStatusModel>();
                       playStatusModel.setPlay(false);
                     },
                   )
@@ -89,8 +89,8 @@ class PlayerPageController extends StatelessWidget {
                     iconSize: 35,
                     icon: const Icon(Icons.play_arrow),
                     onPressed: () {
-                      PlayStatusModel playStatusModel =
-                          context.read<PlayStatusModel>();
+                      PlayStatusModel playStatusModel = context
+                          .read<PlayStatusModel>();
                       playStatusModel.setPlay(true);
                     },
                   );

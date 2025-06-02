@@ -42,19 +42,19 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
   /// 通过偏移量控制歌词滑动
   double _offset = 0;
 
-  set offset(value) {
+  set offset(double value) {
     _offset = value;
     notifyListeners();
   }
 
-  get offset => _offset;
+  double get offset => _offset;
 
   //歌词位置
   int _currentLyricIndex = 0;
 
-  get currentLyricIndex => _currentLyricIndex;
+  int get currentLyricIndex => _currentLyricIndex;
 
-  set currentLyricIndex(value) {
+  set currentLyricIndex(int value) {
     _currentLyricIndex = value;
     notifyListeners();
   }
@@ -80,9 +80,9 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
   /// 滑动到的行
   int? _draggingLine;
 
-  get draggingLine => _draggingLine;
+  int? get draggingLine => _draggingLine;
 
-  set draggingLine(value) {
+  set draggingLine(int? value) {
     _draggingLine = value;
     notifyListeners();
   }
@@ -93,18 +93,22 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
   /// 翻译/音译歌词画笔数组
   final List<TextPainter> subLyricTextPaints;
 
-  LyricPainter(this.lyrics, this.lyricTextPaints, this.subLyricTextPaints,
-      {this.subLyrics,
-      TickerProvider? vsync,
-      this.lyricTextStyle,
-      this.subLyricTextStyle,
-      this.currLyricTextStyle,
-      this.currSubLyricTextStyle,
-      this.draggingLyricTextStyle,
-      this.draggingSubLyricTextStyle,
-      required this.lyricGapValue,
-      required this.subLyricGapValue,
-      required this.lyricMaxWidth});
+  LyricPainter(
+    this.lyrics,
+    this.lyricTextPaints,
+    this.subLyricTextPaints, {
+    this.subLyrics,
+    TickerProvider? vsync,
+    this.lyricTextStyle,
+    this.subLyricTextStyle,
+    this.currLyricTextStyle,
+    this.currSubLyricTextStyle,
+    this.draggingLyricTextStyle,
+    this.draggingSubLyricTextStyle,
+    required this.lyricGapValue,
+    required this.subLyricGapValue,
+    required this.lyricMaxWidth,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -114,9 +118,12 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
     lyricTextPaints[currentLyricIndex]
       //设置歌词
       ..text = TextSpan(
-          text: lyrics[currentLyricIndex].lyric, style: currLyricTextStyle)
+        text: lyrics[currentLyricIndex].lyric,
+        style: currLyricTextStyle,
+      )
       ..layout(maxWidth: lyricMaxWidth);
-    var currentLyricY = _offset +
+    var currentLyricY =
+        _offset +
         size.height / 2 -
         lyricTextPaints[currentLyricIndex].height / 2;
 
@@ -128,43 +135,48 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
       var currentLyricTextPaint = lyricTextPaints[lyricIndex]
         //设置歌词
         ..text = TextSpan(
-            text: currentLyric.lyric,
-            style: isCurrLine
-                ? currLyricTextStyle
-                : isDraggingLine
-                    ? draggingLyricTextStyle
-                    : lyricTextStyle);
+          text: currentLyric.lyric,
+          style: isCurrLine
+              ? currLyricTextStyle
+              : isDraggingLine
+              ? draggingLyricTextStyle
+              : lyricTextStyle,
+        );
       currentLyricTextPaint.layout(maxWidth: lyricMaxWidth);
       var currentLyricHeight = currentLyricTextPaint.height;
       //仅绘制在屏幕内的歌词
       if (currentLyricY < size.height && currentLyricY > 0) {
         //绘制歌词到画布
         currentLyricTextPaint.paint(
-            canvas,
-            Offset(
-                (size.width - currentLyricTextPaint.width) / 2, currentLyricY));
+          canvas,
+          Offset((size.width - currentLyricTextPaint.width) / 2, currentLyricY),
+        );
       }
       //当前歌词结束后调整下次开始绘制歌词的y坐标
       currentLyricY += currentLyricHeight + lyricGapValue;
       //如果有翻译歌词时,寻找该行歌词以后的翻译歌词
       if (subLyrics != null) {
         List<Lyric> remarkLyrics = subLyrics!
-            .where((subLyric) =>
-                subLyric.startTime >= currentLyric.startTime &&
-                subLyric.endTime! <= currentLyric.endTime!)
+            .where(
+              (subLyric) =>
+                  subLyric.startTime >= currentLyric.startTime &&
+                  subLyric.endTime! <= currentLyric.endTime!,
+            )
             .toList();
         for (var remarkLyric in remarkLyrics) {
           //获取位置
           var subIndex = subLyrics!.indexOf(remarkLyric);
 
-          var currentSubPaint = subLyricTextPaints[subIndex] //设置歌词
-            ..text = TextSpan(
-                text: remarkLyric.lyric,
-                style: isCurrLine
-                    ? currSubLyricTextStyle
-                    : isDraggingLine
-                        ? draggingSubLyricTextStyle
-                        : subLyricTextStyle);
+          var currentSubPaint =
+              subLyricTextPaints[subIndex] //设置歌词
+                ..text = TextSpan(
+                  text: remarkLyric.lyric,
+                  style: isCurrLine
+                      ? currSubLyricTextStyle
+                      : isDraggingLine
+                      ? draggingSubLyricTextStyle
+                      : subLyricTextStyle,
+                );
           //仅绘制在屏幕内的歌词
           if (currentLyricY < size.height && currentLyricY > 0) {
             currentSubPaint
@@ -172,9 +184,12 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
               ..layout(maxWidth: lyricMaxWidth)
               //绘制 offset=横向居中
               ..paint(
-                  canvas,
-                  Offset((size.width - subLyricTextPaints[subIndex].width) / 2,
-                      currentLyricY));
+                canvas,
+                Offset(
+                  (size.width - subLyricTextPaints[subIndex].width) / 2,
+                  currentLyricY,
+                ),
+              );
           }
           currentSubPaint.layout(maxWidth: lyricMaxWidth);
           //当前歌词结束后调整下次开始绘制歌词的y坐标

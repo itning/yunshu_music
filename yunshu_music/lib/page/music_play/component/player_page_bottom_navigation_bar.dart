@@ -3,7 +3,7 @@ import 'package:yunshu_music/page/music_play/component/player_page_controller.da
 import 'package:yunshu_music/page/music_play/component/player_page_progress.dart';
 
 class PlayerPageBottomNavigationBar extends StatelessWidget {
-  const PlayerPageBottomNavigationBar({Key? key}) : super(key: key);
+  const PlayerPageBottomNavigationBar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -11,10 +11,7 @@ class PlayerPageBottomNavigationBar extends StatelessWidget {
       height: 112.0,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          PlayerPageProgress(),
-          PlayerPageController(),
-        ],
+        children: const [PlayerPageProgress(), PlayerPageController()],
       ),
     );
   }

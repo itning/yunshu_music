@@ -4,7 +4,7 @@ import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 
 class TitleMusicInfo extends StatelessWidget {
-  const TitleMusicInfo({Key? key}) : super(key: key);
+  const TitleMusicInfo({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,12 +18,12 @@ class TitleMusicInfo extends StatelessWidget {
           children: [
             Text(
               value.name ?? '',
-              style: const TextStyle(fontSize: 18.0),
+              style: const TextStyle(fontSize: 18.0, color: Colors.white),
               overflow: TextOverflow.ellipsis,
             ),
             Text(
               value.singer ?? '',
-              style: const TextStyle(fontSize: 10.0),
+              style: const TextStyle(fontSize: 10.0, color: Colors.white),
               overflow: TextOverflow.ellipsis,
             ),
           ],

@@ -57,11 +57,13 @@ class CacheModel extends ChangeNotifier {
         onCreate: (Database db, int version) async {
           // 所有音乐列表 缓存
           await db.execute(
-              'CREATE TABLE list_cache (musicId TEXT PRIMARY KEY, lyricId TEXT, name TEXT, singer TEXT, type INTEGER, musicUri TEXT, lyricUri TEXT, coverUri TEXT)');
+            'CREATE TABLE list_cache (musicId TEXT PRIMARY KEY, lyricId TEXT, name TEXT, singer TEXT, type INTEGER, musicUri TEXT, lyricUri TEXT, coverUri TEXT)',
+          );
         },
         onUpgrade: (Database db, int oldVersion, int newVersion) async {
-          LogHelper.get()
-              .info('升级数据库：oldVersion：$oldVersion newVersion：$newVersion');
+          LogHelper.get().info(
+            '升级数据库：oldVersion：$oldVersion newVersion：$newVersion',
+          );
           if (oldVersion == 1 && newVersion == 2) {
             await db.execute('ALTER TABLE list_cache ADD COLUMN musicUri TEXT');
             await db.execute('ALTER TABLE list_cache ADD COLUMN lyricUri TEXT');
@@ -93,7 +95,7 @@ class CacheModel extends ChangeNotifier {
             'type': item.type,
             'musicUri': item.musicUri,
             'lyricUri': item.lyricUri,
-            'coverUri': item.coverUri
+            'coverUri': item.coverUri,
           });
         } catch (e) {
           LogHelper.get().error("插入数据库出错", e);
@@ -127,11 +129,14 @@ class CacheModel extends ChangeNotifier {
     if (content == null || content == '') {
       return null;
     }
-    File cacheFile = File(joinAll([
-      (Directory(join((await getTemporaryDirectory()).path, 'lyric_cache')))
-          .path,
-      lyricId
-    ]));
+    File cacheFile = File(
+      joinAll([
+        (Directory(
+          join((await getTemporaryDirectory()).path, 'lyric_cache'),
+        )).path,
+        lyricId,
+      ]),
+    );
     if (!cacheFile.existsSync()) {
       cacheFile = await cacheFile.create(recursive: true);
     }
@@ -147,11 +152,14 @@ class CacheModel extends ChangeNotifier {
     if (lyricId == '') {
       return false;
     }
-    File cacheFile = File(joinAll([
-      (Directory(join((await getTemporaryDirectory()).path, 'lyric_cache')))
-          .path,
-      lyricId
-    ]));
+    File cacheFile = File(
+      joinAll([
+        (Directory(
+          join((await getTemporaryDirectory()).path, 'lyric_cache'),
+        )).path,
+        lyricId,
+      ]),
+    );
     if (cacheFile.existsSync()) {
       await cacheFile.delete();
       return true;
@@ -164,11 +172,14 @@ class CacheModel extends ChangeNotifier {
       return null;
     }
     LogHelper.get().info('get lyric from cache $lyricId');
-    File cacheFile = File(joinAll([
-      (Directory(join((await getTemporaryDirectory()).path, 'lyric_cache')))
-          .path,
-      lyricId
-    ]));
+    File cacheFile = File(
+      joinAll([
+        (Directory(
+          join((await getTemporaryDirectory()).path, 'lyric_cache'),
+        )).path,
+        lyricId,
+      ]),
+    );
     if (cacheFile.existsSync()) {
       return await cacheFile.readAsString();
     } else {
@@ -177,28 +188,38 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<File?> cacheCover(
-      String musicId, List<int>? by, String? mimeType) async {
+    String musicId,
+    List<int>? by,
+    String? mimeType,
+  ) async {
     if (kIsWeb || Platform.isWindows) {
       return null;
     }
     if (null == by) {
       return null;
     }
-    String ext =
-        mimeType == null ? 'png' : extensionFromMime(mimeType) ?? 'png';
+    String ext = mimeType == null
+        ? 'png'
+        : extensionFromMime(mimeType) ?? 'png';
     if (ext == 'jpe') {
       ext = 'jpg';
     }
-    File extFile = File(joinAll([
-      (Directory(join((await getTemporaryDirectory()).path, 'cover_ext_cache')))
-          .path,
-      musicId
-    ]));
-    File cacheFile = File(joinAll([
-      (Directory(join((await getTemporaryDirectory()).path, 'cover_cache')))
-          .path,
-      musicId + "." + ext
-    ]));
+    File extFile = File(
+      joinAll([
+        (Directory(
+          join((await getTemporaryDirectory()).path, 'cover_ext_cache'),
+        )).path,
+        musicId,
+      ]),
+    );
+    File cacheFile = File(
+      joinAll([
+        (Directory(
+          join((await getTemporaryDirectory()).path, 'cover_cache'),
+        )).path,
+        "$musicId.$ext",
+      ]),
+    );
     if (!extFile.existsSync()) {
       extFile = await extFile.create(recursive: true);
     }
@@ -214,11 +235,14 @@ class CacheModel extends ChangeNotifier {
     if (kIsWeb || Platform.isWindows) {
       return null;
     }
-    File extFile = File(joinAll([
-      (Directory(join((await getTemporaryDirectory()).path, 'cover_ext_cache')))
-          .path,
-      musicId
-    ]));
+    File extFile = File(
+      joinAll([
+        (Directory(
+          join((await getTemporaryDirectory()).path, 'cover_ext_cache'),
+        )).path,
+        musicId,
+      ]),
+    );
     String ext = 'png';
     if (extFile.existsSync()) {
       ext = await extFile.readAsString();
@@ -226,11 +250,14 @@ class CacheModel extends ChangeNotifier {
     if (ext.trim() == '') {
       ext = 'png';
     }
-    File cacheFile = File(joinAll([
-      (Directory(join((await getTemporaryDirectory()).path, 'cover_cache')))
-          .path,
-      musicId + "." + ext
-    ]));
+    File cacheFile = File(
+      joinAll([
+        (Directory(
+          join((await getTemporaryDirectory()).path, 'cover_cache'),
+        )).path,
+        "$musicId.$ext",
+      ]),
+    );
     return cacheFile;
   }
 
@@ -239,12 +266,14 @@ class CacheModel extends ChangeNotifier {
       ByteData data = await rootBundle.load("asserts/images/default_cover.jpg");
       return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
     }
-    File defaultCoverFile = File(joinAll([
-      (Directory(
-              join((await getApplicationDocumentsDirectory()).path, 'cover')))
-          .path,
-      "default_cover.jpg"
-    ]));
+    File defaultCoverFile = File(
+      joinAll([
+        (Directory(
+          join((await getApplicationDocumentsDirectory()).path, 'cover'),
+        )).path,
+        "default_cover.jpg",
+      ]),
+    );
     Uint8List? bytes;
     if (!defaultCoverFile.existsSync()) {
       defaultCoverFile = await defaultCoverFile.create(recursive: true);
@@ -264,11 +293,14 @@ class CacheModel extends ChangeNotifier {
     if (musicId == '') {
       return false;
     }
-    File extFile = File(joinAll([
-      (Directory(join((await getTemporaryDirectory()).path, 'cover_ext_cache')))
-          .path,
-      musicId
-    ]));
+    File extFile = File(
+      joinAll([
+        (Directory(
+          join((await getTemporaryDirectory()).path, 'cover_ext_cache'),
+        )).path,
+        musicId,
+      ]),
+    );
     if (!extFile.existsSync()) {
       return false;
     }
@@ -276,11 +308,14 @@ class CacheModel extends ChangeNotifier {
     if (ext.trim() == '') {
       ext = 'png';
     }
-    File cacheFile = File(joinAll([
-      (Directory(join((await getTemporaryDirectory()).path, 'cover_cache')))
-          .path,
-      musicId + "." + ext
-    ]));
+    File cacheFile = File(
+      joinAll([
+        (Directory(
+          join((await getTemporaryDirectory()).path, 'cover_cache'),
+        )).path,
+        "$musicId.$ext",
+      ]),
+    );
     if (cacheFile.existsSync()) {
       await cacheFile.delete();
       await extFile.delete();
@@ -291,19 +326,23 @@ class CacheModel extends ChangeNotifier {
   }
 
   Future<bool> deleteMusicCacheByMusicId(
-      String musicId, String musicUri) async {
+    String musicId,
+    String musicUri,
+  ) async {
     if (kIsWeb || Platform.isWindows) {
       return false;
     }
     Uri uri = Uri.parse(musicUri);
-    File cacheFile = File(joinAll([
-      (Directory(
-              join((await getTemporaryDirectory()).path, 'just_audio_cache')))
-          .path,
-      'remote',
-      sha256.convert(utf8.encode(uri.toString())).toString() +
-          extension(uri.path),
-    ]));
+    File cacheFile = File(
+      joinAll([
+        (Directory(
+          join((await getTemporaryDirectory()).path, 'just_audio_cache'),
+        )).path,
+        'remote',
+        sha256.convert(utf8.encode(uri.toString())).toString() +
+            extension(uri.path),
+      ]),
+    );
     LogHelper.get().debug('即将删除音乐缓存文件：$cacheFile');
     if (cacheFile.existsSync()) {
       try {

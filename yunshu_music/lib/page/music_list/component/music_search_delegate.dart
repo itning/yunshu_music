@@ -20,7 +20,7 @@ class MusicSearchDelegate extends SearchDelegate {
           query = '';
           showSuggestions(context);
         },
-      )
+      ),
     ];
   }
 
@@ -59,51 +59,64 @@ class MusicSearchDelegate extends SearchDelegate {
   }
 
   Widget _buildWidget(
-      BuildContext context, List<SearchResultItem> result, String keyword) {
+    BuildContext context,
+    List<SearchResultItem> result,
+    String keyword,
+  ) {
     return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-      }),
+      behavior: ScrollConfiguration.of(context).copyWith(
+        dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+      ),
       child: Scrollbar(
         child: ListView.builder(
-            primary: true,
-            itemCount: result.length,
-            itemBuilder: (_, int index) {
-              SearchResultItem music = result[index];
-              return InkWell(
-                onTap: () => _play(context, music.musicId),
-                onLongPress: () {
-                  Clipboard.setData(
-                          ClipboardData(text: "${music.name}-${music.singer}"))
-                      .then((_) => ScaffoldMessenger.of(context)
-                              .showSnackBar(const SnackBar(
-                            content: Text('复制成功',
-                                style: TextStyle(fontFamily: 'LXGWWenKaiMono')),
-                            duration: Duration(seconds: 1),
-                          )));
-                },
-                child: ListTile(
-                  title: Text.rich(TextSpan(
-                      children: music.fromLyric
-                          ? [TextSpan(text: '${music.name} - ${music.singer}')]
-                          : highlight(
-                              music.name!, search(music.name!, keyword)))),
-                  subtitle: Text.rich(
-                    TextSpan(
-                        children: music.fromLyric
-                            ? highlightEmTag(music.highlightFields?[0])
-                            : highlight(
-                                music.singer!, search(music.singer!, keyword))),
+          primary: true,
+          itemCount: result.length,
+          itemBuilder: (_, int index) {
+            SearchResultItem music = result[index];
+            return InkWell(
+              onTap: () => _play(context, music.musicId),
+              onLongPress: () {
+                Clipboard.setData(
+                  ClipboardData(text: "${music.name}-${music.singer}"),
+                ).then(
+                  (_) => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        '复制成功',
+                        style: TextStyle(fontFamily: 'LXGWWenKaiMono'),
+                      ),
+                      duration: Duration(seconds: 1),
+                    ),
                   ),
-                  trailing: IconButton(
-                    tooltip: '播放',
-                    onPressed: () => _play(context, music.musicId),
-                    icon: const Icon(Icons.play_arrow),
+                );
+              },
+              child: ListTile(
+                title: Text.rich(
+                  TextSpan(
+                    children: music.fromLyric
+                        ? [TextSpan(text: '${music.name} - ${music.singer}')]
+                        : highlight(music.name!, search(music.name!, keyword)),
                   ),
                 ),
-              );
-            }),
+                subtitle: Text.rich(
+                  TextSpan(
+                    children: music.fromLyric
+                        ? highlightEmTag(music.highlightFields?[0])
+                        : highlight(
+                            music.singer!,
+                            search(music.singer!, keyword),
+                          ),
+                  ),
+                ),
+                trailing: IconButton(
+                  tooltip: '播放',
+                  onPressed: () => _play(context, music.musicId),
+                  icon: const Icon(Icons.play_arrow),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -111,7 +124,9 @@ class MusicSearchDelegate extends SearchDelegate {
   void _play(BuildContext context, String? musicId) {
     close(context, null);
     context.push('/musicPlay');
-    Provider.of<MusicDataModel>(context, listen: false)
-        .setNowPlayMusicUseMusicId(musicId);
+    Provider.of<MusicDataModel>(
+      context,
+      listen: false,
+    ).setNowPlayMusicUseMusicId(musicId);
   }
 }

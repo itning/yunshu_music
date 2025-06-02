@@ -6,7 +6,7 @@ import 'package:yunshu_music/provider/play_status_model.dart';
 
 /// 播放页进度
 class PlayerPageProgress extends StatelessWidget {
-  const PlayerPageProgress({Key? key}) : super(key: key);
+  const PlayerPageProgress({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +20,8 @@ class PlayerPageProgress extends StatelessWidget {
         builder: (context, value, _) => ProgressBar(
           timeLabelLocation: TimeLabelLocation.sides,
           progressBarColor: Colors.white,
-          baseBarColor: Colors.white.withOpacity(0.24),
-          bufferedBarColor: Colors.white.withOpacity(0.24),
+          baseBarColor: Colors.white.withAlpha((255.0 * 0.24).round()),
+          bufferedBarColor: Colors.white.withAlpha((255 * 0.24).round()),
           thumbColor: Colors.white,
           thumbGlowColor: Colors.white,
           timeLabelTextStyle: const TextStyle(color: Colors.white),
@@ -33,11 +33,8 @@ class PlayerPageProgress extends StatelessWidget {
           buffered: value.item3,
           onSeek: (duration) => context.read<PlayStatusModel>().seek(duration),
         ),
-        selector: (_, status) => Tuple3(
-          status.duration,
-          status.position,
-          status.bufferedPosition,
-        ),
+        selector: (_, status) =>
+            Tuple3(status.duration, status.position, status.bufferedPosition),
       ),
     );
   }

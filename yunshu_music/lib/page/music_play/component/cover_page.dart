@@ -8,7 +8,7 @@ import 'package:yunshu_music/util/common_utils.dart';
 
 /// 封面页
 class CoverPage extends StatefulWidget {
-  const CoverPage({Key? key}) : super(key: key);
+  const CoverPage({super.key});
 
   @override
   State<CoverPage> createState() => _CoverPageState();
@@ -22,7 +22,7 @@ class _CoverPageState extends State<CoverPage>
     return Center(
       child: Selector<MusicDataModel, Uint8List?>(
         selector: (_, model) => model.coverBase64,
-        builder: (_, value, __) {
+        builder: (_, value, _) {
           bool largeMode = isLargeMode(context);
           if (value == null) {
             return RotateCoverImageWidget(

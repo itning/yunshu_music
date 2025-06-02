@@ -33,14 +33,14 @@ class LyricController extends ChangeNotifier {
 
   bool _isDragging = false;
 
-  get isDragging => _isDragging;
+  bool get isDragging => _isDragging;
 
-  set isDragging(value) {
+  set isDragging(bool value) {
     _isDragging = value;
     notifyListeners();
   }
 
-  reset() {
+  void reset() {
     progress = const Duration();
     draggingTimer = null;
     draggingTimerDuration = null;

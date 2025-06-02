@@ -44,20 +44,22 @@ class HttpHelper {
             if (received - lastDownload > 2097152) {
               lastDownload = received;
               LogHelper.get().debug(
-                  "下载进度: $url $received/$total ${(received / total * 100).toStringAsFixed(0)}%");
+                "下载进度: $url $received/$total ${(received / total * 100).toStringAsFixed(0)}%",
+              );
             }
           }
         },
         options: Options(
-            responseType: ResponseType.bytes,
-            validateStatus: (status) {
-              if (status == 200) {
-                return true;
-              } else {
-                LogHelper.get().error('下载文件失败,服务器响应码非200 $status');
-                return false;
-              }
-            }),
+          responseType: ResponseType.bytes,
+          validateStatus: (status) {
+            if (status == 200) {
+              return true;
+            } else {
+              LogHelper.get().error('下载文件失败,服务器响应码非200 $status');
+              return false;
+            }
+          },
+        ),
       );
       if (response.data == null) {
         LogHelper.get().error('下载文件失败,response.data == null');
@@ -77,7 +79,8 @@ class HttpHelper {
 
   Future<Response<Map<String, dynamic>>> getMusic() async {
     return await _dio.get<Map<String, dynamic>>(
-        "${LoginModel.get().getBaseUrl()}/music?size=5000&sort=gmtCreate,desc");
+      "${LoginModel.get().getBaseUrl()}/music?size=5000&sort=gmtCreate,desc",
+    );
   }
 
   Future<String?> getLyric(String lyricUri) async {
@@ -88,12 +91,14 @@ class HttpHelper {
     }
     _lyricCancelToken = CancelToken();
     try {
-      Response<String> response =
-          await _dio.get<String>(lyricUri, cancelToken: _lyricCancelToken);
+      Response<String> response = await _dio.get<String>(
+        lyricUri,
+        cancelToken: _lyricCancelToken,
+      );
       _lyricCancelToken = null;
       return response.data;
-    } on DioError catch (e) {
-      if (e.type == DioErrorType.cancel) {
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
         LogHelper.get().info('获取歌词请求取消 $lyricUri');
       } else if (e.response?.statusCode == 404) {
         LogHelper.get().info('该歌曲无歌词 $lyricUri');
@@ -116,9 +121,11 @@ class HttpHelper {
     }
     _coverCancelToken = CancelToken();
     try {
-      Response<List<int>> response = await _dio.get<List<int>>(coverUri,
-          options: Options(responseType: ResponseType.bytes),
-          cancelToken: _coverCancelToken);
+      Response<List<int>> response = await _dio.get<List<int>>(
+        coverUri,
+        options: Options(responseType: ResponseType.bytes),
+        cancelToken: _coverCancelToken,
+      );
       _coverCancelToken = null;
       List<String>? contentTypes = response.headers[Headers.contentTypeHeader];
       String? contentType;
@@ -126,8 +133,8 @@ class HttpHelper {
         contentType = contentTypes[0];
       }
       return Tuple2(contentType, response.data);
-    } on DioError catch (e) {
-      if (e.type == DioErrorType.cancel) {
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
         LogHelper.get().info('获取封面请求取消 $coverUri');
       } else if (e.response?.statusCode == 404) {
         LogHelper.get().info('该歌曲无封面 $coverUri');
@@ -145,16 +152,17 @@ class HttpHelper {
   Future<SearchResultEntity?> search(String keyword) async {
     keyword = Uri.encodeQueryComponent(keyword);
     try {
-      Response<Map<String, dynamic>> response = await _dio.get<
-              Map<String, dynamic>>(
-          "${LoginModel.get().getBaseUrl()}/music/search_v2?size=5000&keyword=$keyword");
+      Response<Map<String, dynamic>>
+      response = await _dio.get<Map<String, dynamic>>(
+        "${LoginModel.get().getBaseUrl()}/music/search_v2?size=5000&keyword=$keyword",
+      );
       if (response.data == null) {
         return null;
       }
       SearchResultEntity result = SearchResultEntity.fromJson(response.data!);
       return result;
-    } on DioError catch (e) {
-      if (e.type == DioErrorType.cancel) {
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
         LogHelper.get().info('搜索歌词请求取消 $keyword');
       } else if (e.response?.statusCode == 404) {
         LogHelper.get().info('搜索歌词返回404 $keyword');

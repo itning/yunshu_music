@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:tuple/tuple.dart';
-import 'package:window_size/window_size.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_util.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
@@ -11,7 +10,6 @@ import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
-import 'package:yunshu_music/util/common_utils.dart';
 
 /// 音乐数据模型
 class MusicDataModel extends ChangeNotifier {
@@ -132,8 +130,9 @@ class MusicDataModel extends ChangeNotifier {
         containsName = musicItem.name!.toLowerCase().contains(lowerCaseKeyword);
       }
       if (musicItem.singer != null) {
-        containsSinger =
-            musicItem.singer!.toLowerCase().contains(lowerCaseKeyword);
+        containsSinger = musicItem.singer!.toLowerCase().contains(
+          lowerCaseKeyword,
+        );
       }
       return containsName || containsSinger;
     }).toList();
@@ -175,13 +174,9 @@ class MusicDataModel extends ChangeNotifier {
     _nowPlayMusic!.name = title;
     _nowPlayMusic!.singer = subTitle;
     _nowPlayMusic!.lyricId = mediaId;
-    _nowMusicIndex =
-        musicList.indexWhere((element) => element.musicId == mediaId);
-    if (kIsWeb) {
-      setTitle('$title-$subTitle');
-    } else if (Platform.isWindows || Platform.isMacOS) {
-      setWindowTitle('$title-$subTitle');
-    }
+    _nowMusicIndex = musicList.indexWhere(
+      (element) => element.musicId == mediaId,
+    );
     notifyListeners();
     await _initCover(mediaId, coverUri);
     await _initLyric(mediaId, lyricUri);
@@ -231,8 +226,9 @@ class MusicDataModel extends ChangeNotifier {
         return;
       }
     }
-    Tuple2<String?, List<int>?> coverBytes =
-        await HttpHelper.get().getCover(coverUri);
+    Tuple2<String?, List<int>?> coverBytes = await HttpHelper.get().getCover(
+      coverUri,
+    );
     if (coverBytes.item2 == null) {
       _coverBase64 = await CacheModel.get().getDefaultCover();
       notifyListeners();

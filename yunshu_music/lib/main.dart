@@ -29,10 +29,13 @@ import 'package:yunshu_music/util/common_utils.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb && Platform.isWindows) {
-    await WindowsSingleInstance.ensureSingleInstance([], "instance_checker",
-        onSecondWindow: (args) {
-      LogHelper.get().info(args);
-    });
+    await WindowsSingleInstance.ensureSingleInstance(
+      [],
+      "instance_checker",
+      onSecondWindow: (args) {
+        LogHelper.get().info(args);
+      },
+    );
   }
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
   await CacheModel.get().init(sharedPreferences);
@@ -46,15 +49,16 @@ void main() async {
   if (!kIsWeb && Platform.isAndroid) {
     // 沉浸式状态栏
     // 写在组件渲染之后，是为了在渲染后进行设置赋值，覆盖状态栏，写在渲染之前对MaterialApp组件会覆盖这个值。
-    SystemUiOverlayStyle systemUiOverlayStyle =
-        const SystemUiOverlayStyle(statusBarColor: Colors.transparent);
+    SystemUiOverlayStyle systemUiOverlayStyle = const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+    );
     SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
   }
 }
 
 /// 主入口
 class YunShuMusicApp extends StatefulWidget {
-  const YunShuMusicApp({Key? key}) : super(key: key);
+  const YunShuMusicApp({super.key});
 
   @override
   State<YunShuMusicApp> createState() => _YunShuMusicAppState();
@@ -120,21 +124,26 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
         ChangeNotifierProvider(create: (_) => SearchModel.get()),
       ],
       child: Consumer2<ThemeModel, SettingModel>(
-        builder: (_, theme, setting, __) {
+        builder: (_, theme, setting, _) {
           return Shortcuts(
             shortcuts: <LogicalKeySet, Intent>{
               LogicalKeySet(LogicalKeyboardKey.space): const PlayPauseIntent(),
               LogicalKeySet(
-                      LogicalKeyboardKey.control, LogicalKeyboardKey.arrowLeft):
-                  const PreviousIntent(),
-              LogicalKeySet(LogicalKeyboardKey.control,
-                  LogicalKeyboardKey.arrowRight): const NextIntent(),
+                LogicalKeyboardKey.control,
+                LogicalKeyboardKey.arrowLeft,
+              ): const PreviousIntent(),
               LogicalKeySet(
-                      LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowLeft):
-                  const SeekBackIntent(),
+                LogicalKeyboardKey.control,
+                LogicalKeyboardKey.arrowRight,
+              ): const NextIntent(),
               LogicalKeySet(
-                      LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowRight):
-                  const SeekForwardIntent(),
+                LogicalKeyboardKey.shift,
+                LogicalKeyboardKey.arrowLeft,
+              ): const SeekBackIntent(),
+              LogicalKeySet(
+                LogicalKeyboardKey.shift,
+                LogicalKeyboardKey.arrowRight,
+              ): const SeekForwardIntent(),
             },
             child: MaterialApp.router(
               localizationsDelegates: const [
@@ -145,9 +154,10 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
               supportedLocales: const [Locale.fromSubtags(languageCode: 'zh')],
               // 与 ThemeData.dark() 相同
               darkTheme: ThemeData(
-                  useMaterial3: setting.useMaterial3Theme,
-                  brightness: Brightness.dark,
-                  fontFamily: 'LXGWWenKaiMono'),
+                useMaterial3: setting.useMaterial3Theme,
+                brightness: Brightness.dark,
+                fontFamily: 'LXGWWenKaiMono',
+              ),
               themeMode: theme.themeMode,
               theme: ThemeData(fontFamily: 'LXGWWenKaiMono'),
               title: '云舒音乐',

@@ -48,23 +48,29 @@ class MusicChannel {
           StreamController<double>();
       volumeEvent = volumeEventController.stream;
 
-      await channel.init(metadataEventController, playbackStateController,
-          volumeEventController);
+      await channel.init(
+        metadataEventController,
+        playbackStateController,
+        volumeEventController,
+      );
     } else {
       // android平台
-      EventChannel _playbackStateEventChannel =
-          const EventChannel('yunshu.music/playback_state_event_channel');
-      playbackStateEvent = _playbackStateEventChannel.receiveBroadcastStream();
-      EventChannel _metadataEventChannel =
-          const EventChannel('yunshu.music/metadata_event_channel');
-      metadataEvent = _metadataEventChannel.receiveBroadcastStream();
+      EventChannel playbackStateEventChannel = const EventChannel(
+        'yunshu.music/playback_state_event_channel',
+      );
+      playbackStateEvent = playbackStateEventChannel.receiveBroadcastStream();
+      EventChannel metadataEventChannel = const EventChannel(
+        'yunshu.music/metadata_event_channel',
+      );
+      metadataEvent = metadataEventChannel.receiveBroadcastStream();
     }
   }
 
   Future<void> initMethod() async {
     if (supportMusicChannel()) {
       return await channel.initMethod(
-          MusicDataModel.get().musicList.map((e) => e.toJson()).toList());
+        MusicDataModel.get().musicList.map((e) => e.toJson()).toList(),
+      );
     }
     await _methodChannel.invokeMethod("init");
   }
@@ -108,8 +114,9 @@ class MusicChannel {
     if (supportMusicChannel()) {
       return await channel.seekTo(position);
     }
-    await _methodChannel
-        .invokeMethod('seekTo', {'position': position.inMilliseconds});
+    await _methodChannel.invokeMethod('seekTo', {
+      'position': position.inMilliseconds,
+    });
   }
 
   Future<void> setPlayMode(String mode) async {
@@ -138,8 +145,9 @@ class MusicChannel {
     if (supportMusicChannel()) {
       return await channel.delPlayListByMediaId(mediaId);
     }
-    await _methodChannel
-        .invokeMethod('delPlayListByMediaId', {'mediaId': mediaId});
+    await _methodChannel.invokeMethod('delPlayListByMediaId', {
+      'mediaId': mediaId,
+    });
   }
 
   Future<void> clearPlayList() async {
