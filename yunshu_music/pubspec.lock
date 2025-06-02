@@ -206,6 +206,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_app_minimizer_plus:
+    dependency: "direct main"
+    description:
+      name: flutter_app_minimizer_plus
+      sha256: "7853cb35ec8d7c8ba07bde6f01174d0258c755baa631d64e4460b5906f6e500b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -245,14 +253,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_windowmanager:
+  flutter_windowmanager_plus:
     dependency: "direct main"
     description:
-      name: flutter_windowmanager
-      sha256: b4d0bc06f6777952b729c0cdb7ce9ad1ecabd8b8b1cb0acb57a36621457dab1b
+      name: flutter_windowmanager_plus
+      sha256: "4e2bf7c7f374699fd74d59785f1d74efd40052c24a5edde5a4d825cc72608d40"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.0"
+    version: "1.0.1"
   get_it:
     dependency: transitive
     description:
@@ -397,14 +405,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.14.0"
-  move_to_background:
-    dependency: "direct main"
-    description:
-      name: move_to_background
-      sha256: "00caad17a6ce149910777131503f43f8ed80025681f94684e3a6a87d979b914c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.2"
   msix:
     dependency: "direct dev"
     description:

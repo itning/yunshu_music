@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_app_minimizer_plus/flutter_app_minimizer_plus.dart';
 import 'package:go_router/go_router.dart';
-import 'package:move_to_background/move_to_background.dart';
 import 'package:yunshu_music/hotkey/action.dart';
 import 'package:yunshu_music/hotkey/intent.dart';
 import 'package:yunshu_music/page/music_list/component/music_list.dart';
@@ -15,12 +15,12 @@ class MusicIndexPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (!kIsWeb) {
-          MoveToBackground.moveTaskToBack();
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (!kIsWeb && !didPop) {
+          FlutterAppMinimizerPlus.minimizeApp();
         }
-        return false;
       },
       child: Actions(
         actions: {
