@@ -70,10 +70,12 @@ class _LoginPageState extends State<LoginPage> {
   void setBaseUrl() async {
     if ((_formKey.currentState as FormState).validate()) {
       await LoginModel.get().setBaseUrl(_controller.text.trim());
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      } else {
-        context.go('/');
+      if (mounted) {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        } else {
+          context.go('/');
+        }
       }
     }
   }

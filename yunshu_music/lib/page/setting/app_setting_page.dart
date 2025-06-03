@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 /// 应用设置页面
 class AppSettingPage extends StatelessWidget {
@@ -180,11 +181,13 @@ class AppSettingPage extends StatelessWidget {
                       bool can = await canLaunchUrl(uri);
                       if (can) {
                         await launchUrl(uri);
-                      } else {
+                      } else if (context.mounted) {
                         MotionToast.error(
                           title: const Text("错误"),
                           description: const Text("无法升级"),
                         ).show(context);
+                      } else {
+                        LogHelper.get().warn('无法弹出提示，因为未mounted');
                       }
                     },
                   );
@@ -235,10 +238,12 @@ class AppSettingPage extends StatelessWidget {
                 if (can) {
                   await launchUrl(uri);
                 } else {
-                  MotionToast.error(
-                    title: const Text("错误"),
-                    description: const Text("无法打开"),
-                  ).show(context);
+                  if (context.mounted) {
+                    MotionToast.error(
+                      title: const Text("错误"),
+                      description: const Text("无法打开"),
+                    ).show(context);
+                  }
                 }
               },
               child: Row(

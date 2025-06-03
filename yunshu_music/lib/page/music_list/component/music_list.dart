@@ -208,15 +208,20 @@ class _InnerListItem extends StatelessWidget {
       },
       onLongPress: () {
         Clipboard.setData(ClipboardData(text: "$name-$singer")).then(
-          (_) => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                '复制成功',
-                style: TextStyle(fontFamily: 'LXGWWenKaiMono'),
-              ),
-              duration: Duration(seconds: 1),
-            ),
-          ),
+          (_) => {
+            if (context.mounted)
+              {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      '复制成功',
+                      style: TextStyle(fontFamily: 'LXGWWenKaiMono'),
+                    ),
+                    duration: Duration(seconds: 1),
+                  ),
+                ),
+              },
+          },
         );
       },
       rightButtonTap: () {
