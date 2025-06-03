@@ -264,7 +264,7 @@ class _PlayList extends StatelessWidget {
                         );
                       },
                     );
-                    if (status) {
+                    if (status && context.mounted) {
                       Navigator.pop(context);
                     }
                   },
