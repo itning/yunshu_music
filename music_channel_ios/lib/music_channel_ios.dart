@@ -89,6 +89,14 @@ class MusicChannelIos extends MusicPlatform {
           await seekTo(Duration(seconds: call.arguments["position"]));
         case 'togglePlayPause':
           PlayerState.playing == _player.state ? await pause() : await play();
+        case 'headphonesUnplugged':
+        case 'audioInterruptionBegan':
+          if (PlayerState.playing == _player.state) {
+            await pause();
+          }
+        case 'audioInterruptionEnded':
+        case 'audioInterruptionShouldResume':
+          break;
       }
     });
 
@@ -114,6 +122,7 @@ class MusicChannelIos extends MusicPlatform {
     });
 
     _player.onPlayerStateChanged.listen((PlayerState event) {
+      print(event.toString());
       if (PlayerState.completed == event) {
         return;
       }

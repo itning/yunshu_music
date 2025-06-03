@@ -7,6 +7,21 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin {
 
   static var channel:FlutterMethodChannel?
 
+  override init() {
+    super.init()
+    let session = AVAudioSession.sharedInstance()
+    // 添加中断监听
+    NotificationCenter.default.addObserver(self, selector: #selector(handleInterruption(notification:)), name: AVAudioSession.interruptionNotification, object: session)
+    // 监听音频路由变化（如耳机插入/拔出）
+    NotificationCenter.default.addObserver(self, selector: #selector(handleRouteChange(notification:)), name: AVAudioSession.routeChangeNotification, object: session)
+  }
+
+  deinit {
+    let session = AVAudioSession.sharedInstance()
+    NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: session)
+    NotificationCenter.default.removeObserver(self, name: AVAudioSession.routeChangeNotification, object: session)
+  }
+
   public static func register(with registrar: FlutterPluginRegistrar) {
     channel = FlutterMethodChannel(name: "music_channel_ios", binaryMessenger: registrar.messenger())
     let instance = SwiftMusicChannelIosPlugin()
@@ -122,6 +137,7 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin {
      }
     //result("iOS " + UIDevice.current.systemVersion)
   }
+
   @objc func playButtonTapped(_ event: Any) -> MPRemoteCommandHandlerStatus {
       SwiftMusicChannelIosPlugin.channel?.invokeMethod("playButtonTapped",  arguments: nil)
       return MPRemoteCommandHandlerStatus.success
@@ -156,4 +172,69 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin {
       SwiftMusicChannelIosPlugin.channel?.invokeMethod("togglePlayPause", arguments: nil)
       return MPRemoteCommandHandlerStatus.success
   }
+
+  @objc func handleInterruption(notification: Notification) {
+    guard let userInfo = notification.userInfo,
+          let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+          let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+        return
+    }
+
+    if type == .began {
+        // 中断开始：通知 Flutter 层暂停播放
+        SwiftMusicChannelIosPlugin.channel?.invokeMethod("audioInterruptionBegan", arguments: nil)
+    } else if type == .ended {
+        // 中断结束：是否需要恢复播放
+        SwiftMusicChannelIosPlugin.channel?.invokeMethod("audioInterruptionEnded", arguments: nil)
+        
+        // 如果系统建议恢复播放
+        guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
+        let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+        if options.contains(.shouldResume) {
+            SwiftMusicChannelIosPlugin.channel?.invokeMethod("audioInterruptionShouldResume", arguments: nil)
+        }
+    }
+ }
+
+ @objc func handleRouteChange(notification: Notification) {
+    guard let userInfo = notification.userInfo,
+          let reasonRaw = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+          let reason = AVAudioSession.RouteChangeReason(rawValue: reasonRaw) else {
+        return
+    }
+
+    switch reason {
+    case .newDeviceAvailable:
+        print("有新设备接入，比如插入耳机")
+        
+    case .oldDeviceUnavailable:
+        print("旧设备不可用，比如拔出耳机")
+        if let previousRoute = userInfo[AVAudioSessionRouteChangePreviousRouteKey] as? AVAudioSessionRouteDescription {
+            for output in previousRoute.outputs {
+                if output.portType == .headphones {
+                    // 真的是耳机拔出
+                    SwiftMusicChannelIosPlugin.channel?.invokeMethod("headphonesUnplugged", arguments: nil)
+                }
+            }
+        }
+        
+    case .categoryChange:
+        print("音频会话类别改变")
+        
+    case .override:
+        print("输出被覆盖（如 AirPlay）")
+        
+    case .wakeFromSleep:
+        print("从休眠中唤醒")
+
+    case .noSuitableRouteForCategory:
+        print("没有合适的音频路线可用")
+    
+    case .routeConfigurationChange:
+        print("routeConfigurationChange")
+
+    @unknown default:
+        break
+    }
+ }
 }
