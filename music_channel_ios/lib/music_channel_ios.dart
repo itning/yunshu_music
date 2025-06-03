@@ -122,7 +122,6 @@ class MusicChannelIos extends MusicPlatform {
     });
 
     _player.onPlayerStateChanged.listen((PlayerState event) {
-      print(event.toString());
       if (PlayerState.completed == event) {
         return;
       }
