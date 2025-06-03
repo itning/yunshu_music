@@ -16,6 +16,7 @@ limitations under the License.
 修改说明：
 1. 适配dart空安全
 2. 注释修改
+3. 优化代码
 */
 import 'dart:async';
 
@@ -32,91 +33,48 @@ class LyricWidget extends StatefulWidget {
   final List<Lyric>? remarkLyrics;
   final Size size;
   final LyricController controller;
-  late TextStyle lyricStyle;
-  late TextStyle remarkStyle;
-  late TextStyle currLyricStyle;
-  late TextStyle currRemarkLyricStyle;
-  late TextStyle draggingLyricStyle;
-  late TextStyle draggingRemarkLyricStyle;
+  final TextStyle lyricStyle;
+  final TextStyle remarkStyle;
+  final TextStyle currLyricStyle;
+  final TextStyle currRemarkLyricStyle;
+  final TextStyle draggingLyricStyle;
+  final TextStyle draggingRemarkLyricStyle;
   final double lyricGap;
   final double remarkLyricGap;
-  bool enableDrag;
+  final bool enableDrag;
+  final double? lyricMaxWidth;
 
-  /// 歌词画笔数组
-  List<TextPainter> lyricTextPaints = [];
-
-  /// 翻译/音译歌词画笔数组
-  List<TextPainter> subLyricTextPaints = [];
-
-  /// 字体最大宽度
-  double? lyricMaxWidth;
-
-  LyricWidget({
+  const LyricWidget({
     super.key,
     required this.lyrics,
     this.remarkLyrics,
     required this.size,
     required this.controller,
-    TextStyle? lyricStyle,
-    TextStyle? remarkStyle,
-    TextStyle? currLyricStyle,
-    this.lyricGap = 10,
-    this.remarkLyricGap = 20,
-    TextStyle? draggingLyricStyle,
-    TextStyle? draggingRemarkLyricStyle,
-    this.enableDrag = true,
-    this.lyricMaxWidth,
-    TextStyle? currRemarkLyricStyle,
-  }) : assert(lyrics.isNotEmpty) {
-    this.lyricStyle = lyricStyle ??= const TextStyle(
+    this.lyricStyle = const TextStyle(
       color: Colors.white70,
       fontSize: 16,
       fontFamily: 'LXGWWenKaiMono',
-    );
-    this.remarkStyle = remarkStyle ??= const TextStyle(
+    ),
+    this.remarkStyle = const TextStyle(
       color: Colors.white70,
       fontSize: 16,
       fontFamily: 'LXGWWenKaiMono',
-    );
-    this.currLyricStyle = currLyricStyle ??= const TextStyle(
+    ),
+    this.currLyricStyle = const TextStyle(
       color: Colors.white,
       fontSize: 16,
       fontFamily: 'LXGWWenKaiMono',
-    );
-    this.currRemarkLyricStyle = currRemarkLyricStyle ??= this.currLyricStyle;
-    this.draggingLyricStyle = draggingLyricStyle ??= lyricStyle.copyWith(
-      color: Colors.grey[300],
-      fontFamily: 'LXGWWenKaiMono',
-    );
-    this.draggingRemarkLyricStyle = draggingRemarkLyricStyle ??= remarkStyle
-        .copyWith(color: Colors.grey[300], fontFamily: 'LXGWWenKaiMono');
-
-    //歌词转画笔
-    lyricTextPaints.addAll(
-      lyrics
-          .map(
-            (l) => TextPainter(
-              text: TextSpan(text: l.lyric, style: lyricStyle),
-              textDirection: TextDirection.ltr,
-            ),
-          )
-          .toList(),
-    );
-
-    //翻译/音译歌词转画笔
-    if (remarkLyrics != null && remarkLyrics!.isNotEmpty) {
-      subLyricTextPaints.addAll(
-        remarkLyrics!
-            .map(
-              (l) => TextPainter(
-                text: TextSpan(text: l.lyric, style: remarkStyle),
-                textDirection: TextDirection.ltr,
-              ),
-            )
-            .toList(),
-      );
-    }
-  }
+    ),
+    TextStyle? currRemarkLyricStyle,
+    TextStyle? draggingLyricStyle,
+    TextStyle? draggingRemarkLyricStyle,
+    this.lyricGap = 10,
+    this.remarkLyricGap = 20,
+    this.enableDrag = true,
+    this.lyricMaxWidth,
+  }) : currRemarkLyricStyle = currRemarkLyricStyle ?? currLyricStyle,
+       draggingLyricStyle = draggingLyricStyle ?? lyricStyle,
+       draggingRemarkLyricStyle = draggingRemarkLyricStyle ?? remarkStyle;
 
   @override
   State<LyricWidget> createState() => _LyricWidgetState();
@@ -124,6 +82,8 @@ class LyricWidget extends StatefulWidget {
 
 class _LyricWidgetState extends State<LyricWidget>
     with TickerProviderStateMixin {
+  late List<TextPainter> lyricTextPaints;
+  late List<TextPainter> subLyricTextPaints;
   late LyricPainter _lyricPainter;
   double totalHeight = 0;
   late AnimationController _animationController;
@@ -132,13 +92,34 @@ class _LyricWidgetState extends State<LyricWidget>
 
   @override
   void initState() {
+    super.initState();
+    lyricTextPaints = widget.lyrics
+        .map(
+          (l) => TextPainter(
+            text: TextSpan(text: l.lyric, style: widget.lyricStyle),
+            textDirection: TextDirection.ltr,
+          ),
+        )
+        .toList();
+
+    subLyricTextPaints =
+        widget.remarkLyrics
+            ?.map(
+              (l) => TextPainter(
+                text: TextSpan(text: l.lyric, style: widget.remarkStyle),
+                textDirection: TextDirection.ltr,
+              ),
+            )
+            .toList() ??
+        [];
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
     _animationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        if (null != _animationListenerVoidCallbackFunc) {
+        if (_animationListenerVoidCallbackFunc != null) {
           _animationController.removeListener(
             _animationListenerVoidCallbackFunc!,
           );
@@ -167,7 +148,6 @@ class _LyricWidgetState extends State<LyricWidget>
         widget.controller.oldLine = curLine;
       }
     });
-    super.initState();
   }
 
   @override
@@ -188,21 +168,19 @@ class _LyricWidgetState extends State<LyricWidget>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.lyricMaxWidth == null ||
-        widget.lyricMaxWidth == double.infinity) {
-      widget.lyricMaxWidth = MediaQuery.of(context).size.width;
-    }
+    final lyricMaxWidth =
+        widget.lyricMaxWidth ?? MediaQuery.of(context).size.width;
 
     _lyricPainter = LyricPainter(
       widget.lyrics,
-      widget.lyricTextPaints,
-      widget.subLyricTextPaints,
+      lyricTextPaints,
+      subLyricTextPaints,
       subLyrics: widget.remarkLyrics,
       lyricTextStyle: widget.lyricStyle,
       subLyricTextStyle: widget.remarkStyle,
       currLyricTextStyle: widget.currLyricStyle,
       lyricGapValue: widget.lyricGap,
-      lyricMaxWidth: widget.lyricMaxWidth!,
+      lyricMaxWidth: lyricMaxWidth,
       subLyricGapValue: widget.remarkLyricGap,
       draggingLyricTextStyle: widget.draggingLyricStyle,
       draggingSubLyricTextStyle: widget.draggingRemarkLyricStyle,
@@ -277,7 +255,7 @@ class _LyricWidgetState extends State<LyricWidget>
     if (!mounted) {
       return;
     }
-    if (null == widget.controller.draggingOffset) {
+    if (widget.controller.draggingOffset == null) {
       return;
     }
 
@@ -321,7 +299,7 @@ class _LyricWidgetState extends State<LyricWidget>
     _animationController.reset();
     // 计算当前行偏移量
     var currentRowOffset = computeScrollY(currentLyricIndex);
-    //如果偏移量相同不执行动画
+    // 如果偏移量相同不执行动画
     if (currentRowOffset == widget.controller.previousRowOffset) {
       return;
     }
@@ -363,16 +341,18 @@ class _LyricWidgetState extends State<LyricWidget>
   double computeScrollY(int curLine) {
     double totalHeight = 0;
     for (var i = 0; i < curLine; i++) {
-      var currPaint = widget.lyricTextPaints[i]
+      var currPaint = lyricTextPaints[i]
         ..text = TextSpan(
           text: widget.lyrics[i].lyric,
           style: widget.lyricStyle,
         );
-      currPaint.layout(maxWidth: widget.lyricMaxWidth!);
+      currPaint.layout(
+        maxWidth: widget.lyricMaxWidth ?? MediaQuery.of(context).size.width,
+      );
       totalHeight += currPaint.height + widget.lyricGap;
     }
     if (widget.remarkLyrics != null) {
-      //增加 当前行之前的翻译歌词的偏移量
+      // 增加 当前行之前的翻译歌词的偏移量
       widget.remarkLyrics!
           .where(
             (subLyric) => subLyric.endTime! <= widget.lyrics[curLine].endTime!,
@@ -380,14 +360,15 @@ class _LyricWidgetState extends State<LyricWidget>
           .toList()
           .forEach((subLyric) {
             var currentPaint =
-                widget.subLyricTextPaints[widget.remarkLyrics!.indexOf(
-                    subLyric,
-                  )]
+                subLyricTextPaints[widget.remarkLyrics!.indexOf(subLyric)]
                   ..text = TextSpan(
                     text: subLyric.lyric,
                     style: widget.remarkStyle,
                   );
-            currentPaint.layout(maxWidth: widget.lyricMaxWidth!);
+            currentPaint.layout(
+              maxWidth:
+                  widget.lyricMaxWidth ?? MediaQuery.of(context).size.width,
+            );
             totalHeight += widget.remarkLyricGap + currentPaint.height;
           });
     }
