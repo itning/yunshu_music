@@ -11,7 +11,6 @@ import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_tray/system_tray.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:window_size/window_size.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
 class MusicChannelWindows extends MusicPlatform {
@@ -81,8 +80,9 @@ class MusicChannelWindows extends MusicPlatform {
     StreamController<dynamic> playbackStateController,
     StreamController<double> volumeController,
   ) async {
-    setWindowTitle("云舒音乐");
-    setWindowMinSize(const Size(450, 900));
+    await windowManager.ensureInitialized();
+    windowManager.setTitle("云舒音乐");
+    windowManager.setMinimumSize(const Size(450, 900));
 
     _metadataEventController = metadataEventController;
     _playbackStateController = playbackStateController;
@@ -93,7 +93,6 @@ class MusicChannelWindows extends MusicPlatform {
     _playMode = valueOf(
       _sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE',
     );
-    await windowManager.ensureInitialized();
 
     _player = AudioPlayer(playerId: "69420");
     _player.setReleaseMode(ReleaseMode.stop);
@@ -216,7 +215,7 @@ class MusicChannelWindows extends MusicPlatform {
     }
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
-    setWindowTitle("${_metaData.title}-${_metaData.subTitle}");
+    windowManager.setTitle("${_metaData.title}-${_metaData.subTitle}");
     _systemTray.setToolTip('${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}');
   }
 

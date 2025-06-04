@@ -12,10 +12,6 @@ dependencies:
     sdk: flutter
   music_platform_interface:
     path: ../music_platform_interface
-  window_size:
-    git:
-      url: https://github.com/google/flutter-desktop-embedding.git
-      path: plugins/window_size
   shared_preferences: ^2.5.3
   windows_taskbar: ^1.1.2
   system_tray: ^2.0.3
