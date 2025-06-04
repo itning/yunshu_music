@@ -168,7 +168,6 @@ class MusicChannelMacOS extends MusicPlatform {
     _playbackState.state = MusicStatus.none;
 
     await _systemTray.initSystemTray(
-      title: "云舒音乐",
       iconPath: "asserts/icon/app_icon.ico",
       toolTip: "云舒音乐",
     );
