@@ -16,11 +16,6 @@ class MusicChannelIos extends MusicPlatform {
 
   static const MethodChannel _channel = MethodChannel('music_channel_ios');
 
-  static Future<String?> get platformVersion async {
-    final String? version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
-  }
-
   static const String _nowPlayMusicIdKey = "NOW_PLAY_MEDIA_ID_KEY";
   static const String _playModeKey = "PLAY_MODE";
   static const String _playListKey = "PLAY_LIST";
