@@ -69,7 +69,8 @@
       "type": 1, // 歌曲类型定义见下方链接
       "musicUri": "音乐URL路径，访问该URL即可拿到音乐数据",
       "lyricUri": "LRC歌词URL路径，访问该URL即可拿到歌词数据",
-      "coverUri": "歌曲封面图片URL路径，访问该URL即可拿到歌曲封面图片数据"
+      "coverUri": "歌曲封面图片URL路径，访问该URL即可拿到歌曲封面图片数据",
+      "musicDownloadUri": "音乐下载地址，可以和musicUri相同"
     },
     ...
   ]
