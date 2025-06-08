@@ -6,7 +6,6 @@ import 'package:motion_toast/motion_toast.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
@@ -88,74 +87,6 @@ class AppSettingPage extends StatelessWidget {
                       onChanged: (value) => context
                           .read<SettingModel>()
                           .setUseMaterial3Theme(value),
-                    );
-                  },
-                ),
-              ],
-            ),
-            const Divider(),
-            const Padding(
-              padding: EdgeInsets.only(left: 16.0, top: 16.0),
-              child: Text('缓存设置', style: TextStyle(fontSize: 12.0)),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text('开启歌曲缓存', style: TextStyle(fontSize: 17.0)),
-                ),
-                Selector<CacheModel, bool>(
-                  selector: (_, cache) {
-                    return cache.enableMusicCache;
-                  },
-                  builder: (BuildContext context, enable, _) {
-                    return Switch(
-                      value: enable,
-                      onChanged: (value) =>
-                          context.read<CacheModel>().setEnableMusicCache(value),
-                    );
-                  },
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text('开启封面缓存', style: TextStyle(fontSize: 17.0)),
-                ),
-                Selector<CacheModel, bool>(
-                  selector: (_, cache) {
-                    return cache.enableCoverCache;
-                  },
-                  builder: (BuildContext context, enable, _) {
-                    return Switch(
-                      value: enable,
-                      onChanged: (value) =>
-                          context.read<CacheModel>().setEnableCoverCache(value),
-                    );
-                  },
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text('开启歌词缓存', style: TextStyle(fontSize: 17.0)),
-                ),
-                Selector<CacheModel, bool>(
-                  selector: (_, cache) {
-                    return cache.enableLyricCache;
-                  },
-                  builder: (BuildContext context, enable, _) {
-                    return Switch(
-                      value: enable,
-                      onChanged: (value) =>
-                          context.read<CacheModel>().setEnableLyricCache(value),
                     );
                   },
                 ),

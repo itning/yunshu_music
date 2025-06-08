@@ -39,7 +39,6 @@ class LyricUtil {
     try {
       matches = reg.allMatches(lyricStr);
     } catch (e) {
-      // Fluttertoast.showToast(msg: "歌词解析失败", toastLength: Toast.LENGTH_LONG);
       LogHelper.get().error('歌词解析失败', e);
     }
 

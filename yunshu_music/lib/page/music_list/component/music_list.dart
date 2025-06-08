@@ -10,7 +10,6 @@ import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/page/music_list/component/music_list_item.dart';
-import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/music_list_status_model.dart';
 import 'package:yunshu_music/provider/setting_model.dart';
@@ -113,6 +112,7 @@ class _MusicListState extends State<MusicList> {
                         musicId: music.musicId ?? '',
                         lyricId: music.lyricId ?? '',
                         musicUri: music.musicUri ?? '',
+                        musicDownloadUri: music.musicDownloadUri ?? '',
                       );
                     },
                   ),
@@ -158,6 +158,7 @@ class _InnerListItem extends StatelessWidget {
   final String musicId;
   final String lyricId;
   final String musicUri;
+  final String musicDownloadUri;
 
   const _InnerListItem({
     required this.index,
@@ -166,6 +167,7 @@ class _InnerListItem extends StatelessWidget {
     required this.musicId,
     required this.lyricId,
     required this.musicUri,
+    required this.musicDownloadUri,
   });
 
   Future<bool?> showDeleteConfirmDialog(BuildContext context) {
@@ -253,68 +255,19 @@ class _InnerListItem extends StatelessWidget {
                       title: SelectableText(singer),
                     ),
                     ListTile(
-                      leading: const Icon(Icons.image),
-                      title: const Text('删除封面缓存'),
-                      onTap: () {
-                        showDeleteConfirmDialog(context).then((value) {
-                          if (value ?? false) {
-                            CacheModel.get().deleteCover(musicId).then((value) {
-                              if (value) {
-                                // Fluttertoast.showToast(msg: "删除歌词缓存成功");
-                              } else {
-                                // Fluttertoast.showToast(msg: "缓存不存在");
-                              }
-                            });
-                          }
-                        });
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.delete),
-                      title: const Text('删除歌词缓存'),
-                      onTap: () {
-                        showDeleteConfirmDialog(context).then((value) {
-                          if (value ?? false) {
-                            CacheModel.get().deleteLyric(lyricId).then((value) {
-                              if (value) {
-                                // Fluttertoast.showToast(msg: "删除歌词缓存成功");
-                              } else {
-                                // Fluttertoast.showToast(msg: "缓存不存在");
-                              }
-                            });
-                          }
-                        });
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.delete_forever),
-                      title: const Text('删除歌曲缓存'),
-                      onTap: () {
-                        showDeleteConfirmDialog(context).then((value) {
-                          if (value ?? false) {
-                            CacheModel.get()
-                                .deleteMusicCacheByMusicId(musicId, musicUri)
-                                .then((value) {
-                                  if (value) {
-                                    // Fluttertoast.showToast(msg: "删除歌曲缓存成功");
-                                  } else {
-                                    // Fluttertoast.showToast(msg: "缓存不存在");
-                                  }
-                                });
-                          }
-                        });
-                      },
-                    ),
-                    ListTile(
                       leading: const Icon(Icons.download),
                       title: const Text('下载歌曲到本地'),
                       onTap: () async {
-                        Uri url = Uri.parse(musicUri);
+                        Uri url = Uri.parse(musicDownloadUri);
                         bool can = await canLaunchUrl(url);
                         if (can) {
                           await launchUrl(url);
                         } else {
-                          // Fluttertoast.showToast(msg: "下载失败");
+                          if (context.mounted) {
+                            MotionToast.error(
+                              description: Text("下载失败"),
+                            ).show(context);
+                          }
                         }
                       },
                     ),

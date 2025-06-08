@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:tuple/tuple.dart';
@@ -8,8 +6,8 @@ import 'package:yunshu_music/component/lyric/lyric_util.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
-import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
+import 'package:yunshu_music/util/common_utils.dart';
 
 /// 音乐数据模型
 class MusicDataModel extends ChangeNotifier {
@@ -58,15 +56,6 @@ class MusicDataModel extends ChangeNotifier {
 
   /// 刷新音乐列表
   Future<String?> refreshMusicList({bool needInit = false}) async {
-    if (needInit) {
-      List<MusicData> list = await CacheModel.get().getMusicList();
-      if (list.isNotEmpty) {
-        _musicList = list;
-        await MusicChannel.get().initMethod();
-        notifyListeners();
-        return null;
-      }
-    }
     Response<Map<String, dynamic>> response = await HttpHelper.get().getMusic();
     if (response.statusCode != 200) {
       return '服务器状态${response.statusCode}';
@@ -80,7 +69,6 @@ class MusicDataModel extends ChangeNotifier {
       return musicEntity.msg ?? '服务器错误';
     }
     _musicList = musicEntity.data!;
-    CacheModel.get().cacheMusicList(_musicList);
     if (needInit) {
       await MusicChannel.get().initMethod();
     }
@@ -199,43 +187,20 @@ class MusicDataModel extends ChangeNotifier {
   }
 
   Future<void> _initLyric(String lyricId, String lyricUri) async {
-    if (CacheModel.get().enableLyricCache) {
-      String? lyric = await CacheModel.get().getLyric(lyricId);
-      if (null != lyric) {
-        List<Lyric>? list = LyricUtil.formatLyric(lyric);
-        _lyricList = list;
-        notifyListeners();
-        return;
-      }
-    }
     String? lyric = await HttpHelper.get().getLyric(lyricUri);
-    if (CacheModel.get().enableLyricCache) {
-      CacheModel.get().cacheLyric(lyricId, lyric);
-    }
     List<Lyric>? list = LyricUtil.formatLyric(lyric);
     _lyricList = list;
     notifyListeners();
   }
 
   Future<void> _initCover(String musicId, String coverUri) async {
-    if (CacheModel.get().enableCoverCache) {
-      File? coverFromCache = await CacheModel.get().getCover(musicId);
-      if (null != coverFromCache && coverFromCache.existsSync()) {
-        _coverBase64 = await coverFromCache.readAsBytes();
-        notifyListeners();
-        return;
-      }
-    }
     Tuple2<String?, List<int>?> coverBytes = await HttpHelper.get().getCover(
       coverUri,
     );
     if (coverBytes.item2 == null) {
-      _coverBase64 = await CacheModel.get().getDefaultCover();
+      _coverBase64 = await getDefaultCover();
       notifyListeners();
       return;
-    }
-    if (CacheModel.get().enableCoverCache) {
-      CacheModel.get().cacheCover(musicId, coverBytes.item2, coverBytes.item1);
     }
     _coverBase64 = Uint8List.fromList(coverBytes.item2!);
     notifyListeners();

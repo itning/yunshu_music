@@ -15,7 +15,6 @@ import 'package:yunshu_music/page/login/login_page.dart';
 import 'package:yunshu_music/page/music_list/music_index_page.dart';
 import 'package:yunshu_music/page/music_play/music_play_page.dart';
 import 'package:yunshu_music/page/setting/app_setting_page.dart';
-import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/login_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/music_list_status_model.dart';
@@ -38,7 +37,6 @@ void main() async {
     );
   }
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-  await CacheModel.get().init(sharedPreferences);
   await ThemeModel.get().init(sharedPreferences);
   await LoginModel.get().init(sharedPreferences);
   await MusicChannel.get().init();
@@ -114,7 +112,6 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeModel.get()),
-        ChangeNotifierProvider(create: (_) => CacheModel.get()),
         ChangeNotifierProvider(create: (_) => PlayStatusModel.get()),
         ChangeNotifierProvider(create: (_) => MusicDataModel.get()),
         ChangeNotifierProvider(create: (_) => VolumeDataModel.get()),

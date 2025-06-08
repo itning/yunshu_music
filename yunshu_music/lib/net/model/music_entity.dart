@@ -32,6 +32,7 @@ class MusicData {
   String? musicUri;
   String? lyricUri;
   String? coverUri;
+  String? musicDownloadUri;
 
   MusicData();
 
