@@ -62,6 +62,10 @@ MusicData $MusicDataFromJson(Map<String, dynamic> json) {
   if (coverUri != null) {
     musicData.coverUri = coverUri;
   }
+  final String? musicDownloadUri = jsonConvert.convert<String>(json['musicDownloadUri']);
+  if (musicDownloadUri != null) {
+    musicData.musicDownloadUri = musicDownloadUri;
+  }
   return musicData;
 }
 
@@ -75,5 +79,6 @@ Map<String, dynamic> $MusicDataToJson(MusicData entity) {
   data['musicUri'] = entity.musicUri;
   data['lyricUri'] = entity.lyricUri;
   data['coverUri'] = entity.coverUri;
+  data['musicDownloadUri'] = entity.musicDownloadUri;
   return data;
 }
