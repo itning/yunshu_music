@@ -10,7 +10,6 @@ import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
 import 'package:yunshu_music/page/music_list/component/music_list_item.dart';
-import 'package:yunshu_music/provider/cache_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/music_list_status_model.dart';
 import 'package:yunshu_music/provider/setting_model.dart';
@@ -254,83 +253,6 @@ class _InnerListItem extends StatelessWidget {
                     ListTile(
                       leading: const Icon(Icons.person),
                       title: SelectableText(singer),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.image),
-                      title: const Text('删除封面缓存'),
-                      onTap: () {
-                        showDeleteConfirmDialog(context).then((value) {
-                          if (value ?? false) {
-                            CacheModel.get().deleteCover(musicId).then((value) {
-                              if (value) {
-                                if (context.mounted) {
-                                  MotionToast.success(
-                                    description: Text("删除歌词缓存成功"),
-                                  ).show(context);
-                                }
-                              } else {
-                                if (context.mounted) {
-                                  MotionToast.error(
-                                    description: Text("缓存不存在"),
-                                  ).show(context);
-                                }
-                              }
-                            });
-                          }
-                        });
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.delete),
-                      title: const Text('删除歌词缓存'),
-                      onTap: () {
-                        showDeleteConfirmDialog(context).then((value) {
-                          if (value ?? false) {
-                            CacheModel.get().deleteLyric(lyricId).then((value) {
-                              if (value) {
-                                if (context.mounted) {
-                                  MotionToast.success(
-                                    description: Text("删除歌词缓存成功"),
-                                  ).show(context);
-                                }
-                              } else {
-                                if (context.mounted) {
-                                  MotionToast.error(
-                                    description: Text("缓存不存在"),
-                                  ).show(context);
-                                }
-                              }
-                            });
-                          }
-                        });
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.delete_forever),
-                      title: const Text('删除歌曲缓存'),
-                      onTap: () {
-                        showDeleteConfirmDialog(context).then((value) {
-                          if (value ?? false) {
-                            CacheModel.get()
-                                .deleteMusicCacheByMusicId(musicId, musicUri)
-                                .then((value) {
-                                  if (value) {
-                                    if (context.mounted) {
-                                      MotionToast.success(
-                                        description: Text("删除歌曲缓存成功"),
-                                      ).show(context);
-                                    }
-                                  } else {
-                                    if (context.mounted) {
-                                      MotionToast.error(
-                                        description: Text("缓存不存在"),
-                                      ).show(context);
-                                    }
-                                  }
-                                });
-                          }
-                        });
-                      },
                     ),
                     ListTile(
                       leading: const Icon(Icons.download),

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
@@ -349,4 +350,9 @@ bool isLargeMode(BuildContext context) {
     return true;
   }
   return sizeAllow && (kIsWeb || Platform.isWindows || Platform.isMacOS);
+}
+
+Future<Uint8List> getDefaultCover() async {
+  ByteData data = await rootBundle.load("asserts/images/default_cover.jpg");
+  return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
 }
