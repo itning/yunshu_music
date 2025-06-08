@@ -79,7 +79,7 @@ class HttpHelper {
 
   Future<Response<Map<String, dynamic>>> getMusic() async {
     return await _dio.get<Map<String, dynamic>>(
-      "${LoginModel.get().getBaseUrl()}/music?size=5000&sort=gmtCreate,desc",
+      "${LoginModel.get().getBaseUrl()}/music",
     );
   }
 
@@ -103,11 +103,9 @@ class HttpHelper {
       } else if (e.response?.statusCode == 404) {
         LogHelper.get().info('该歌曲无歌词 $lyricUri');
       } else {
-        //Fluttertoast.showToast(msg: '获取歌词网络异常');
         LogHelper.get().warn('获取歌词网络异常', e);
       }
     } catch (e) {
-      //Fluttertoast.showToast(msg: '获取歌词失败');
       LogHelper.get().error('获取歌词失败', e);
     }
     return null;
@@ -139,11 +137,9 @@ class HttpHelper {
       } else if (e.response?.statusCode == 404) {
         LogHelper.get().info('该歌曲无封面 $coverUri');
       } else {
-        //Fluttertoast.showToast(msg: '获取封面网络异常');
         LogHelper.get().warn('获取封面网络异常', e);
       }
     } catch (e) {
-      //Fluttertoast.showToast(msg: '获取封面失败');
       LogHelper.get().error('获取封面失败', e);
     }
     return const Tuple2(null, null);
@@ -167,11 +163,9 @@ class HttpHelper {
       } else if (e.response?.statusCode == 404) {
         LogHelper.get().info('搜索歌词返回404 $keyword');
       } else {
-        //Fluttertoast.showToast(msg: '搜索歌词网络异常');
         LogHelper.get().warn('搜索歌词网络异常', e);
       }
     } catch (e) {
-      //Fluttertoast.showToast(msg: '搜索歌词失败');
       LogHelper.get().error('搜索歌词失败', e);
     }
     return null;

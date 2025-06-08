@@ -99,8 +99,6 @@ class CacheModel extends ChangeNotifier {
           });
         } catch (e) {
           LogHelper.get().error("插入数据库出错", e);
-          // Fluttertoast.showToast(
-          //     msg: '缓存音乐列表出错', toastLength: Toast.LENGTH_LONG);
           await txn.rawDelete('DELETE FROM list_cache');
           return 0;
         }

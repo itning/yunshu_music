@@ -113,6 +113,7 @@ class _MusicListState extends State<MusicList> {
                         musicId: music.musicId ?? '',
                         lyricId: music.lyricId ?? '',
                         musicUri: music.musicUri ?? '',
+                        musicDownloadUri: music.musicDownloadUri ?? '',
                       );
                     },
                   ),
@@ -158,6 +159,7 @@ class _InnerListItem extends StatelessWidget {
   final String musicId;
   final String lyricId;
   final String musicUri;
+  final String musicDownloadUri;
 
   const _InnerListItem({
     required this.index,
@@ -166,6 +168,7 @@ class _InnerListItem extends StatelessWidget {
     required this.musicId,
     required this.lyricId,
     required this.musicUri,
+    required this.musicDownloadUri,
   });
 
   Future<bool?> showDeleteConfirmDialog(BuildContext context) {
@@ -260,9 +263,17 @@ class _InnerListItem extends StatelessWidget {
                           if (value ?? false) {
                             CacheModel.get().deleteCover(musicId).then((value) {
                               if (value) {
-                                // Fluttertoast.showToast(msg: "删除歌词缓存成功");
+                                if (context.mounted) {
+                                  MotionToast.success(
+                                    description: Text("删除歌词缓存成功"),
+                                  ).show(context);
+                                }
                               } else {
-                                // Fluttertoast.showToast(msg: "缓存不存在");
+                                if (context.mounted) {
+                                  MotionToast.error(
+                                    description: Text("缓存不存在"),
+                                  ).show(context);
+                                }
                               }
                             });
                           }
@@ -277,9 +288,17 @@ class _InnerListItem extends StatelessWidget {
                           if (value ?? false) {
                             CacheModel.get().deleteLyric(lyricId).then((value) {
                               if (value) {
-                                // Fluttertoast.showToast(msg: "删除歌词缓存成功");
+                                if (context.mounted) {
+                                  MotionToast.success(
+                                    description: Text("删除歌词缓存成功"),
+                                  ).show(context);
+                                }
                               } else {
-                                // Fluttertoast.showToast(msg: "缓存不存在");
+                                if (context.mounted) {
+                                  MotionToast.error(
+                                    description: Text("缓存不存在"),
+                                  ).show(context);
+                                }
                               }
                             });
                           }
@@ -296,9 +315,17 @@ class _InnerListItem extends StatelessWidget {
                                 .deleteMusicCacheByMusicId(musicId, musicUri)
                                 .then((value) {
                                   if (value) {
-                                    // Fluttertoast.showToast(msg: "删除歌曲缓存成功");
+                                    if (context.mounted) {
+                                      MotionToast.success(
+                                        description: Text("删除歌曲缓存成功"),
+                                      ).show(context);
+                                    }
                                   } else {
-                                    // Fluttertoast.showToast(msg: "缓存不存在");
+                                    if (context.mounted) {
+                                      MotionToast.error(
+                                        description: Text("缓存不存在"),
+                                      ).show(context);
+                                    }
                                   }
                                 });
                           }
@@ -309,12 +336,16 @@ class _InnerListItem extends StatelessWidget {
                       leading: const Icon(Icons.download),
                       title: const Text('下载歌曲到本地'),
                       onTap: () async {
-                        Uri url = Uri.parse(musicUri);
+                        Uri url = Uri.parse(musicDownloadUri);
                         bool can = await canLaunchUrl(url);
                         if (can) {
                           await launchUrl(url);
                         } else {
-                          // Fluttertoast.showToast(msg: "下载失败");
+                          if (context.mounted) {
+                            MotionToast.error(
+                              description: Text("下载失败"),
+                            ).show(context);
+                          }
                         }
                       },
                     ),
