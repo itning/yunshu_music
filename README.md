@@ -26,6 +26,8 @@
 
 本项目需要配合 [云舒 NAS](https://github.com/itning/yunshu-nas) 使用，作为后端音乐服务器，请自行搭建。
 
+或者使用[云舒音乐本地服务端](https://github.com/itning/yunshu_music_local) 来使用
+
 目前支持以下平台：
 
 | 平台    | 支持 |
