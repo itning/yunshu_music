@@ -10,13 +10,43 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _controller = TextEditingController();
+  late GlobalKey<FormState> _formKey;
+  late TextEditingController _controller;
+  late TextEditingController _signParamController;
+
+  late TextEditingController _signKeyController;
+
+  late TextEditingController _timeParamController;
+
+  late bool _enableSign;
+
+  @override
+  void initState() {
+    super.initState();
+    _formKey = GlobalKey<FormState>();
+    final loginModel = LoginModel.get();
+    _controller = TextEditingController(text: loginModel.getBaseUrl());
+    _signParamController = TextEditingController(
+      text: loginModel.getSignParamName(),
+    );
+    _signKeyController = TextEditingController(text: loginModel.getSignKey());
+    _timeParamController = TextEditingController(
+      text: loginModel.getAuthorizationTimeParamName(),
+    );
+    _enableSign = LoginModel.get().getEnableAuthorization();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _signParamController.dispose();
+    _signKeyController.dispose();
+    _timeParamController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    String? baseUrl = LoginModel.get().getBaseUrl();
-    _controller.text = baseUrl ?? '';
     return Scaffold(
       appBar: AppBar(title: const Text('设置音乐源')),
       body: Form(
@@ -46,6 +76,62 @@ class _LoginPageState extends State<LoginPage> {
                 return null;
               },
             ),
+            CheckboxListTile(
+              title: const Text('启用URL签名'),
+              value: _enableSign,
+              onChanged: (value) {
+                setState(() {
+                  _enableSign = value!;
+                });
+              },
+            ),
+            if (_enableSign)
+              Column(
+                children: [
+                  TextFormField(
+                    controller: _signParamController,
+                    decoration: const InputDecoration(
+                      labelText: "签名参数名称",
+                      hintText: "如 sign",
+                      prefixIcon: Icon(Icons.edit),
+                    ),
+                    validator: (v) {
+                      if (v!.trim().isEmpty) {
+                        return "签名参数不能为空";
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: _signKeyController,
+                    decoration: const InputDecoration(
+                      labelText: "签名密钥",
+                      hintText: "请输入签名密钥",
+                      prefixIcon: Icon(Icons.key),
+                    ),
+                    validator: (v) {
+                      if (v!.trim().isEmpty) {
+                        return "签名密钥不能为空";
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: _timeParamController,
+                    decoration: const InputDecoration(
+                      labelText: "时间戳参数名",
+                      hintText: "请输入时间戳参数名",
+                      prefixIcon: Icon(Icons.timer),
+                    ),
+                    validator: (v) {
+                      if (v!.trim().isEmpty) {
+                        return "时间戳参数名不能为空";
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
             Padding(
               padding: const EdgeInsets.only(
                 top: 12.0,
@@ -69,7 +155,14 @@ class _LoginPageState extends State<LoginPage> {
 
   void setBaseUrl() async {
     if ((_formKey.currentState as FormState).validate()) {
-      await LoginModel.get().setBaseUrl(_controller.text.trim());
+      final loginModel = LoginModel.get();
+
+      await loginModel.setBaseUrl(_controller.text.trim());
+      await loginModel.setEnableAuthorization(_enableSign);
+      await loginModel.setSignParamName(_signParamController.text.trim());
+      await loginModel.setSignKey(_signKeyController.text.trim());
+      await loginModel.setAuthorizationTimeParamName(_timeParamController.text.trim());
+
       if (mounted) {
         if (Navigator.canPop(context)) {
           Navigator.pop(context);

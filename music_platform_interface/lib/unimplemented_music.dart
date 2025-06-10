@@ -27,7 +27,7 @@ class UnimplementedMusic extends MusicPlatform {
   }
 
   @override
-  Future<void> initMethod(List<Map<dynamic, dynamic>> musicList) {
+  Future<void> initMethod(List<Map<dynamic, dynamic>> musicList, Map<String, dynamic> authorizationData) {
     throw UnimplementedError();
   }
 

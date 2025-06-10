@@ -20,7 +20,7 @@ abstract class MusicPlatform extends PlatformInterface {
       StreamController<dynamic> playbackStateController,
       StreamController<double> volumeController);
 
-  Future<void> initMethod(List<Map> musicList);
+  Future<void> initMethod(List<Map> musicList, Map<String, dynamic> authorizationData);
 
   Future<void> playFromId(String id);
 

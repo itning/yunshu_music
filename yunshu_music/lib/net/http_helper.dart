@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:music_platform_interface/encryption_tool.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/provider/login_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
@@ -78,12 +79,27 @@ class HttpHelper {
   }
 
   Future<Response<Map<String, dynamic>>> getMusic() async {
-    return await _dio.get<Map<String, dynamic>>(
-      "${LoginModel.get().getBaseUrl()}/music",
-    );
+    String url = "${LoginModel.get().getBaseUrl()}/music";
+    if (LoginModel.get().getEnableAuthorization()) {
+      url = sign(
+        url: url,
+        pkey: LoginModel.get().getSignKey()!,
+        signParamName: LoginModel.get().getSignParamName(),
+        timeParamName: LoginModel.get().getAuthorizationTimeParamName(),
+      );
+    }
+    return await _dio.get<Map<String, dynamic>>(url);
   }
 
   Future<String?> getLyric(String lyricUri) async {
+    if (LoginModel.get().getEnableAuthorization()) {
+      lyricUri = sign(
+        url: lyricUri,
+        pkey: LoginModel.get().getSignKey()!,
+        signParamName: LoginModel.get().getSignParamName(),
+        timeParamName: LoginModel.get().getAuthorizationTimeParamName(),
+      );
+    }
     LogHelper.get().info('获取歌词：$lyricUri');
     if (null != _lyricCancelToken && !_lyricCancelToken!.isCancelled) {
       LogHelper.get().info('取消上一个获取歌词的请求');
@@ -112,6 +128,14 @@ class HttpHelper {
   }
 
   Future<Tuple2<String?, List<int>?>> getCover(String coverUri) async {
+    if (LoginModel.get().getEnableAuthorization()) {
+      coverUri = sign(
+        url: coverUri,
+        pkey: LoginModel.get().getSignKey()!,
+        signParamName: LoginModel.get().getSignParamName(),
+        timeParamName: LoginModel.get().getAuthorizationTimeParamName(),
+      );
+    }
     LogHelper.get().info('获取封面：$coverUri');
     if (null != _coverCancelToken && !_coverCancelToken!.isCancelled) {
       LogHelper.get().info('取消上一个获取封面的请求');

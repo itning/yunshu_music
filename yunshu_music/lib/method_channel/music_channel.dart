@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:music_channel/music_channel.dart' as channel;
+import 'package:yunshu_music/provider/login_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 
 class MusicChannel {
@@ -31,6 +32,8 @@ class MusicChannel {
       switch (call.method) {
         case 'getMusicList':
           return MusicDataModel.get().musicList.map((e) => e.toJson()).toList();
+        case 'getAuthorizationData':
+          return LoginModel.get().getAuthorizationData();
         default:
       }
     });
@@ -70,6 +73,7 @@ class MusicChannel {
     if (supportMusicChannel()) {
       return await channel.initMethod(
         MusicDataModel.get().musicList.map((e) => e.toJson()).toList(),
+        LoginModel.get().getAuthorizationData(),
       );
     }
     await _methodChannel.invokeMethod("init");

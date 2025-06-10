@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
+import 'package:music_platform_interface/encryption_tool.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
@@ -72,6 +73,8 @@ class MusicChannelMacOS extends MusicPlatform {
   bool _isPlayNow = false;
 
   late Menu _menu;
+
+  late Map<String, dynamic> _authorizationData;
 
   @override
   Future<void> init(
@@ -199,10 +202,19 @@ class MusicChannelMacOS extends MusicPlatform {
     }
     _playbackState.state = MusicStatus.connecting;
     _playbackStateController.sink.add(_playbackState.toMap());
+    String url = _nowPlayMusic!.musicUri!;
+    if (_authorizationData["ENABLE"]) {
+      url = sign(
+        url: _nowPlayMusic!.musicUri!,
+        pkey: _authorizationData['SIGN'],
+        signParamName: _authorizationData['SIGN_PARAM'],
+        timeParamName: _authorizationData['TIME_PARAM'],
+      );
+    }
     if (autoStart) {
-      _player.play(UrlSource(_nowPlayMusic!.musicUri!));
+      _player.play(UrlSource(url));
     } else {
-      _player.setSourceUrl(_nowPlayMusic!.musicUri!);
+      _player.setSourceUrl(url);
     }
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
@@ -211,7 +223,11 @@ class MusicChannelMacOS extends MusicPlatform {
   }
 
   @override
-  Future<void> initMethod(List<Map> musicList) async {
+  Future<void> initMethod(
+    List<Map> musicList,
+    Map<String, dynamic> authorizationData,
+  ) async {
+    _authorizationData = authorizationData;
     List<Music> musics = musicList.map((item) => Music.fromMap(item)).toList();
     _musicList.clear();
     _musicList.addAll(musics);

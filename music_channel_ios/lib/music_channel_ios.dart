@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
+import 'package:music_platform_interface/encryption_tool.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
@@ -58,6 +59,8 @@ class MusicChannelIos extends MusicPlatform {
 
   /// 正在播放的音乐信息
   Music? _nowPlayMusic;
+
+  late Map<String, dynamic> _authorizationData;
 
   @override
   Future<void> init(
@@ -134,10 +137,19 @@ class MusicChannelIos extends MusicPlatform {
             int duration = event.duration!.inMilliseconds;
             _metaData.duration = duration;
             metadataEventController.sink.add(_metaData.toMap());
+            String coverUri = _nowPlayMusic!.coverUri!;
+            if (_authorizationData["ENABLE"]) {
+              coverUri = sign(
+                url: _nowPlayMusic!.coverUri!,
+                pkey: _authorizationData['SIGN'],
+                signParamName: _authorizationData['SIGN_PARAM'],
+                timeParamName: _authorizationData['TIME_PARAM'],
+              );
+            }
             _channel.invokeMethod("setLockScreenDisplay", {
               "name": _nowPlayMusic!.name,
               "singer": _nowPlayMusic!.singer,
-              "coverUri": _nowPlayMusic!.coverUri,
+              "coverUri": coverUri,
               "duration": event.duration!.inSeconds,
             });
           }
@@ -169,23 +181,43 @@ class MusicChannelIos extends MusicPlatform {
     }
     _playbackState.state = MusicStatus.connecting;
     _playbackStateController.sink.add(_playbackState.toMap());
+    String musicUri = _nowPlayMusic!.musicUri!;
+    String coverUri = _nowPlayMusic!.coverUri!;
+    if (_authorizationData["ENABLE"]) {
+      coverUri = sign(
+        url: _nowPlayMusic!.coverUri!,
+        pkey: _authorizationData['SIGN'],
+        signParamName: _authorizationData['SIGN_PARAM'],
+        timeParamName: _authorizationData['TIME_PARAM'],
+      );
+      musicUri = sign(
+        url: _nowPlayMusic!.musicUri!,
+        pkey: _authorizationData['SIGN'],
+        signParamName: _authorizationData['SIGN_PARAM'],
+        timeParamName: _authorizationData['TIME_PARAM'],
+      );
+    }
     _channel.invokeMethod("setLockScreenDisplay", {
       "name": _nowPlayMusic!.name,
       "singer": _nowPlayMusic!.singer,
-      "coverUri": _nowPlayMusic!.coverUri,
+      "coverUri": coverUri,
       "duration": 0,
     });
     if (autoStart) {
-      _player.play(UrlSource(_nowPlayMusic!.musicUri!));
+      _player.play(UrlSource(musicUri));
     } else {
-      _player.setSourceUrl(_nowPlayMusic!.musicUri!);
+      _player.setSourceUrl(musicUri);
     }
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
   }
 
   @override
-  Future<void> initMethod(List<Map> musicList) async {
+  Future<void> initMethod(
+    List<Map> musicList,
+    Map<String, dynamic> authorizationData,
+  ) async {
+    _authorizationData = authorizationData;
     List<Music> musics = musicList.map((item) => Music.fromMap(item)).toList();
     _musicList.clear();
     _musicList.addAll(musics);

@@ -23,6 +23,10 @@ class MusicChannel extends MusicPlatform {
   late StreamController<dynamic> playbackStateController;
   late StreamController<double> volumeController;
 
+  late Map<String, dynamic> _authorizationData;
+
+  Map<String, dynamic> get authorizationData => _authorizationData;
+
   @override
   Future<void> init(
       StreamController<dynamic> metadataEventController,
@@ -54,7 +58,8 @@ class MusicChannel extends MusicPlatform {
   }
 
   @override
-  Future<void> initMethod(List<Map> musicList) async {
+  Future<void> initMethod(List<Map> musicList, Map<String, dynamic> authorizationData) async {
+    _authorizationData = authorizationData;
     List<Music> musics = musicList.map((item) => Music.fromMap(item)).toList();
     try {
       MusicData.get().addMusic(musics);

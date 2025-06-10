@@ -10,8 +10,8 @@ Future<void> init(
       metadataEventController, playbackStateController, volumeStateController);
 }
 
-Future<void> initMethod(List<Map> musicList) {
-  return MusicPlatform.instance.initMethod(musicList);
+Future<void> initMethod(List<Map> musicList, Map<String, dynamic> authorizationData) {
+  return MusicPlatform.instance.initMethod(musicList, authorizationData);
 }
 
 Future<void> playFromId(String id) {

@@ -17,9 +17,11 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.tencent.mmkv.MMKV;
 
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +65,25 @@ public class MainActivity extends FlutterActivity {
         methodChannel.setMethodCallHandler((call, result) -> {
             switch (call.method) {
                 case "init":
+                    methodChannel.invokeMethod("getAuthorizationData", null, new MethodChannel.Result() {
+                        @Override
+                        public void success(@Nullable Object response) {
+                            if (null == response) {
+                                return;
+                            }
+                            //noinspection unchecked
+                            MusicChannel.authorizationData = (Map<String, Object>) response;
+                        }
+
+                        @Override
+                        public void error(@NonNull String errorCode, @Nullable String errorMessage, @Nullable Object errorDetails) {
+                            Log.e(TAG, MessageFormat.format("getAuthorizationData error {0} {1} {2}", errorCode, errorMessage, errorDetails));
+                        }
+
+                        @Override
+                        public void notImplemented() {
+                        }
+                    });
                     try {
                         if (!browser.isConnected()) {
                             browser.connect();

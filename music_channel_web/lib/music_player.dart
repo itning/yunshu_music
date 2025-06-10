@@ -1,8 +1,10 @@
 import 'dart:html' as html;
 import 'dart:js' as js;
+
 import 'package:flutter/services.dart';
 import 'package:music_channel_web/music_channel_web.dart';
 import 'package:music_channel_web/music_data.dart';
+import 'package:music_platform_interface/encryption_tool.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_status.dart';
 
@@ -188,16 +190,33 @@ class MusicPlayer {
       return;
     }
 
-    _audio.src = nowPlayMusic.musicUri!;
+    String uri = nowPlayMusic.musicUri!;
+    String coverUri = nowPlayMusic.coverUri!;
+    if (MusicChannel.get().authorizationData["ENABLE"]) {
+      uri = sign(
+        url: nowPlayMusic.musicUri!,
+        pkey: MusicChannel.get().authorizationData['SIGN'],
+        signParamName: MusicChannel.get().authorizationData['SIGN_PARAM'],
+        timeParamName: MusicChannel.get().authorizationData['TIME_PARAM'],
+      );
+      coverUri = sign(
+        url: nowPlayMusic.coverUri!,
+        pkey: MusicChannel.get().authorizationData['SIGN'],
+        signParamName: MusicChannel.get().authorizationData['SIGN_PARAM'],
+        timeParamName: MusicChannel.get().authorizationData['TIME_PARAM'],
+      );
+    }
+    _audio.src = uri;
     _playbackState.state = MusicStatus.connecting;
     MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
     _metaData.from(nowPlayMusic);
     MusicChannel.get().metadataEventController.sink.add(_metaData.toMap());
     // Media Session API
     js.context.callMethod("setMediaMetadataInfoFromDart",
-        [_metaData.title, _metaData.subTitle, _metaData.coverUri]);
+        [_metaData.title, _metaData.subTitle, coverUri]);
     SystemChrome.setApplicationSwitcherDescription(
-        ApplicationSwitcherDescription(label: '${_metaData.title}-${_metaData.subTitle}'));
+        ApplicationSwitcherDescription(
+            label: '${_metaData.title}-${_metaData.subTitle}'));
     _audio.load();
     _audio.pause();
   }
