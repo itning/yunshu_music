@@ -6,7 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
   music_channel_windows
   screen_retriever_windows
-  system_tray
+  tray_manager
   url_launcher_windows
   window_manager
   windows_single_instance
@@ -14,6 +14,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  smtc_windows
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

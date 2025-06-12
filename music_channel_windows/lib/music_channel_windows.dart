@@ -10,11 +10,12 @@ import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
 import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:system_tray/system_tray.dart';
+import 'package:smtc_windows/smtc_windows.dart';
+import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
-class MusicChannelWindows extends MusicPlatform {
+class MusicChannelWindows extends MusicPlatform with TrayListener {
   static void registerWith() {
     MusicPlatform.instance = MusicChannelWindows();
   }
@@ -69,13 +70,13 @@ class MusicChannelWindows extends MusicPlatform {
   /// 正在播放的音乐信息
   Music? _nowPlayMusic;
 
-  late SystemTray _systemTray;
-
   bool _isPlayNow = false;
 
   late Menu _menu;
 
   late Map<String, dynamic> _authorizationData;
+
+  late SMTCWindows _smtc;
 
   @override
   Future<void> init(
@@ -84,6 +85,7 @@ class MusicChannelWindows extends MusicPlatform {
     StreamController<double> volumeController,
   ) async {
     await windowManager.ensureInitialized();
+    await SMTCWindows.initialize();
     windowManager.setTitle("云舒音乐");
     windowManager.setMinimumSize(const Size(450, 900));
 
@@ -101,37 +103,39 @@ class MusicChannelWindows extends MusicPlatform {
     _player.setReleaseMode(ReleaseMode.stop);
     _player.setPlayerMode(PlayerMode.mediaPlayer);
 
-    _systemTray = SystemTray();
-
-    _menu = Menu();
-    await _menu.buildFrom([
-      MenuItemLabel(label: '云舒音乐', onClicked: (_) => windowManager.show()),
-      MenuSeparator(),
-      MenuItemLabel(label: '上一曲', onClicked: (_) => skipToPrevious()),
-      MenuItemLabel(label: '下一曲', onClicked: (_) => skipToNext()),
-      MenuItemLabel(
-        label: '播放',
-        name: "PlayStatus",
-        onClicked: (_) {
-          _isPlayNow ? pause() : play();
-        },
-      ),
-      MenuSeparator(),
-      MenuItemLabel(
-        label: '退出',
-        onClicked: (_) {
-          _player.stop();
-          _player.dispose();
-          exit(0);
-        },
-      ),
-    ]);
+    _menu = Menu(
+      items: [
+        MenuItem(label: '云舒音乐', onClick: (_) => windowManager.show()),
+        MenuItem.separator(),
+        MenuItem(label: '上一曲', onClick: (_) => skipToPrevious()),
+        MenuItem(label: '下一曲', onClick: (_) => skipToNext()),
+        MenuItem(
+          label: '播放',
+          key: 'PlayStatus',
+          onClick: (_) => _isPlayNow ? pause() : play(),
+        ),
+        MenuItem.separator(),
+        MenuItem(
+          label: '退出',
+          onClick: (_) async {
+            await _smtc.disableSmtc();
+            await _player.dispose();
+            exit(0);
+          },
+        ),
+      ],
+    );
 
     _player.onPositionChanged.listen((Duration event) {
       int position = event.inMilliseconds;
       _playbackState.position = position;
       playbackStateController.sink.add(_playbackState.toMap());
-      WindowsTaskbar.setProgress(position, _metaData.duration);
+      windowManager.isVisible().then((visible) {
+        if (visible) {
+          WindowsTaskbar.setProgress(position, _metaData.duration);
+        }
+      });
+      _smtc.setPosition(event);
     });
 
     _player.onPlayerStateChanged.listen((PlayerState event) {
@@ -141,8 +145,15 @@ class MusicChannelWindows extends MusicPlatform {
       bool playing = PlayerState.playing == event;
       _playbackState.state = playing ? MusicStatus.playing : MusicStatus.paused;
       playbackStateController.sink.add(_playbackState.toMap());
-      WindowsTaskbar.setProgressMode(
-        playing ? TaskbarProgressMode.normal : TaskbarProgressMode.paused,
+      windowManager.isVisible().then((visible) {
+        if (visible) {
+          WindowsTaskbar.setProgressMode(
+            playing ? TaskbarProgressMode.normal : TaskbarProgressMode.paused,
+          );
+        }
+      });
+      _smtc.setPlaybackStatus(
+        playing ? PlaybackStatus.playing : PlaybackStatus.paused,
       );
       _isPlayNow = playing;
       _upContextMenu();
@@ -157,14 +168,24 @@ class MusicChannelWindows extends MusicPlatform {
             int duration = event.duration!.inMilliseconds;
             _metaData.duration = duration;
             metadataEventController.sink.add(_metaData.toMap());
-            WindowsTaskbar.setProgress(_playbackState.position, duration);
+            windowManager.isVisible().then((visible) {
+              if (visible) {
+                WindowsTaskbar.setProgress(_playbackState.position, duration);
+              }
+            });
+            _smtc.setEndTime(event.duration!);
           }
         case AudioEventType.seekComplete:
           break;
         case AudioEventType.complete:
           _playbackState.state = MusicStatus.none;
           playbackStateController.sink.add(_playbackState.toMap());
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
+          windowManager.isVisible().then((visible) {
+            if (visible) {
+              WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
+            }
+          });
+          _smtc.setPlaybackStatus(PlaybackStatus.stopped);
           next(false);
           initPlay(autoStart: true);
         case AudioEventType.prepared:
@@ -177,28 +198,55 @@ class MusicChannelWindows extends MusicPlatform {
 
     _playbackState.state = MusicStatus.none;
 
-    await _systemTray.initSystemTray(
-      title: "云舒音乐",
-      iconPath: "asserts/icon/app_icon.ico",
-      toolTip: "云舒音乐",
+    _smtc = SMTCWindows(
+      status: PlaybackStatus.stopped,
+      config: const SMTCConfig(
+        fastForwardEnabled: false,
+        nextEnabled: true,
+        pauseEnabled: true,
+        playEnabled: true,
+        rewindEnabled: true,
+        prevEnabled: true,
+        stopEnabled: true,
+      ),
     );
 
-    await _systemTray.setContextMenu(_menu);
-    _systemTray.registerSystemTrayEventHandler((eventName) {
-      if (eventName == kSystemTrayEventRightClick) {
-        _systemTray.popUpContextMenu();
-      } else if (eventName == kSystemTrayEventClick) {
-        windowManager.isVisible().then(
-          (visible) => visible ? windowManager.hide() : windowManager.show(),
-        );
+    _smtc.buttonPressStream.listen((event) {
+      switch (event) {
+        case PressedButton.play:
+          play();
+        case PressedButton.pause:
+          pause();
+        case PressedButton.next:
+          skipToNext();
+        case PressedButton.previous:
+          skipToPrevious();
+        case PressedButton.stop:
+          pause();
+        default:
       }
     });
+
+    await trayManager.setIcon("asserts/icon/app_icon.ico");
+    await trayManager.setContextMenu(_menu);
+    trayManager.addListener(this);
+  }
+
+  @override
+  void onTrayIconMouseDown() {
+    windowManager.isVisible().then(
+      (visible) => visible ? windowManager.hide() : windowManager.show(),
+    );
+  }
+
+  @override
+  void onTrayIconRightMouseDown() {
+    trayManager.popUpContextMenu();
   }
 
   void _upContextMenu() {
-    _menu
-        .findItemByName<MenuItemLabel>('PlayStatus')
-        ?.setLabel(_isPlayNow ? '暂停' : '播放');
+    _menu.getMenuItem('PlayStatus')!.label = _isPlayNow ? '暂停' : '播放';
+    trayManager.setContextMenu(_menu);
   }
 
   void initPlay({bool autoStart = false}) {
@@ -210,12 +258,23 @@ class MusicChannelWindows extends MusicPlatform {
     }
     _playbackState.state = MusicStatus.connecting;
     _playbackStateController.sink.add(_playbackState.toMap());
-    WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
+    windowManager.isVisible().then((visible) {
+      if (visible) {
+        WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
+      }
+    });
 
     String url = _nowPlayMusic!.musicUri!;
+    String coverUri = _nowPlayMusic!.coverUri!;
     if (_authorizationData["ENABLE"]) {
       url = sign(
         url: _nowPlayMusic!.musicUri!,
+        pkey: _authorizationData['SIGN'],
+        signParamName: _authorizationData['SIGN_PARAM'],
+        timeParamName: _authorizationData['TIME_PARAM'],
+      );
+      coverUri = sign(
+        url: _nowPlayMusic!.coverUri!,
         pkey: _authorizationData['SIGN'],
         signParamName: _authorizationData['SIGN_PARAM'],
         timeParamName: _authorizationData['TIME_PARAM'],
@@ -230,7 +289,14 @@ class MusicChannelWindows extends MusicPlatform {
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
     windowManager.setTitle("${_metaData.title}-${_metaData.subTitle}");
-    _systemTray.setToolTip('${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}');
+    trayManager.setToolTip('${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}');
+    _smtc.updateMetadata(
+      MusicMetadata(
+        title: _metaData.title,
+        artist: _metaData.subTitle,
+        thumbnail: coverUri,
+      ),
+    );
   }
 
   @override
