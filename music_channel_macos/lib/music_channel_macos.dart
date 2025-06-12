@@ -10,10 +10,10 @@ import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
 import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:system_tray/system_tray.dart';
+import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
-class MusicChannelMacOS extends MusicPlatform {
+class MusicChannelMacOS extends MusicPlatform with TrayListener {
   static void registerWith() {
     MusicPlatform.instance = MusicChannelMacOS();
   }
@@ -68,8 +68,6 @@ class MusicChannelMacOS extends MusicPlatform {
   /// 正在播放的音乐信息
   Music? _nowPlayMusic;
 
-  late SystemTray _systemTray;
-
   bool _isPlayNow = false;
 
   late Menu _menu;
@@ -100,31 +98,27 @@ class MusicChannelMacOS extends MusicPlatform {
     _player.setReleaseMode(ReleaseMode.stop);
     _player.setPlayerMode(PlayerMode.mediaPlayer);
 
-    _systemTray = SystemTray();
-
-    _menu = Menu();
-    await _menu.buildFrom([
-      MenuItemLabel(label: '云舒音乐', onClicked: (_) => windowManager.show()),
-      MenuSeparator(),
-      MenuItemLabel(label: '上一曲', onClicked: (_) => skipToPrevious()),
-      MenuItemLabel(label: '下一曲', onClicked: (_) => skipToNext()),
-      MenuItemLabel(
-        label: '播放',
-        name: "PlayStatus",
-        onClicked: (_) {
-          _isPlayNow ? pause() : play();
-        },
-      ),
-      MenuSeparator(),
-      MenuItemLabel(
-        label: '退出',
-        onClicked: (_) {
-          _player.stop();
-          _player.dispose();
-          exit(0);
-        },
-      ),
-    ]);
+    _menu = Menu(
+      items: [
+        MenuItem(label: '云舒音乐', onClick: (_) => windowManager.show()),
+        MenuItem.separator(),
+        MenuItem(label: '上一曲', onClick: (_) => skipToPrevious()),
+        MenuItem(label: '下一曲', onClick: (_) => skipToNext()),
+        MenuItem(
+          label: '播放',
+          key: 'PlayStatus',
+          onClick: (_) => _isPlayNow ? pause() : play(),
+        ),
+        MenuItem.separator(),
+        MenuItem(
+          label: '退出',
+          onClick: (_) async {
+            await _player.dispose();
+            exit(0);
+          },
+        ),
+      ],
+    );
 
     _player.onPositionChanged.listen((Duration event) {
       int position = event.inMilliseconds;
@@ -170,27 +164,26 @@ class MusicChannelMacOS extends MusicPlatform {
 
     _playbackState.state = MusicStatus.none;
 
-    await _systemTray.initSystemTray(
-      iconPath: "asserts/icon/app_icon.ico",
-      toolTip: "云舒音乐",
-    );
+    await trayManager.setIcon("asserts/icon/app_icon.ico");
+    await trayManager.setContextMenu(_menu);
+    trayManager.addListener(this);
+  }
 
-    await _systemTray.setContextMenu(_menu);
-    _systemTray.registerSystemTrayEventHandler((eventName) {
-      if (eventName == kSystemTrayEventRightClick) {
-        _systemTray.popUpContextMenu();
-      } else if (eventName == kSystemTrayEventClick) {
-        windowManager.isVisible().then(
-          (visible) => visible ? windowManager.hide() : windowManager.show(),
-        );
-      }
-    });
+  @override
+  void onTrayIconMouseDown() {
+    windowManager.isVisible().then(
+      (visible) => visible ? windowManager.hide() : windowManager.show(),
+    );
+  }
+
+  @override
+  void onTrayIconRightMouseDown() {
+    trayManager.popUpContextMenu();
   }
 
   void _upContextMenu() {
-    _menu
-        .findItemByName<MenuItemLabel>('PlayStatus')
-        ?.setLabel(_isPlayNow ? '暂停' : '播放');
+    _menu.getMenuItem('PlayStatus')!.label = _isPlayNow ? '暂停' : '播放';
+    trayManager.setContextMenu(_menu);
   }
 
   void initPlay({bool autoStart = false}) {
@@ -219,7 +212,7 @@ class MusicChannelMacOS extends MusicPlatform {
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
     windowManager.setTitle("${_metaData.title}-${_metaData.subTitle}");
-    _systemTray.setToolTip('${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}');
+    trayManager.setToolTip('${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}');
   }
 
   @override
