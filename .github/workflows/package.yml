@@ -111,16 +111,32 @@ jobs:
           cd yunshu_music
           flutter pub get
 
+      - name: CERT
+        run: |
+          cd yunshu_music
+          $certBytes = [System.Convert]::FromBase64String("${{ secrets.CERT_PFX_BASE64 }}")
+          $pfxPath = Join-Path $(Get-Location) "yunshu_cert.pfx"
+          [System.IO.File]::WriteAllBytes($pfxPath, $certBytes)
+
       - name: Build Windows App
         run: |
           cd yunshu_music
           flutter build windows --release
           Compress-Archive -Path .\build\windows\x64\runner\Release\* -DestinationPath windows.zip
+          dart run msix:create -c ./yunshu_cert.pfx -p ${{ secrets.CERT_PFX_PASSWORD }} --install-certificate false
           
       - name: Create Github Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: "yunshu_music/windows.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
+          allowUpdates: true
+
+      - name: Create Github Msix Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "yunshu_music/build/windows/x64/runner/Release/yunshu_music.msix"
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           allowUpdates: true
