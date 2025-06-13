@@ -39,10 +39,9 @@ jobs:
         run: |
           cd yunshu_music
           dart run msix:create -c ./yunshu_cert.pfx -p ${{ secrets.CERT_PFX_PASSWORD }} --install-certificate false
-          Compress-Archive -Path .\build\windows\x64\runner\Release\* -DestinationPath windows.zip
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows_app
-          path: yunshu_music/windows.zip
+          path: yunshu_music/build/windows/x64/runner/Release/yunshu_music.msix
