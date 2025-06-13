@@ -34,18 +34,15 @@ jobs:
           $certBytes = [System.Convert]::FromBase64String("${{ secrets.CERT_PFX_BASE64 }}")
           $pfxPath = Join-Path $(Get-Location) "yunshu_cert.pfx"
           [System.IO.File]::WriteAllBytes($pfxPath, $certBytes)
-          Write-Host "✅ Certificate file written to: $pfxPath"
-          dir
 
       - name: Build Windows App
         run: |
           cd yunshu_music
           dart run msix:create -c ./yunshu_cert.pfx -p ${{ secrets.CERT_PFX_PASSWORD }} --install-certificate false
           Compress-Archive -Path .\build\windows\x64\runner\Release\* -DestinationPath windows.zip
-          dir
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows_app
-          path: windows.zip
+          path: yunshu_music/windows.zip
