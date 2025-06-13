@@ -30,7 +30,7 @@ jobs:
 
       - name: CERT
         run: |
-          $certBytes = [System.Convert]::FromBase64String(${{ secrets.CERT_PFX_BASE64 }})
+          $certBytes = [System.Convert]::FromBase64String("${{ secrets.CERT_PFX_BASE64 }}")
           [System.IO.File]::WriteAllBytes(".\yunshu_cert.pfx", $certBytes)
 
       - name: Build Windows App
@@ -38,3 +38,9 @@ jobs:
           dart run msix:create -c yunshu_cert.pfx -p ${{ secrets.CERT_PFX_PASSWORD }} --install-certificate false
           Compress-Archive -Path .\build\windows\x64\runner\Release\* -DestinationPath windows.zip
           dir
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows_app
+          path: windows.zip
