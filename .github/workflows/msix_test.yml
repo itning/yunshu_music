@@ -32,7 +32,9 @@ jobs:
         run: |
           cd yunshu_music
           $certBytes = [System.Convert]::FromBase64String("${{ secrets.CERT_PFX_BASE64 }}")
-          [System.IO.File]::WriteAllBytes(".\yunshu_cert.pfx", $certBytes)
+          $pfxPath = Join-Path $(Get-Location) "yunshu_cert.pfx"
+          [System.IO.File]::WriteAllBytes($pfxPath, $certBytes)
+          Write-Host "✅ Certificate file written to: $pfxPath"
           dir
 
       - name: Build Windows App
