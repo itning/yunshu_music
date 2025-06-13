@@ -1,0 +1,40 @@
+name: msix_test
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+  
+env:
+  FLUTTER_VERSION: "3.32.3"
+  
+jobs:     
+  build_windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Install and set Flutter version
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          #channel: 'stable'
+
+      - name: Restore packages
+        run: |
+          cd yunshu_music
+          flutter pub get
+
+      - name: CERT
+        run: |
+          $certBytes = [System.Convert]::FromBase64String(${{ secrets.CERT_PFX_BASE64 }})
+          [System.IO.File]::WriteAllBytes(".\yunshu_cert.pfx", $certBytes)
+
+      - name: Build Windows App
+        run: |
+          dart run msix:create -c yunshu_cert.pfx -p ${{ secrets.CERT_PFX_PASSWORD }} --install-certificate false
+          Compress-Archive -Path .\build\windows\x64\runner\Release\* -DestinationPath windows.zip
+          dir
