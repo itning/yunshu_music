@@ -1,9 +1,6 @@
 name: msix_test
 
 on:
-  push:
-    tags:
-      - '*'
   workflow_dispatch:
   
 env:
