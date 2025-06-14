@@ -33,7 +33,7 @@ jobs:
       - name: Prepare deploy directory
         run: |
           mkdir -p deploy
-          cp -r yunshu_music/build/web/. deploy/
+          cp -r yunshu_music/build/web/. ../deploy/
           pwd && ls -la
 
       - name: Checkout deploy branch
