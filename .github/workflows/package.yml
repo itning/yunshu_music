@@ -10,12 +10,64 @@ env:
   FLUTTER_VERSION: "3.32.3"
   
 jobs:
+  build_mac_and_ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Install and set Flutter version
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          #channel: 'stable'
+
+      - name: Restore packages
+        run: |
+          cd yunshu_music
+          flutter pub get
+
+      - name: Build Mac&IOS App
+        run: |
+          cd yunshu_music
+          flutter build ios --release --no-codesign
+          flutter build macos --release
+          
+      - name: Zip_ios
+        uses: thedoctor0/zip-release@master
+        with:
+         filename: 'ios.zip'
+         path: 'yunshu_music/build/ios/iphoneos'
+
+      - name: Zip_mac
+        uses: thedoctor0/zip-release@master
+        with:
+         filename: 'mac_arm64.zip'
+         path: 'yunshu_music/build/macos/Build/Products/Release'
+
+      - name: Create Github ios Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "ios.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
+          allowUpdates: true
+
+      - name: Create Github mac_arm64 Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "mac_arm64.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
+          allowUpdates: true
+          
   build_web:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
@@ -52,7 +104,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Java to compile Android project
         uses: actions/setup-java@v1
@@ -98,7 +150,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
