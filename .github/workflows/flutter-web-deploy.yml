@@ -28,11 +28,13 @@ jobs:
         run: |
           cd yunshu_music
           flutter build web --release
+          pwd && ls -la
 
       - name: Prepare deploy directory
         run: |
           mkdir -p deploy
           cp -r yunshu_music/build/web/. deploy/
+          pwd && ls -la
 
       - name: Checkout deploy branch
         uses: actions/checkout@v4
@@ -44,6 +46,7 @@ jobs:
 
       - name: Clear old contents in deploy branch
         run: |
+          pwd && ls -la
           cd deploy-branch
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
@@ -51,10 +54,12 @@ jobs:
 
       - name: Copy new build files
         run: |
+          pwd && ls -la
           cp -r ../deploy/. deploy-branch/
 
       - name: Commit and push changes
         run: |
+          pwd && ls -la
           cd deploy-branch
           git add .
           git commit -m "Deploy web build: ${{ github.sha }}" || echo "Nothing to commit"
