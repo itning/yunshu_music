@@ -34,10 +34,11 @@
 | 平台    | 支持 |
 | ------- | ---- |
 | Android | ✅   |
-| Web     | ✅   |
+| iOS     | ✅   |
 | Windows | ✅   |
 | MacOS   | ✅   |
-| iOS     | ✅   |
+| Web     | ✅   |
+| Linux   | ❌   |
 
 ---
 
