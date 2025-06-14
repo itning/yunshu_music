@@ -1,4 +1,4 @@
-name: msix_test
+name: macos_test
 
 on:
   workflow_dispatch:
