@@ -31,8 +31,14 @@ jobs:
           flutter build ios --release --no-codesign
           flutter build macos --release
           
-      # - name: Upload Artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: windows_app
-      #     path: yunshu_music/build/windows/x64/runner/Release/yunshu_music.msix
+      - name: Upload mac Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac_app
+          path: yunshu_music/build/macos/Build/Products/Release/云舒音乐.app
+
+      - name: Upload ios Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios_app
+          path: yunshu_music/build/ios/iphoneos/Runner.app
