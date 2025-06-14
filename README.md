@@ -17,6 +17,7 @@
 [![GitHub repo size in bytes](https://img.shields.io/github/repo-size/itning/yunshu_music.svg)](https://github.com/itning/yunshu_music)
 [![Hits](https://hitcount.itning.com?u=itning&r=yunshu_music)](https://github.com/itning/hit-count)
 [![language](https://img.shields.io/badge/language-Dart-green.svg)](https://github.com/itning/yunshu_music)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/b87e6589-b9bd-4eac-94af-5a7107485334/deploy-status)](https://app.netlify.com/projects/frolicking-starlight-34418f/deploys)
 
 </div>
 
