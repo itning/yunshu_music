@@ -19,6 +19,7 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           #channel: 'stable'
+          cache: true
 
       - name: Restore packages
         run: |
