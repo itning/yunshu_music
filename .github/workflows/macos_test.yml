@@ -1,0 +1,41 @@
+name: msix_test
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+  
+env:
+  FLUTTER_VERSION: "3.32.3"
+  
+jobs:     
+  build_windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Install and set Flutter version
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          #channel: 'stable'
+
+      - name: Restore packages
+        run: |
+          cd yunshu_music
+          flutter pub get
+
+      - name: Build Windows App
+        run: |
+          cd yunshu_music
+          flutter build ios --release --no-codesign
+          flutter build macos --release
+          
+      # - name: Upload Artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: windows_app
+      #     path: yunshu_music/build/windows/x64/runner/Release/yunshu_music.msix
