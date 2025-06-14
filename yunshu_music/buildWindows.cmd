@@ -1,1 +1,0 @@
-flutter clean&&flutter build windows --release
