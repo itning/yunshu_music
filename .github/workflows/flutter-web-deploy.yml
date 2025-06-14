@@ -1,6 +1,9 @@
 name: Build and Deploy Flutter Web
 
 on:
+  push:
+    tags:
+      - '*'
   workflow_dispatch:
 
 env:
