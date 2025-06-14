@@ -25,7 +25,7 @@ jobs:
           cd yunshu_music
           flutter pub get
 
-      - name: Build Windows App
+      - name: Build Mac&IOS App
         run: |
           cd yunshu_music
           flutter build ios --release --no-codesign
