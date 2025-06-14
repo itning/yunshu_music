@@ -62,5 +62,5 @@ jobs:
           pwd && ls -la
           cd deploy-branch
           git add .
-          git commit -m "Deploy web build: ${{ github.sha }}" || echo "Nothing to commit"
+          git commit -m "Deploy web build" || echo "Nothing to commit"
           git push origin build_web --force
