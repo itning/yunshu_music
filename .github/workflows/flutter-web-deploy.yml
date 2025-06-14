@@ -33,7 +33,7 @@ jobs:
       - name: Prepare deploy directory
         run: |
           mkdir -p deploy
-          cp -r yunshu_music/build/web/. ../deploy/
+          cp -r yunshu_music/build/web/. /home/runner/work/yunshu_music/deploy/
           pwd && ls -la
 
       - name: Checkout deploy branch
@@ -41,13 +41,10 @@ jobs:
         with:
           repository: ${{ github.repository }}
           ref: build_web
-          path: deploy-branch
-          persist-credentials: false
 
       - name: Clear old contents in deploy branch
         run: |
           pwd && ls -la
-          cd deploy-branch
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git rm -rf . || echo "No files to remove."
@@ -55,12 +52,11 @@ jobs:
       - name: Copy new build files
         run: |
           pwd && ls -la
-          cp -r ../deploy/. deploy-branch/
+          cp -r /home/runner/work/yunshu_music/deploy/. /home/runner/work/yunshu_music/yunshu_music
 
       - name: Commit and push changes
         run: |
           pwd && ls -la
-          cd deploy-branch
           git add .
           git commit -m "Deploy web build" || echo "Nothing to commit"
           git push origin build_web --force
