@@ -34,11 +34,11 @@ jobs:
       - name: Upload mac Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 云舒音乐.app
-          path: yunshu_music/build/macos/Build/Products/Release/云舒音乐.app
+          name: mac
+          path: yunshu_music/build/macos/Build/Products/Release
 
       - name: Upload ios Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Runner.app
-          path: yunshu_music/build/ios/iphoneos/Runner.app
+          name: ios
+          path: yunshu_music/build/ios/iphoneos
