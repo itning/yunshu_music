@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   
 env:
-  FLUTTER_VERSION: "3.32.6"
+  FLUTTER_VERSION: "3.32.7"
   
 jobs:
   build_mac_and_ios:
