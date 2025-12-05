@@ -13,7 +13,7 @@ dependencies:
   music_platform_interface:
     path: ../music_platform_interface
   shared_preferences: ^2.5.3
-  audioplayers: ^6.5.0
+  audioplayers: ^6.5.1
 
 dev_dependencies:
   flutter_test:
