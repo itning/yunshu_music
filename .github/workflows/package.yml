@@ -112,6 +112,7 @@ jobs:
         uses: actions/setup-java@v6
         with:
           java-version: "17.x"
+          distribution: temurin
 
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
