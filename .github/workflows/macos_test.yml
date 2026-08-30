@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v7
 
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
@@ -33,13 +33,13 @@ jobs:
           flutter build macos --release
           
       - name: Upload mac Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mac
           path: yunshu_music/build/macos/Build/Products/Release
 
       - name: Upload ios Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ios
           path: yunshu_music/build/ios/iphoneos

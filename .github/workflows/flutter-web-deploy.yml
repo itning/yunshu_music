@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
@@ -41,7 +41,7 @@ jobs:
           pwd && ls -la
 
       - name: Checkout deploy branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.repository }}
           ref: build_web

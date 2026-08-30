@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
@@ -106,10 +106,10 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Java to compile Android project
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v6
         with:
           java-version: "17.x"
 
@@ -154,7 +154,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
