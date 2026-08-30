@@ -1,0 +1,51 @@
+name: Windows Build Check
+
+on:
+  push:
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: "3.47.2"
+
+jobs:
+  build_windows:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Install and set Flutter version
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Restore packages
+        run: |
+          cd yunshu_music
+          flutter pub get
+
+      - name: Build Windows App
+        run: |
+          cd yunshu_music
+          flutter build windows --release
+
+      - name: Verify FFmpeg DLLs bundled
+        shell: pwsh
+        run: |
+          $dlls = Get-ChildItem yunshu_music/build/windows/x64/runner/Release/*.dll |
+            Where-Object { $_.Name -match '^(avcodec|avformat|avutil|swresample)-' } |
+            Select-Object -ExpandProperty Name
+          Write-Host "FFmpeg DLLs: $($dlls -join ', ')"
+          if (-not $dlls) {
+            Write-Error "FFmpeg DLLs missing from Release output"
+            exit 1
+          }
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: yunshu_music/build/windows/x64/runner/Release/
+          if-no-files-found: error
