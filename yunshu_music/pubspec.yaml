@@ -38,10 +38,6 @@ dependency_overrides:
   # smtc_windows 1.1.0 内置的 rust 生成代码基于 flutter_rust_bridge 2.11.1，
   # 运行时版本必须与 codegen 版本一致，故钉死版本
   flutter_rust_bridge: 2.11.1
-  # audioplayers_windows 在非平台线程发送 EventSink 消息（上游 issue #1635），
-  # 本地 vendor 了修复 PR #1961（另修复了其 MSVC 编译错误），官方发布后可移除
-  audioplayers_windows:
-    path: ../audioplayers_windows
 
 dev_dependencies:
   flutter_test:
