@@ -14,6 +14,9 @@
 #include <memory>
 #include <sstream>
 
+#include "include/music_channel_windows/music_channel_windows_plugin.h"
+#include "ffmpeg_engine.h"
+
 namespace {
 
 class MusicChannelWindowsPlugin : public flutter::Plugin {
@@ -47,11 +50,15 @@ void MusicChannelWindowsPlugin::RegisterWithRegistrar(
       });
 
   registrar->AddPlugin(std::move(plugin));
+
+  yunshu::FfmpegEngine::Instance()->Init(registrar);
 }
 
 MusicChannelWindowsPlugin::MusicChannelWindowsPlugin() {}
 
-MusicChannelWindowsPlugin::~MusicChannelWindowsPlugin() {}
+MusicChannelWindowsPlugin::~MusicChannelWindowsPlugin() {
+  yunshu::FfmpegEngine::Instance()->Shutdown();
+}
 
 void MusicChannelWindowsPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
