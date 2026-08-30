@@ -166,8 +166,6 @@ class MusicChannelWindows extends MusicPlatform with TrayListener {
         });
         _smtc.setEndTime(duration);
       }
-      _playbackState.state = MusicStatus.paused;
-      _playbackStateController.sink.add(_playbackState.toMap());
     });
 
     _player.onComplete.listen((_) {

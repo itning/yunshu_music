@@ -54,6 +54,7 @@ class FfmpegEngine {
   size_t block_align_ = 8;
   std::atomic<uint64_t> real_frames_fed_{0};
   std::atomic<bool> complete_emitted_{false};
+  bool autoplay_source_ = false;
 };
 
 }  // namespace yunshu

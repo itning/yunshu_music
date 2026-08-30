@@ -197,6 +197,7 @@ void FfmpegEngine::SetSource(const std::string& url, bool autoplay) {
   ring_->Clear();
   complete_emitted_ = false;
   real_frames_fed_ = 0;
+  autoplay_source_ = autoplay;
   if (output_) {
     output_->Flush(0);
   }
@@ -233,6 +234,7 @@ void FfmpegEngine::OnDecoderPrepared(int64_t duration_ms) {
       duration_ms < 0 ? flutter::EncodableValue()
                       : flutter::EncodableValue(duration_ms);
   Emit(std::move(e));
+  EmitState(autoplay_source_);
 }
 
 void FfmpegEngine::OnDecoderError(const std::string& code,
