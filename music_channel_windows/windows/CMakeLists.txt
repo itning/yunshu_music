@@ -28,6 +28,7 @@ file(GLOB FFMPEG_DLLS
 
 add_library(${PLUGIN_NAME} SHARED
   "music_channel_windows_plugin.cpp"
+  "wasapi_output.cpp"
 )
 apply_standard_settings(${PLUGIN_NAME})
 set_target_properties(${PLUGIN_NAME} PROPERTIES
@@ -36,7 +37,7 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(${PLUGIN_NAME} PRIVATE "${FFMPEG_ROOT}/include")
-target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin
+target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin ole32
   "${FFMPEG_ROOT}/lib/avcodec.lib"
   "${FFMPEG_ROOT}/lib/avformat.lib"
   "${FFMPEG_ROOT}/lib/avutil.lib"
