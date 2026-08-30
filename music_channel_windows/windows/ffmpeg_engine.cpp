@@ -197,6 +197,9 @@ void FfmpegEngine::SetSource(const std::string& url, bool autoplay) {
   ring_->Clear();
   complete_emitted_ = false;
   real_frames_fed_ = 0;
+  if (output_) {
+    output_->Flush(0);
+  }
 
   FfmpegDecoder::Callbacks cbs;
   cbs.on_prepared = [this](int64_t duration_ms) {
