@@ -5,26 +5,28 @@ import static top.itning.yunshu_music.channel.MusicChannel.methodChannel;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ComponentName;
-import android.content.Context;
 import android.media.AudioManager;
 import android.os.Bundle;
-import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.MediaDescriptionCompat;
-import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.MediaMetadata;
+import androidx.media3.common.Player;
+import androidx.media3.session.MediaController;
+import androidx.media3.session.SessionCommand;
+import androidx.media3.session.SessionToken;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.tencent.mmkv.MMKV;
 
-import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import io.flutter.embedding.android.FlutterActivity;
@@ -32,36 +34,36 @@ import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
 import top.itning.yunshu_music.channel.MusicChannel;
-import top.itning.yunshu_music.service.MusicBrowserService;
+import top.itning.yunshu_music.service.MediaPlayerImpl;
+import top.itning.yunshu_music.service.MusicPlayDataService;
 import top.itning.yunshu_music.service.MusicPlayMode;
+import top.itning.yunshu_music.service.MusicSessionService;
 
 public class MainActivity extends FlutterActivity {
     private static final String TAG = "MainActivity";
-    private MediaBrowserCompat browser;
-    private MediaControllerCompat controller;
-    private final SubscriptionCall subscriptionCall = new SubscriptionCall();
+    private MediaController controller;
     private final PlaybackStateEvent playbackStateEvent = new PlaybackStateEvent();
     private final MetadataEvent metadataEvent = new MetadataEvent();
-    private final PlayCallback playCallback = new PlayCallback();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate" + this.toString());
-        MMKV.initialize(this);
         super.onCreate(savedInstanceState);
+        MMKV.initialize(this);
         NotificationChannel channel = new NotificationChannel("1", "播放通知", NotificationManager.IMPORTANCE_LOW);
-        NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
         notificationManager.createNotificationChannel(channel);
     }
 
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
-        Log.d(TAG, "configureFlutterEngine" + this.toString());
         methodChannel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), "yunshu.music/method_channel");
         EventChannel playbackStateEventChannel = new EventChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), "yunshu.music/playback_state_event_channel");
         EventChannel metadataEventChannel = new EventChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), "yunshu.music/metadata_event_channel");
         playbackStateEventChannel.setStreamHandler(playbackStateEvent);
         metadataEventChannel.setStreamHandler(metadataEvent);
+
+        connectController();
+
         methodChannel.setMethodCallHandler((call, result) -> {
             switch (call.method) {
                 case "init":
@@ -71,60 +73,35 @@ public class MainActivity extends FlutterActivity {
                             if (null == response) {
                                 return;
                             }
-                            //noinspection unchecked
-                            MusicChannel.authorizationData = (Map<String, Object>) response;
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> data = (Map<String, Object>) response;
+                            MusicChannel.authorizationData = data;
                         }
 
                         @Override
                         public void error(@NonNull String errorCode, @Nullable String errorMessage, @Nullable Object errorDetails) {
-                            Log.e(TAG, MessageFormat.format("getAuthorizationData error {0} {1} {2}", errorCode, errorMessage, errorDetails));
+                            Log.e(TAG, "getAuthorizationData error " + errorCode + " " + errorMessage + " " + errorDetails);
                         }
 
                         @Override
                         public void notImplemented() {
                         }
                     });
-                    try {
-                        if (!browser.isConnected()) {
-                            browser.connect();
-                        }
-                        result.success(null);
-                    } catch (Exception e) {
-                        Log.e(TAG, "connect error", e);
-                        result.error("-1", null, null);
-                    }
+                    result.success(null);
                     break;
                 case "playFromId":
                     if (!call.hasArgument("id")) {
                         result.error("-1", null, null);
                         break;
                     }
-                    String id = call.argument("id");
-                    try {
-                        controller.getTransportControls().playFromMediaId(id, null);
-                        result.success(null);
-                    } catch (Exception e) {
-                        Log.e(TAG, "playFromId error", e);
-                        result.error("-1", null, null);
-                    }
+                    sendCustomCommand(MediaPlayerImpl.ACTION_PLAY_FROM_ID, call.argument("id"));
+                    result.success(null);
                     break;
                 case "play":
-                    try {
-                        controller.getTransportControls().play();
-                        result.success(null);
-                    } catch (Exception e) {
-                        Log.e(TAG, "play error", e);
-                        result.error("-1", null, null);
-                    }
+                    withController(MediaController::play, result);
                     break;
                 case "pause":
-                    try {
-                        controller.getTransportControls().pause();
-                        result.success(null);
-                    } catch (Exception e) {
-                        Log.e(TAG, "pause error", e);
-                        result.error("-1", null, null);
-                    }
+                    withController(MediaController::pause, result);
                     break;
                 case "seekTo":
                     if (!call.hasArgument("position")) {
@@ -133,31 +110,15 @@ public class MainActivity extends FlutterActivity {
                     }
                     @SuppressWarnings("ConstantConditions")
                     int position = call.argument("position");
-                    try {
-                        controller.getTransportControls().seekTo(position);
-                        result.success(null);
-                    } catch (Exception e) {
-                        Log.e(TAG, "seekTo error", e);
-                        result.error("-1", null, null);
-                    }
+                    withController(c -> c.seekTo(position), result);
                     break;
                 case "skipToPrevious":
-                    try {
-                        controller.getTransportControls().skipToPrevious();
-                        result.success(null);
-                    } catch (Exception e) {
-                        Log.e(TAG, "skipToPrevious error", e);
-                        result.error("-1", null, null);
-                    }
+                    sendCustomCommand(MediaPlayerImpl.ACTION_SKIP_PREVIOUS, null);
+                    result.success(null);
                     break;
                 case "skipToNext":
-                    try {
-                        controller.getTransportControls().skipToNext();
-                        result.success(null);
-                    } catch (Exception e) {
-                        Log.e(TAG, "skipToNext error", e);
-                        result.error("-1", null, null);
-                    }
+                    sendCustomCommand(MediaPlayerImpl.ACTION_SKIP_NEXT, null);
+                    result.success(null);
                     break;
                 case "setPlayMode":
                     if (!call.hasArgument("mode")) {
@@ -166,9 +127,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     try {
                         String mode = call.argument("mode");
-                        @SuppressWarnings("ConstantConditions")
-                        MusicPlayMode musicPlayMode = MusicPlayMode.valueOf(mode.toUpperCase());
-                        MusicChannel.musicPlayDataService.setPlayMode(musicPlayMode);
+                        MusicChannel.musicPlayDataService.setPlayMode(MusicPlayMode.valueOf(mode.toUpperCase()));
                         result.success(null);
                     } catch (Exception e) {
                         Log.e(TAG, "playMode error", e);
@@ -182,9 +141,11 @@ public class MainActivity extends FlutterActivity {
                     result.success(MusicChannel.musicPlayDataService.getPlayList().stream()
                             .map(item -> {
                                 Map<String, String> map = new HashMap<>((int) (3 / 0.75F + 1.0F));
-                                map.put("mediaId", item.getMediaId());
-                                map.put("title", item.getDescription().getTitle() == null ? null : item.getDescription().getTitle().toString());
-                                map.put("subTitle", item.getDescription().getSubtitle() == null ? null : item.getDescription().getSubtitle().toString());
+                                map.put("mediaId", item.mediaId);
+                                map.put("title", MusicChannel.musicPlayDataService.getTitle(item) == null
+                                        ? null : MusicChannel.musicPlayDataService.getTitle(item).toString());
+                                map.put("subTitle", MusicChannel.musicPlayDataService.getSinger(item) == null
+                                        ? null : MusicChannel.musicPlayDataService.getSinger(item).toString());
                                 return map;
                             })
                             .collect(Collectors.toList()));
@@ -195,8 +156,7 @@ public class MainActivity extends FlutterActivity {
                         break;
                     }
                     try {
-                        String mediaId = call.argument("mediaId");
-                        MusicChannel.musicPlayDataService.delPlayListByMediaId(mediaId);
+                        MusicChannel.musicPlayDataService.delPlayListByMediaId(call.argument("mediaId"));
                         result.success(null);
                     } catch (Exception e) {
                         Log.e(TAG, "playMode error", e);
@@ -216,47 +176,132 @@ public class MainActivity extends FlutterActivity {
                     result.notImplemented();
             }
         });
-        browser = new MediaBrowserCompat(this, new ComponentName(this, MusicBrowserService.class), new MediaBrowserCompat.ConnectionCallback() {
+        super.configureFlutterEngine(flutterEngine);
+    }
 
+    private void connectController() {
+        SessionToken token = new SessionToken(this, new ComponentName(this, MusicSessionService.class));
+        ListenableFuture<MediaController> future = new MediaController.Builder(this, token).buildAsync();
+        future.addListener(() -> {
+            MediaController c;
+            try {
+                c = Futures.getDone(future);
+            } catch (Exception e) {
+                Log.e(TAG, "controller connect failed", e);
+                return;
+            }
+            controller = c;
+            c.addListener(new Player.Listener() {
+                @Override
+                public void onPlaybackStateChanged(@androidx.media3.common.Player.State int playbackState) {
+                    Map<String, Object> map = new HashMap<>((int) (3 / 0.75F + 1.0F));
+                    map.put("bufferedPosition", c.getBufferedPosition());
+                    map.put("state", playbackState);
+                    map.put("position", c.getCurrentPosition());
+                    playbackStateEvent.send(map);
+                }
+
+                @Override
+                public void onMediaMetadataChanged(MediaMetadata metadata) {
+                    MediaItem current = c.getCurrentMediaItem();
+                    Bundle extras = metadata.extras;
+                    Map<String, Object> map = new HashMap<>((int) (7 / 0.75F + 1.0F));
+                    map.put("mediaId", current == null ? "" : current.mediaId);
+                    map.put("title", metadata.title == null ? "" : metadata.title.toString());
+                    map.put("subTitle", metadata.artist == null ? "" : metadata.artist.toString());
+                    map.put("duration", metadata.durationMs == null ? 0L : metadata.durationMs);
+                    map.put("musicUri", current == null || current.localConfiguration == null || current.localConfiguration.uri == null
+                            ? "" : current.localConfiguration.uri.toString());
+                    map.put("lyricUri", extras == null || extras.getString("lyricUri") == null ? "" : extras.getString("lyricUri"));
+                    map.put("coverUri", metadata.artworkUri == null ? "" : metadata.artworkUri.toString());
+                    metadataEvent.send(map);
+                }
+            });
+            onControllerConnected();
+        }, getMainExecutor());
+    }
+
+    private void onControllerConnected() {
+        methodChannel.invokeMethod("getMusicList", null, new MethodChannel.Result() {
             @Override
-            public void onConnected() {
-                Log.d(TAG, "MediaBrowserCompat onConnected");
-                if (browser.isConnected()) {
-                    controller = new MediaControllerCompat(getApplicationContext(), browser.getSessionToken());
-                    controller.registerCallback(playCallback);
-                    browser.subscribe(browser.getRoot(), subscriptionCall);
+            public void success(@Nullable Object response) {
+                if (null == response) {
+                    return;
+                }
+                @SuppressWarnings("unchecked")
+                List<Map<String, String>> musicList = (List<Map<String, String>>) response;
+                List<MediaItem> items = musicList.stream()
+                        .map(m -> MusicPlayDataService.buildMediaItem(
+                                m.get("musicId"), m.get("musicUri"), m.get("name"), m.get("singer"),
+                                m.get("coverUri"), m.get("lyricUri")))
+                        .collect(Collectors.toList());
+                MusicChannel.musicPlayDataService.addMusic(items);
+                MediaItem now = MusicChannel.musicPlayDataService.getNowPlayMusic();
+                if (now != null) {
+                    sendCustomCommand(MediaPlayerImpl.ACTION_PLAY_FROM_ID, now.mediaId);
                 }
             }
 
             @Override
-            public void onConnectionFailed() {
-                Log.e(TAG, "onConnectionFailed");
-                Toast.makeText(MainActivity.this, "连接失败", Toast.LENGTH_LONG).show();
+            public void error(String errorCode, @Nullable String errorMessage, @Nullable Object errorDetails) {
             }
-        }, null);
-        super.configureFlutterEngine(flutterEngine);
+
+            @Override
+            public void notImplemented() {
+            }
+        });
+    }
+
+    private void sendCustomCommand(String action, String id) {
+        SessionCommand command = new SessionCommand(action, new Bundle());
+        Bundle args = new Bundle();
+        if (id != null) {
+            args.putString("id", id);
+        }
+        if (controller == null) {
+            Log.w(TAG, "controller not ready, drop " + action);
+            return;
+        }
+        controller.sendCustomCommand(command, args);
+    }
+
+    private void withController(Consumer<MediaController> action, MethodChannel.Result result) {
+        if (controller == null) {
+            result.error("-1", "controller not ready", null);
+            return;
+        }
+        try {
+            action.accept(controller);
+            result.success(null);
+        } catch (Exception e) {
+            Log.e(TAG, "controller error", e);
+            result.error("-1", null, null);
+        }
     }
 
     @Override
     protected void onResume() {
-        Log.d(TAG, "onResume");
         super.onResume();
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
     }
 
     @Override
     protected void onDestroy() {
-        Log.d(TAG, "onDestroy");
+        MediaController c = controller;
+        controller = null;
+        if (c != null) {
+            c.release();
+        }
         super.onDestroy();
-        browser.disconnect();
     }
 
     private class PlaybackStateEvent implements EventChannel.StreamHandler {
-
         private EventChannel.EventSink events;
 
         public void send(Object o) {
-            events.success(o);
+            if (events != null) {
+                events.success(o);
+            }
         }
 
         @Override
@@ -266,16 +311,16 @@ public class MainActivity extends FlutterActivity {
 
         @Override
         public void onCancel(Object arguments) {
-
         }
     }
 
     private class MetadataEvent implements EventChannel.StreamHandler {
-
         private EventChannel.EventSink events;
 
         public void send(Object o) {
-            events.success(o);
+            if (events != null) {
+                events.success(o);
+            }
         }
 
         @Override
@@ -285,42 +330,6 @@ public class MainActivity extends FlutterActivity {
 
         @Override
         public void onCancel(Object arguments) {
-
-        }
-    }
-
-    private class PlayCallback extends MediaControllerCompat.Callback {
-
-        @Override
-        public void onPlaybackStateChanged(PlaybackStateCompat state) {
-            Map<String, Object> map = new HashMap<>((int) (3 / 0.75F + 1.0F));
-            map.put("bufferedPosition", state.getBufferedPosition());
-            map.put("state", state.getState());
-            map.put("position", state.getPosition());
-            playbackStateEvent.send(map);
-        }
-
-        @Override
-        public void onMetadataChanged(MediaMetadataCompat metadata) {
-            MediaDescriptionCompat description = metadata.getDescription();
-            Map<String, Object> map = new HashMap<>((int) (7 / 0.75F + 1.0F));
-            map.put("mediaId", description.getMediaId());
-            map.put("title", description.getTitle());
-            map.put("subTitle", description.getSubtitle());
-            map.put("duration", metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION));
-            map.put("musicUri", description.getMediaUri() == null ? "" : description.getMediaUri().toString());
-            map.put("lyricUri", metadata.getBundle().getString("lyricUri"));
-            map.put("coverUri", description.getIconUri() == null ? "" : description.getIconUri().toString());
-            metadataEvent.send(map);
-        }
-    }
-
-    private class SubscriptionCall extends MediaBrowserCompat.SubscriptionCallback {
-        @Override
-        public void onChildrenLoaded(@NonNull String parentId, @NonNull List<MediaBrowserCompat.MediaItem> children) {
-            Log.d(TAG, "onChildrenLoaded " + parentId + " " + MainActivity.this.getPackageName() + " " + children.size());
-            MusicChannel.musicPlayDataService.addMusic(children);
-            controller.getTransportControls().playFromMediaId(MusicChannel.musicPlayDataService.getNowPlayMusic().getMediaId(), null);
         }
     }
 }

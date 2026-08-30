@@ -1,6 +1,11 @@
 package top.itning.yunshu_music.service;
 
-import android.support.v4.media.MediaBrowserCompat;
+import android.net.Uri;
+import android.os.Bundle;
+
+import androidx.annotation.Nullable;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.MediaMetadata;
 
 import com.tencent.mmkv.MMKV;
 
@@ -20,11 +25,12 @@ public class MusicPlayDataService {
     private static final String NOW_PLAY_MEDIA_ID_KEY = "NOW_PLAY_MEDIA_ID_KEY";
     private static final String PLAY_MODE_KEY = "PLAY_MODE";
     private static final String PLAY_LIST_KEY = "PLAY_LIST";
-    private final List<MediaBrowserCompat.MediaItem> MUSIC_LIST = new ArrayList<>();
-    private final List<MediaBrowserCompat.MediaItem> PLAY_LIST = new ArrayList<>();
-    private final Set<MediaBrowserCompat.MediaItem> RANDOM_SET = new HashSet<>();
+    private static final String LYRICS_URI_KEY = "lyricUri";
+    private final List<MediaItem> MUSIC_LIST = new ArrayList<>();
+    private final List<MediaItem> PLAY_LIST = new ArrayList<>();
+    private final Set<MediaItem> RANDOM_SET = new HashSet<>();
     private int nowPlayIndex;
-    private MediaBrowserCompat.MediaItem nowPlayMusic;
+    private MediaItem nowPlayMusic;
     private MusicPlayMode playMode;
     private final MMKV kv;
 
@@ -40,11 +46,60 @@ public class MusicPlayDataService {
         }
     }
 
+    public static MediaItem buildMediaItem(String mediaId, String musicUri, String name, String singer, String coverUri, String lyricUri) {
+        Bundle extras = new Bundle();
+        if (lyricUri != null) {
+            extras.putString(LYRICS_URI_KEY, lyricUri);
+        }
+        MediaMetadata metadata = new MediaMetadata.Builder()
+                .setTitle(name)
+                .setArtist(singer)
+                .setArtworkUri(coverUri == null ? null : Uri.parse(coverUri))
+                .setExtras(extras)
+                .build();
+        MediaItem.Builder builder = new MediaItem.Builder()
+                .setMediaId(mediaId)
+                .setMediaMetadata(metadata);
+        if (musicUri != null) {
+            builder.setUri(musicUri);
+        }
+        return builder.build();
+    }
+
+    @Nullable
+    public String getMediaUri(MediaItem item) {
+        if (item.localConfiguration == null || item.localConfiguration.uri == null) {
+            return null;
+        }
+        return item.localConfiguration.uri.toString();
+    }
+
+    @Nullable
+    public CharSequence getTitle(MediaItem item) {
+        return item.mediaMetadata.title;
+    }
+
+    @Nullable
+    public CharSequence getSinger(MediaItem item) {
+        return item.mediaMetadata.artist;
+    }
+
+    @Nullable
+    public Uri getCoverUri(MediaItem item) {
+        return item.mediaMetadata.artworkUri;
+    }
+
+    @Nullable
+    public String getLyricUri(MediaItem item) {
+        Bundle extras = item.mediaMetadata.extras;
+        return extras == null ? null : extras.getString(LYRICS_URI_KEY);
+    }
+
     public int getNowPlayIndex() {
         return nowPlayIndex;
     }
 
-    public MediaBrowserCompat.MediaItem getNowPlayMusic() {
+    public MediaItem getNowPlayMusic() {
         return nowPlayMusic;
     }
 
@@ -52,16 +107,16 @@ public class MusicPlayDataService {
         return playMode;
     }
 
-    public List<MediaBrowserCompat.MediaItem> getPlayList() {
+    public List<MediaItem> getPlayList() {
         return PLAY_LIST;
     }
 
     public void delPlayListByMediaId(String mediaId) {
-        if (nowPlayMusic != null && mediaId.equals(nowPlayMusic.getMediaId())) {
+        if (nowPlayMusic != null && mediaId.equals(nowPlayMusic.mediaId)) {
             return;
         }
-        PLAY_LIST.removeIf(it -> mediaId.equals(it.getMediaId()));
-        String playListString = PLAY_LIST.stream().map(MediaBrowserCompat.MediaItem::getMediaId).collect(Collectors.joining("@"));
+        PLAY_LIST.removeIf(it -> mediaId.equals(it.mediaId));
+        String playListString = PLAY_LIST.stream().map(it -> it.mediaId).collect(Collectors.joining("@"));
         kv.encode(PLAY_LIST_KEY, playListString);
     }
 
@@ -70,7 +125,7 @@ public class MusicPlayDataService {
         if (nowPlayMusic != null) {
             PLAY_LIST.add(nowPlayMusic);
             nowPlayIndex = 0;
-            String playListString = PLAY_LIST.stream().map(MediaBrowserCompat.MediaItem::getMediaId).collect(Collectors.joining("@"));
+            String playListString = PLAY_LIST.stream().map(it -> it.mediaId).collect(Collectors.joining("@"));
             kv.encode(PLAY_LIST_KEY, playListString);
         } else {
             nowPlayIndex = -1;
@@ -83,21 +138,21 @@ public class MusicPlayDataService {
         kv.encode(PLAY_MODE_KEY, playMode.name());
     }
 
-    public void addMusic(List<MediaBrowserCompat.MediaItem> musicList) {
+    public void addMusic(List<MediaItem> musicList) {
         MUSIC_LIST.addAll(musicList);
         String playListString = kv.decodeString(PLAY_LIST_KEY, "");
 
         List<String> playListMusicIdList = Arrays.asList(playListString.split("@"));
-        List<MediaBrowserCompat.MediaItem> playList = new ArrayList<>(playListMusicIdList.size());
+        List<MediaItem> playList = new ArrayList<>(playListMusicIdList.size());
         for (String mediaId : playListMusicIdList) {
-            MUSIC_LIST.stream().filter(it -> mediaId.equals(it.getMediaId())).findFirst().ifPresent(playList::add);
+            MUSIC_LIST.stream().filter(it -> mediaId.equals(it.mediaId)).findFirst().ifPresent(playList::add);
         }
         PLAY_LIST.addAll(playList);
 
         String nowPlayMediaId = kv.decodeString(NOW_PLAY_MEDIA_ID_KEY);
         if (null != nowPlayMediaId) {
             for (int i = 0; i < PLAY_LIST.size(); i++) {
-                if (nowPlayMediaId.equals(PLAY_LIST.get(i).getMediaId())) {
+                if (nowPlayMediaId.equals(PLAY_LIST.get(i).mediaId)) {
                     nowPlayIndex = i;
                     nowPlayMusic = PLAY_LIST.get(i);
                     break;
@@ -109,7 +164,7 @@ public class MusicPlayDataService {
         }
     }
 
-    public void removeMusic(MediaBrowserCompat.MediaItem music) {
+    public void removeMusic(MediaItem music) {
         MUSIC_LIST.remove(music);
     }
 
@@ -117,8 +172,8 @@ public class MusicPlayDataService {
         nowPlayIndex = -1;
         nowPlayMusic = null;
         for (int i = 0; i < MUSIC_LIST.size(); i++) {
-            MediaBrowserCompat.MediaItem item = MUSIC_LIST.get(i);
-            if (mediaId.equals(item.getMediaId())) {
+            MediaItem item = MUSIC_LIST.get(i);
+            if (mediaId.equals(item.mediaId)) {
                 nowPlayMusic = item;
                 break;
             }
@@ -133,14 +188,13 @@ public class MusicPlayDataService {
         } else {
             nowPlayIndex = playListIndex;
         }
-        String playListString = PLAY_LIST.stream().map(MediaBrowserCompat.MediaItem::getMediaId).collect(Collectors.joining("@"));
+        String playListString = PLAY_LIST.stream().map(it -> it.mediaId).collect(Collectors.joining("@"));
         kv.encode(PLAY_LIST_KEY, playListString);
-        kv.encode(NOW_PLAY_MEDIA_ID_KEY, nowPlayMusic.getMediaId());
+        kv.encode(NOW_PLAY_MEDIA_ID_KEY, nowPlayMusic.mediaId);
     }
 
     public void previous(boolean userTrigger) {
         if (nowPlayIndex - 1 < 0) {
-            // 需要新增
             switch (playMode) {
                 case RANDOMLY:
                     int randomMusicListIndex = getRandom();
@@ -170,14 +224,13 @@ public class MusicPlayDataService {
             nowPlayIndex--;
             nowPlayMusic = PLAY_LIST.get(nowPlayIndex);
         }
-        String playListString = PLAY_LIST.stream().map(MediaBrowserCompat.MediaItem::getMediaId).collect(Collectors.joining("@"));
+        String playListString = PLAY_LIST.stream().map(it -> it.mediaId).collect(Collectors.joining("@"));
         kv.encode(PLAY_LIST_KEY, playListString);
-        kv.encode(NOW_PLAY_MEDIA_ID_KEY, nowPlayMusic.getMediaId());
+        kv.encode(NOW_PLAY_MEDIA_ID_KEY, nowPlayMusic.mediaId);
     }
 
     public void next(boolean userTrigger) {
         if (nowPlayIndex + 1 >= PLAY_LIST.size()) {
-            // 需要新增
             switch (playMode) {
                 case RANDOMLY:
                     int randomMusicListIndex = getRandom();
@@ -207,18 +260,13 @@ public class MusicPlayDataService {
             nowPlayIndex++;
             nowPlayMusic = PLAY_LIST.get(nowPlayIndex);
         }
-        String playListString = PLAY_LIST.stream().map(MediaBrowserCompat.MediaItem::getMediaId).collect(Collectors.joining("@"));
+        String playListString = PLAY_LIST.stream().map(it -> it.mediaId).collect(Collectors.joining("@"));
         kv.encode(PLAY_LIST_KEY, playListString);
-        kv.encode(NOW_PLAY_MEDIA_ID_KEY, nowPlayMusic.getMediaId());
+        kv.encode(NOW_PLAY_MEDIA_ID_KEY, nowPlayMusic.mediaId);
     }
 
-    /**
-     * 随机获取一首
-     *
-     * @return 在音乐列表中的索引
-     */
     private int getRandom() {
-        List<MediaBrowserCompat.MediaItem> canPlayList = MUSIC_LIST.stream()
+        List<MediaItem> canPlayList = MUSIC_LIST.stream()
                 .filter(item -> !RANDOM_SET.contains(item))
                 .filter(item -> !PLAY_LIST.contains(item))
                 .collect(Collectors.toList());
@@ -228,21 +276,16 @@ public class MusicPlayDataService {
         }
         Random random = new Random();
         int canPlayListIndex = random.nextInt(canPlayList.size());
-        MediaBrowserCompat.MediaItem mediaItem = canPlayList.get(canPlayListIndex);
+        MediaItem mediaItem = canPlayList.get(canPlayListIndex);
         RANDOM_SET.add(mediaItem);
         return MUSIC_LIST.indexOf(mediaItem);
     }
 
-    /**
-     * 顺序下一曲
-     *
-     * @return 在音乐列表中的索引
-     */
     private int toSequenceNext() {
         if (nowPlayIndex == -1) {
             return 0;
         }
-        MediaBrowserCompat.MediaItem mediaItem = PLAY_LIST.get(nowPlayIndex);
+        MediaItem mediaItem = PLAY_LIST.get(nowPlayIndex);
         int musicListIndex = MUSIC_LIST.indexOf(mediaItem);
         if (musicListIndex + 1 >= MUSIC_LIST.size()) {
             return 0;
@@ -251,16 +294,11 @@ public class MusicPlayDataService {
         }
     }
 
-    /**
-     * 顺序上一曲
-     *
-     * @return 在音乐列表中的索引
-     */
     private int toSequencePrevious() {
         if (nowPlayIndex == -1) {
             return MUSIC_LIST.size() - 1;
         }
-        MediaBrowserCompat.MediaItem mediaItem = PLAY_LIST.get(nowPlayIndex);
+        MediaItem mediaItem = PLAY_LIST.get(nowPlayIndex);
         int musicListIndex = MUSIC_LIST.indexOf(mediaItem);
         if (musicListIndex - 1 < 0) {
             return MUSIC_LIST.size() - 1;
