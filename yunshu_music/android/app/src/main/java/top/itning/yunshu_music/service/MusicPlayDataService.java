@@ -111,6 +111,10 @@ public class MusicPlayDataService {
         return PLAY_LIST;
     }
 
+    public boolean isMusicListEmpty() {
+        return MUSIC_LIST.isEmpty();
+    }
+
     public void delPlayListByMediaId(String mediaId) {
         if (nowPlayMusic != null && mediaId.equals(nowPlayMusic.mediaId)) {
             return;
@@ -194,6 +198,9 @@ public class MusicPlayDataService {
     }
 
     public void previous(boolean userTrigger) {
+        if (MUSIC_LIST.isEmpty()) {
+            return;
+        }
         if (nowPlayIndex - 1 < 0) {
             switch (playMode) {
                 case RANDOMLY:
@@ -230,6 +237,9 @@ public class MusicPlayDataService {
     }
 
     public void next(boolean userTrigger) {
+        if (MUSIC_LIST.isEmpty()) {
+            return;
+        }
         if (nowPlayIndex + 1 >= PLAY_LIST.size()) {
             switch (playMode) {
                 case RANDOMLY:

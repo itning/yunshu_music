@@ -14,6 +14,8 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.session.MediaSession;
 import androidx.media3.session.MediaSessionService;
 
+import com.tencent.mmkv.MMKV;
+
 import top.itning.yunshu_music.MainActivity;
 import top.itning.yunshu_music.util.HttpClient;
 
@@ -31,6 +33,7 @@ public class MusicSessionService extends MediaSessionService {
     @Override
     public void onCreate() {
         super.onCreate();
+        MMKV.initialize(this);
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                 .setUsage(C.USAGE_MEDIA)

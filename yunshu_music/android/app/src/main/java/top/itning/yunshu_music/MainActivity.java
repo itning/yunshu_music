@@ -7,6 +7,8 @@ import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -44,11 +46,26 @@ public class MainActivity extends FlutterActivity {
     private MediaController controller;
     private final PlaybackStateEvent playbackStateEvent = new PlaybackStateEvent();
     private final MetadataEvent metadataEvent = new MetadataEvent();
+    private final Handler uiHandler = new Handler(Looper.getMainLooper());
+    private final Runnable positionRunnable = new Runnable() {
+        @Override
+        public void run() {
+            MediaController c = controller;
+            if (c == null) {
+                return;
+            }
+            pushPlaybackState(c);
+            int s = c.getPlaybackState();
+            if (s != Player.STATE_IDLE && s != Player.STATE_ENDED) {
+                uiHandler.postDelayed(this, 500);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         MMKV.initialize(this);
+        super.onCreate(savedInstanceState);
         NotificationChannel channel = new NotificationChannel("1", "播放通知", NotificationManager.IMPORTANCE_LOW);
         NotificationManager notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
         notificationManager.createNotificationChannel(channel);
@@ -194,31 +211,68 @@ public class MainActivity extends FlutterActivity {
             c.addListener(new Player.Listener() {
                 @Override
                 public void onPlaybackStateChanged(@androidx.media3.common.Player.State int playbackState) {
-                    Map<String, Object> map = new HashMap<>((int) (3 / 0.75F + 1.0F));
-                    map.put("bufferedPosition", c.getBufferedPosition());
-                    map.put("state", playbackState);
-                    map.put("position", c.getCurrentPosition());
-                    playbackStateEvent.send(map);
+                    uiHandler.removeCallbacks(positionRunnable);
+                    pushPlaybackState(c);
+                    if (playbackState == Player.STATE_READY) {
+                        pushMetadata(c);
+                    }
+                    int s = c.getPlaybackState();
+                    if (s != Player.STATE_IDLE && s != Player.STATE_ENDED) {
+                        uiHandler.postDelayed(positionRunnable, 500);
+                    }
                 }
 
                 @Override
                 public void onMediaMetadataChanged(MediaMetadata metadata) {
-                    MediaItem current = c.getCurrentMediaItem();
-                    Bundle extras = metadata.extras;
-                    Map<String, Object> map = new HashMap<>((int) (7 / 0.75F + 1.0F));
-                    map.put("mediaId", current == null ? "" : current.mediaId);
-                    map.put("title", metadata.title == null ? "" : metadata.title.toString());
-                    map.put("subTitle", metadata.artist == null ? "" : metadata.artist.toString());
-                    map.put("duration", metadata.durationMs == null ? 0L : metadata.durationMs);
-                    map.put("musicUri", current == null || current.localConfiguration == null || current.localConfiguration.uri == null
-                            ? "" : current.localConfiguration.uri.toString());
-                    map.put("lyricUri", extras == null || extras.getString("lyricUri") == null ? "" : extras.getString("lyricUri"));
-                    map.put("coverUri", metadata.artworkUri == null ? "" : metadata.artworkUri.toString());
-                    metadataEvent.send(map);
+                    pushMetadata(c);
                 }
             });
             onControllerConnected();
         }, getMainExecutor());
+    }
+
+    private int mapState(MediaController c) {
+        int s = c.getPlaybackState();
+        if (s == Player.STATE_BUFFERING) {
+            return 8; // PlaybackStateCompat.STATE_BUFFERING
+        } else if (c.getPlayWhenReady() && s == Player.STATE_READY) {
+            return 3; // PlaybackStateCompat.STATE_PLAYING
+        } else if (s == Player.STATE_ENDED) {
+            return 2; // PlaybackStateCompat.STATE_PAUSED
+        } else if (s == Player.STATE_IDLE) {
+            return 1; // PlaybackStateCompat.STATE_STOPPED
+        } else {
+            return 2; // PlaybackStateCompat.STATE_PAUSED
+        }
+    }
+
+    private void pushPlaybackState(MediaController c) {
+        Map<String, Object> map = new HashMap<>((int) (3 / 0.75F + 1.0F));
+        map.put("bufferedPosition", Math.max(0, c.getBufferedPosition()));
+        map.put("state", mapState(c));
+        map.put("position", Math.max(0, c.getCurrentPosition()));
+        playbackStateEvent.send(map);
+    }
+
+    private void pushMetadata(MediaController c) {
+        MediaMetadata metadata = c.getMediaMetadata();
+        MediaItem current = c.getCurrentMediaItem();
+        Bundle extras = metadata.extras;
+        long duration = c.getDuration();
+        if (duration < 0) {
+            duration = metadata.durationMs == null ? 0L : metadata.durationMs;
+        }
+        int durationMs = (int) Math.max(0, duration);
+        Map<String, Object> map = new HashMap<>((int) (7 / 0.75F + 1.0F));
+        map.put("mediaId", current == null ? "" : current.mediaId);
+        map.put("title", metadata.title == null ? "" : metadata.title.toString());
+        map.put("subTitle", metadata.artist == null ? "" : metadata.artist.toString());
+        map.put("duration", durationMs);
+        map.put("musicUri", current == null || current.localConfiguration == null || current.localConfiguration.uri == null
+                ? "" : current.localConfiguration.uri.toString());
+        map.put("lyricUri", extras == null || extras.getString("lyricUri") == null ? "" : extras.getString("lyricUri"));
+        map.put("coverUri", metadata.artworkUri == null ? "" : metadata.artworkUri.toString());
+        metadataEvent.send(map);
     }
 
     private void onControllerConnected() {
@@ -287,6 +341,7 @@ public class MainActivity extends FlutterActivity {
 
     @Override
     protected void onDestroy() {
+        uiHandler.removeCallbacks(positionRunnable);
         MediaController c = controller;
         controller = null;
         if (c != null) {

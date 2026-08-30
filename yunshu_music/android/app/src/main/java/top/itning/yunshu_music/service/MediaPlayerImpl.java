@@ -10,6 +10,7 @@ import android.view.KeyEvent;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
@@ -22,6 +23,13 @@ import androidx.media3.session.SessionResult;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import io.flutter.plugin.common.MethodChannel;
+import top.itning.yunshu_music.channel.MusicChannel;
 
 /**
  * Central playback + queue logic. Single-item engine: each play intent resolves the next song via
@@ -113,22 +121,68 @@ public class MediaPlayerImpl implements MediaSession.Callback, Player.Listener {
 
     private void handlePlayFromId(String id) {
         Log.d(TAG, "handlePlayFromId " + id);
-        musicPlayDataService.playFromMediaId(id);
-        playCurrent();
+        ensureListLoaded(() -> {
+            musicPlayDataService.playFromMediaId(id);
+            playCurrent();
+        });
     }
 
     private void handleNext(boolean userTrigger) {
         Log.d(TAG, "handleNext " + userTrigger);
         player.stop();
-        musicPlayDataService.next(userTrigger);
-        playCurrent();
+        ensureListLoaded(() -> {
+            musicPlayDataService.next(userTrigger);
+            playCurrent();
+        });
     }
 
     private void handlePrevious(boolean userTrigger) {
         Log.d(TAG, "handlePrevious " + userTrigger);
         player.stop();
-        musicPlayDataService.previous(userTrigger);
-        playCurrent();
+        ensureListLoaded(() -> {
+            musicPlayDataService.previous(userTrigger);
+            playCurrent();
+        });
+    }
+
+    private void ensureListLoaded(Runnable onReady) {
+        if (!musicPlayDataService.isMusicListEmpty()) {
+            onReady.run();
+            return;
+        }
+        MethodChannel channel = MusicChannel.methodChannel;
+        if (channel == null) {
+            onReady.run();
+            return;
+        }
+        channel.invokeMethod("getMusicList", null, new MethodChannel.Result() {
+            @Override
+            public void success(@Nullable Object response) {
+                if (null == response) {
+                    onReady.run();
+                    return;
+                }
+                @SuppressWarnings("unchecked")
+                List<Map<String, String>> musicList = (List<Map<String, String>>) response;
+                List<MediaItem> items = musicList.stream()
+                        .map(m -> MusicPlayDataService.buildMediaItem(
+                                m.get("musicId"), m.get("musicUri"), m.get("name"), m.get("singer"),
+                                m.get("coverUri"), m.get("lyricUri")))
+                        .collect(Collectors.toList());
+                musicPlayDataService.addMusic(items);
+                onReady.run();
+            }
+
+            @Override
+            public void error(String errorCode, @Nullable String errorMessage, @Nullable Object errorDetails) {
+                onReady.run();
+            }
+
+            @Override
+            public void notImplemented() {
+                onReady.run();
+            }
+        });
     }
 
     private void playCurrent() {
