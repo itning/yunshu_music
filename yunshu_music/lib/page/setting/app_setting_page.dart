@@ -215,11 +215,15 @@ class AppSettingPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                    '点击列表中歌曲自动跳转到播放详情页',
-                    style: TextStyle(fontSize: 17.0),
+                const Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      '点击列表中歌曲自动跳转到播放详情页',
+                      maxLines: 1,
+                      overflow: TextOverflow.fade,
+                      style: TextStyle(fontSize: 17.0),
+                    ),
                   ),
                 ),
                 Selector<SettingModel, bool>(
