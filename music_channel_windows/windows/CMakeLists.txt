@@ -29,8 +29,10 @@ file(GLOB FFMPEG_DLLS
 add_library(${PLUGIN_NAME} SHARED
   "music_channel_windows_plugin.cpp"
   "wasapi_output.cpp"
+  "ffmpeg_decoder.cpp"
 )
 apply_standard_settings(${PLUGIN_NAME})
+target_compile_options(${PLUGIN_NAME} PRIVATE /WX- /utf-8)
 set_target_properties(${PLUGIN_NAME} PROPERTIES
   CXX_VISIBILITY_PRESET hidden)
 target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
