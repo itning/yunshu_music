@@ -1,7 +1,6 @@
 name: Windows Build Check
 
 on:
-  push:
   workflow_dispatch:
 
 env:
