@@ -23,8 +23,27 @@ class _LyricPageState extends State<LyricPage>
     with AutomaticKeepAliveClientMixin<LyricPage> {
   final LyricController _controller = LyricController();
 
+  PlayStatusModel? _playStatus;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final PlayStatusModel playStatus = context.read<PlayStatusModel>();
+    if (!identical(_playStatus, playStatus)) {
+      _playStatus?.removeListener(_onPositionChanged);
+      _playStatus = playStatus;
+      playStatus.addListener(_onPositionChanged);
+      _controller.updatePosition(playStatus.position);
+    }
+  }
+
+  void _onPositionChanged() {
+    _controller.updatePosition(_playStatus?.position ?? Duration.zero);
+  }
+
   @override
   void dispose() {
+    _playStatus?.removeListener(_onPositionChanged);
     _controller.dispose();
     if (!kIsWeb && Platform.isAndroid) {
       FlutterWindowManagerPlus.clearFlags(
@@ -44,13 +63,6 @@ class _LyricPageState extends State<LyricPage>
           child: Stack(
             alignment: Alignment.center,
             children: <Widget>[
-              Selector<PlayStatusModel, Duration>(
-                selector: (_, model) => model.position,
-                builder: (_, value, _) {
-                  _controller.updatePosition(value);
-                  return const SizedBox.shrink();
-                },
-              ),
               Center(
                 child: Selector<MusicDataModel, List<Lyric>?>(
                   selector: (_, data) => data.lyricList,
