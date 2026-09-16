@@ -1020,14 +1020,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.2"
-  windows_single_instance:
-    dependency: "direct main"
-    description:
-      name: windows_single_instance
-      sha256: "8f464db5121d7e12ce8323ef170adc76ad18678057b63b1218932fe17db05642"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.2.0"
   windows_taskbar:
     dependency: transitive
     description:

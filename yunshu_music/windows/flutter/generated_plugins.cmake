@@ -9,7 +9,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   tray_manager
   url_launcher_windows
   window_manager
-  windows_single_instance
   windows_taskbar
 )
 

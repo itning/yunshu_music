@@ -7,7 +7,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:windows_single_instance/windows_single_instance.dart';
 import 'package:yunshu_music/component/lyric/lyric_controller.dart';
 import 'package:yunshu_music/hotkey/intent.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
@@ -23,19 +22,9 @@ import 'package:yunshu_music/provider/search_model.dart';
 import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 import 'package:yunshu_music/provider/volume_data_model.dart';
-import 'package:yunshu_music/util/common_utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (!kIsWeb && Platform.isWindows) {
-    await WindowsSingleInstance.ensureSingleInstance(
-      [],
-      "instance_checker",
-      onSecondWindow: (args) {
-        LogHelper.get().info(args);
-      },
-    );
-  }
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
   await ThemeModel.get().init(sharedPreferences);
   await LoginModel.get().init(sharedPreferences);
