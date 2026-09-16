@@ -72,11 +72,11 @@ class _LyricPageState extends State<LyricPage>
                   },
                 ),
               ),
-              Selector<LyricController, bool>(
-                selector: (_, controller) => controller.isDragging,
-                builder: (BuildContext context, value, _) {
+              ListenableBuilder(
+                listenable: _controller,
+                builder: (BuildContext context, _) {
                   return Offstage(
-                    offstage: !value,
+                    offstage: !_controller.isDragging,
                     child: GestureDetector(
                       onTap: () {
                         _controller.completeDrag();
