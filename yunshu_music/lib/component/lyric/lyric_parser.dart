@@ -60,6 +60,9 @@ class LyricParser {
   }
 
   /// 按时间取歌词下标；二分查找，空列表返回 0。
+  ///
+  /// 返回起始时间不晚于 [position] 的最后一行，因此恰好落在行起始时间时
+  /// 显示该行（避免 seek 到行边界时闪回上一行）。
   static int indexAt(Duration position, List<Lyric> lyrics) {
     if (lyrics.isEmpty) {
       return 0;
@@ -67,11 +70,11 @@ class LyricParser {
     int low = 0;
     int high = lyrics.length - 1;
     while (low < high) {
-      int mid = low + ((high - low) >> 1);
-      if (position <= lyrics[mid].endTime) {
-        high = mid;
+      int mid = low + ((high - low + 1) >> 1);
+      if (lyrics[mid].startTime <= position) {
+        low = mid;
       } else {
-        low = mid + 1;
+        high = mid - 1;
       }
     }
     return low;

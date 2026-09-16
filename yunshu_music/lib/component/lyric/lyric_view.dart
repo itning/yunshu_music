@@ -59,6 +59,9 @@ class _LyricViewState extends State<LyricView>
 
   int _currentIndex = 0;
 
+  /// 是否刚结束一次拖动，用于结束后强制重新居中（即使行号未变）。
+  bool _wasDragging = false;
+
   @override
   void initState() {
     super.initState();
@@ -87,9 +90,22 @@ class _LyricViewState extends State<LyricView>
   }
 
   void _onControllerChanged() {
-    final double? offset = widget.controller.draggingOffset;
-    if (widget.controller.isDragging && offset != null) {
+    final LyricController controller = widget.controller;
+    final double? offset = controller.draggingOffset;
+    if (controller.isDragging && offset != null) {
+      _wasDragging = true;
       _scrollOffset.value = offset;
+      return;
+    }
+    if (_wasDragging) {
+      // 拖动结束（点击跳转或自动回弹）后无条件重新居中
+      _wasDragging = false;
+      final LyricLayout? layout = _layout;
+      if (layout == null || layout.length == 0) {
+        return;
+      }
+      _currentIndex = LyricParser.indexAt(controller.position, widget.lyrics);
+      _animateTo(-layout.offsetOf(_currentIndex));
       return;
     }
     _syncCurrentLine();
@@ -115,16 +131,7 @@ class _LyricViewState extends State<LyricView>
     if (!mounted) {
       return;
     }
-    final LyricLayout? layout = _layout;
-    if (layout == null || widget.controller.draggingOffset == null) {
-      return;
-    }
-    final int index = LyricParser.indexAt(
-      widget.controller.position,
-      widget.lyrics,
-    );
-    _currentIndex = index;
-    _animateTo(-layout.offsetOf(index));
+    // 交给 _onControllerChanged 统一处理重新居中
     widget.controller.cancelDragging();
   }
 

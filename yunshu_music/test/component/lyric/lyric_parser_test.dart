@@ -91,6 +91,13 @@ void main() {
       expect(LyricParser.indexAt(const Duration(seconds: 3), lyrics), 0);
     });
 
+    test('恰好落在行起始时间时显示该行', () {
+      final lyrics = threeLines();
+
+      expect(LyricParser.indexAt(const Duration(seconds: 10), lyrics), 1);
+      expect(LyricParser.indexAt(const Duration(seconds: 20), lyrics), 2);
+    });
+
     test('空列表返回 0', () {
       expect(LyricParser.indexAt(Duration.zero, []), 0);
     });

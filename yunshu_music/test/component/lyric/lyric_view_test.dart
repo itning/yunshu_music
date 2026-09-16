@@ -89,6 +89,27 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('拖动后点击跳转会重新居中（行号未变）', (tester) async {
+    final controller = LyricController();
+    await tester.pumpWidget(_app(controller));
+    final painter = _painterOf(tester);
+
+    controller.beginDrag(
+      offset: -5,
+      line: 0,
+      progress: const Duration(milliseconds: 1),
+    );
+    await tester.pump();
+    expect(painter.scrollOffset.value, -5);
+
+    controller.completeDrag();
+    await tester.pumpAndSettle();
+
+    expect(painter.scrollOffset.value, -painter.layout.offsetOf(0));
+
+    controller.dispose();
+  });
+
   testWidgets('dispose 时移除 controller 监听器', (tester) async {
     final controller = _CountingLyricController();
     await tester.pumpWidget(_app(controller));
