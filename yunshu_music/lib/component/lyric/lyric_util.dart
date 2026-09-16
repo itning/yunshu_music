@@ -19,11 +19,8 @@ limitations under the License.
 3. 歌词如果不是换行符结尾则添加换行符
 */
 import 'package:yunshu_music/component/lyric/lyric.dart';
-import 'package:yunshu_music/util/common_utils.dart';
 
 class LyricUtil {
-  static var tags = ['ti', 'ar', 'al', 'offset', 'by'];
-
   /// 格式化歌词
   static List<Lyric>? formatLyric(String? lyricStr) {
     if (lyricStr == null || lyricStr.trim().isEmpty) {
@@ -33,53 +30,71 @@ class LyricUtil {
       lyricStr += "\n";
     }
     lyricStr = lyricStr.replaceAll("\r", "");
-    RegExp reg = RegExp(r"""\[(.*?):(.*?)\](.*?)\n""");
 
-    Iterable<Match>? matches;
-    try {
-      matches = reg.allMatches(lyricStr);
-    } catch (e) {
-      LogHelper.get().error('歌词解析失败', e);
+    // 全局 offset，单位毫秒，正值表示整体提前，负值相反
+    int offset = 0;
+    Match? offsetMatch = RegExp(r'\[offset:(-?\d+)\]').firstMatch(lyricStr);
+    if (offsetMatch != null) {
+      offset = int.tryParse(offsetMatch.group(1)!) ?? 0;
     }
 
+    // 支持 [分钟:秒]、[分钟:秒.毫秒]、[分钟:秒:毫秒]，且一行可有多个时间戳
+    RegExp timeTagReg = RegExp(r'\[(\d+):(\d+)(?:[.:](\d+))?\]');
     List<Lyric> lyrics = [];
-    List? list = matches?.toList();
-    if (list != null) {
-      int offset = 0;
-      for (int i = 0; i < list.length; i++) {
-        var temp = list[i];
-        var title = temp[1];
-        if (!tags.contains(title)) {
-          try {
-            int.parse(title);
-          } on FormatException catch (_) {
-            continue;
-          }
-          lyrics.add(
-            Lyric(
-              temp[3],
-              startTime: lyricTimeToDuration("$title:${temp[2]}", offset),
-            ),
-          );
-        } else if (title == "offset" && offset == 0) {
-          try {
-            offset = int.parse(temp[2]);
-          } on FormatException catch (e) {
-            LogHelper.get().warn('parse offset [${temp[2]}] to int error', e);
-          }
-        }
+    for (String line in lyricStr.split("\n")) {
+      if (line.trim().isEmpty) {
+        continue;
       }
-    }
-    //移除所有空歌词
-    lyrics.removeWhere((lyric) => lyric.lyric.trim().isEmpty);
-    for (int i = 0; i < lyrics.length - 1; i++) {
-      lyrics[i].endTime = lyrics[i + 1].startTime;
+      Iterable<RegExpMatch> matches = timeTagReg.allMatches(line);
+      if (matches.isEmpty) {
+        continue;
+      }
+      // 歌词正文为最后一个时间戳标签之后的内容
+      String text = line.substring(matches.last.end);
+      if (text.trim().isEmpty) {
+        continue;
+      }
+      for (RegExpMatch match in matches) {
+        String minute = match.group(1)!;
+        String second = match.group(2)!;
+        String? milli = match.group(3);
+        String time = milli == null
+            ? "$minute:$second"
+            : "$minute:$second.$milli";
+        lyrics.add(Lyric(text, startTime: lyricTimeToDuration(time, offset)));
+      }
     }
     if (lyrics.isEmpty) {
       return lyrics;
     }
+    // 一行多时间戳可能打乱顺序，统一按时间排序
+    lyrics.sort((a, b) => a.startTime.compareTo(b.startTime));
+    for (int i = 0; i < lyrics.length - 1; i++) {
+      lyrics[i].endTime = lyrics[i + 1].startTime;
+    }
     lyrics.last.endTime = const Duration(hours: 200);
     return lyrics;
+  }
+
+  /// 根据当前时长获取歌词下标。
+  ///
+  /// 歌词按 [Lyric.startTime] 有序，且前一条的 endTime 等于后一条的 startTime，
+  /// 因此对 endTime 二分查找，返回第一个 endTime 不早于 [duration] 的下标。
+  static int findIndexByDuration(Duration duration, List<Lyric> lyrics) {
+    if (lyrics.isEmpty) {
+      return 0;
+    }
+    int low = 0;
+    int high = lyrics.length - 1;
+    while (low < high) {
+      int mid = low + ((high - low) >> 1);
+      if (duration <= lyrics[mid].endTime!) {
+        high = mid;
+      } else {
+        low = mid + 1;
+      }
+    }
+    return low;
   }
 
   /// 1、标准格式： [分钟:秒.毫秒] 歌词
@@ -90,18 +105,26 @@ class LyricUtil {
     int minuteSeparatorIndex = time.indexOf(":");
     int secondSeparatorIndex = time.indexOf(".");
     if (secondSeparatorIndex == -1) {
-      secondSeparatorIndex = time.lastIndexOf(":");
+      int lastColonIndex = time.lastIndexOf(":");
+      // mm:ss:SSS 格式，用最后一个冒号分隔毫秒；mm:ss 格式则无毫秒
+      secondSeparatorIndex = lastColonIndex == minuteSeparatorIndex
+          ? -1
+          : lastColonIndex;
     }
 
     // 分
     var minute = time.substring(0, minuteSeparatorIndex);
     // 秒
-    var seconds = time.substring(
-      minuteSeparatorIndex + 1,
-      secondSeparatorIndex,
-    );
+    var seconds = secondSeparatorIndex == -1
+        ? time.substring(minuteSeparatorIndex + 1)
+        : time.substring(minuteSeparatorIndex + 1, secondSeparatorIndex);
     // 微秒
-    var milliseconds = time.substring(secondSeparatorIndex + 1);
+    var milliseconds = secondSeparatorIndex == -1
+        ? ''
+        : time.substring(secondSeparatorIndex + 1);
+    if (milliseconds.isEmpty) {
+      milliseconds = '0';
+    }
     var microseconds = '0';
     // 判断是否存在微秒
     if (milliseconds.length > 3) {

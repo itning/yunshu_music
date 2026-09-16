@@ -27,9 +27,6 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
   /// 翻译/音译歌词列表
   List<Lyric>? subLyrics;
 
-  /// 画布大小
-  Size canvasSize = Size.zero;
-
   /// 字体最大宽度
   double lyricMaxWidth;
 
@@ -93,12 +90,15 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
   /// 翻译/音译歌词画笔数组
   final List<TextPainter> subLyricTextPaints;
 
+  /// 记录每行已应用的样式，避免重复 layout
+  final List<TextStyle?> _appliedLyricStyles = [];
+  final List<TextStyle?> _appliedSubLyricStyles = [];
+
   LyricPainter(
     this.lyrics,
     this.lyricTextPaints,
     this.subLyricTextPaints, {
     this.subLyrics,
-    TickerProvider? vsync,
     this.lyricTextStyle,
     this.subLyricTextStyle,
     this.currLyricTextStyle,
@@ -110,18 +110,49 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
     required this.lyricMaxWidth,
   });
 
+  /// 仅在样式变化时重新 layout，避免每帧重复计算
+  void _layoutLyric(int index, TextStyle? style, String text) {
+    if (_appliedLyricStyles.length <= index) {
+      _appliedLyricStyles.addAll(
+        List<TextStyle?>.filled(index + 1 - _appliedLyricStyles.length, null),
+      );
+    }
+    if (identical(_appliedLyricStyles[index], style)) {
+      return;
+    }
+    lyricTextPaints[index]
+      ..text = TextSpan(text: text, style: style)
+      ..layout(maxWidth: lyricMaxWidth);
+    _appliedLyricStyles[index] = style;
+  }
+
+  /// 仅在样式变化时重新 layout，避免每帧重复计算
+  void _layoutSubLyric(int index, TextStyle? style, String text) {
+    if (_appliedSubLyricStyles.length <= index) {
+      _appliedSubLyricStyles.addAll(
+        List<TextStyle?>.filled(
+          index + 1 - _appliedSubLyricStyles.length,
+          null,
+        ),
+      );
+    }
+    if (identical(_appliedSubLyricStyles[index], style)) {
+      return;
+    }
+    subLyricTextPaints[index]
+      ..text = TextSpan(text: text, style: style)
+      ..layout(maxWidth: lyricMaxWidth);
+    _appliedSubLyricStyles[index] = style;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
-    canvasSize = size;
-
     //初始化歌词的Y坐标在正中央
-    lyricTextPaints[currentLyricIndex]
-      //设置歌词
-      ..text = TextSpan(
-        text: lyrics[currentLyricIndex].lyric,
-        style: currLyricTextStyle,
-      )
-      ..layout(maxWidth: lyricMaxWidth);
+    _layoutLyric(
+      currentLyricIndex,
+      currLyricTextStyle,
+      lyrics[currentLyricIndex].lyric,
+    );
     var currentLyricY =
         _offset +
         size.height / 2 -
@@ -132,17 +163,16 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
       var currentLyric = lyrics[lyricIndex];
       var isCurrLine = currentLyricIndex == lyricIndex;
       var isDraggingLine = _draggingLine == lyricIndex;
-      var currentLyricTextPaint = lyricTextPaints[lyricIndex]
-        //设置歌词
-        ..text = TextSpan(
-          text: currentLyric.lyric,
-          style: isCurrLine
-              ? currLyricTextStyle
-              : isDraggingLine
-              ? draggingLyricTextStyle
-              : lyricTextStyle,
-        );
-      currentLyricTextPaint.layout(maxWidth: lyricMaxWidth);
+      _layoutLyric(
+        lyricIndex,
+        isCurrLine
+            ? currLyricTextStyle
+            : isDraggingLine
+            ? draggingLyricTextStyle
+            : lyricTextStyle,
+        currentLyric.lyric,
+      );
+      var currentLyricTextPaint = lyricTextPaints[lyricIndex];
       var currentLyricHeight = currentLyricTextPaint.height;
       //仅绘制在屏幕内的歌词
       if (currentLyricY < size.height && currentLyricY > 0) {
@@ -156,42 +186,27 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
       currentLyricY += currentLyricHeight + lyricGapValue;
       //如果有翻译歌词时,寻找该行歌词以后的翻译歌词
       if (subLyrics != null) {
-        List<Lyric> remarkLyrics = subLyrics!
-            .where(
-              (subLyric) =>
-                  subLyric.startTime >= currentLyric.startTime &&
-                  subLyric.endTime! <= currentLyric.endTime!,
-            )
-            .toList();
-        for (var remarkLyric in remarkLyrics) {
-          //获取位置
-          var subIndex = subLyrics!.indexOf(remarkLyric);
-
-          var currentSubPaint =
-              subLyricTextPaints[subIndex] //设置歌词
-                ..text = TextSpan(
-                  text: remarkLyric.lyric,
-                  style: isCurrLine
-                      ? currSubLyricTextStyle
-                      : isDraggingLine
-                      ? draggingSubLyricTextStyle
-                      : subLyricTextStyle,
-                );
+        final subStyle = isCurrLine
+            ? currSubLyricTextStyle
+            : isDraggingLine
+            ? draggingSubLyricTextStyle
+            : subLyricTextStyle;
+        for (var subIndex = 0; subIndex < subLyrics!.length; subIndex++) {
+          var remarkLyric = subLyrics![subIndex];
+          if (remarkLyric.startTime < currentLyric.startTime ||
+              remarkLyric.endTime! > currentLyric.endTime!) {
+            continue;
+          }
+          _layoutSubLyric(subIndex, subStyle, remarkLyric.lyric);
+          var currentSubPaint = subLyricTextPaints[subIndex];
           //仅绘制在屏幕内的歌词
           if (currentLyricY < size.height && currentLyricY > 0) {
-            currentSubPaint
-              //计算文本宽高
-              ..layout(maxWidth: lyricMaxWidth)
-              //绘制 offset=横向居中
-              ..paint(
-                canvas,
-                Offset(
-                  (size.width - subLyricTextPaints[subIndex].width) / 2,
-                  currentLyricY,
-                ),
-              );
+            //绘制 offset=横向居中
+            currentSubPaint.paint(
+              canvas,
+              Offset((size.width - currentSubPaint.width) / 2, currentLyricY),
+            );
           }
-          currentSubPaint.layout(maxWidth: lyricMaxWidth);
           //当前歌词结束后调整下次开始绘制歌词的y坐标
           currentLyricY += currentSubPaint.height + subLyricGapValue;
         }
@@ -201,7 +216,15 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
 
   @override
   bool shouldRepaint(LyricPainter oldDelegate) {
-    //当歌词进度发生变化时重新绘制
-    return oldDelegate.currentLyricIndex != currentLyricIndex;
+    //当歌词进度、拖动行、偏移量或样式发生变化时重新绘制
+    return oldDelegate.currentLyricIndex != currentLyricIndex ||
+        oldDelegate.draggingLine != draggingLine ||
+        oldDelegate.offset != offset ||
+        oldDelegate.lyricTextStyle != lyricTextStyle ||
+        oldDelegate.subLyricTextStyle != subLyricTextStyle ||
+        oldDelegate.currLyricTextStyle != currLyricTextStyle ||
+        oldDelegate.currSubLyricTextStyle != currSubLyricTextStyle ||
+        oldDelegate.draggingLyricTextStyle != draggingLyricTextStyle ||
+        oldDelegate.draggingSubLyricTextStyle != draggingSubLyricTextStyle;
   }
 }

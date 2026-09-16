@@ -25,6 +25,7 @@ import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_controller.dart';
 import 'package:yunshu_music/component/lyric/lyric_painter.dart';
+import 'package:yunshu_music/component/lyric/lyric_util.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
@@ -88,7 +89,26 @@ class _LyricWidgetState extends State<LyricWidget>
   double totalHeight = 0;
   late AnimationController _animationController;
   VoidCallback? _animationListenerVoidCallbackFunc;
+  VoidCallback? _controllerListener;
   int _animationHashCode = -1;
+
+  /// 每行歌词的累计偏移量，_lineOffsets[i] 表示第 i 行相对第一行的偏移
+  List<double> _lineOffsets = const [0];
+
+  /// 翻译歌词按结束时间排序后的高度前缀和
+  List<double> _remarkPrefix = const [0];
+
+  /// 翻译歌词按结束时间排序后的结束时间
+  List<Duration> _remarkEndTimes = const [];
+
+  bool _lineOffsetsDirty = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // MediaQuery 宽度变化会影响文本换行与行高，需要重新计算
+    _lineOffsetsDirty = true;
+  }
 
   @override
   void initState() {
@@ -135,36 +155,21 @@ class _LyricWidgetState extends State<LyricWidget>
     WidgetsBinding.instance.addPostFrameCallback((call) {
       totalHeight = computeScrollY(widget.lyrics.length - 1);
     });
-    widget.controller.addListener(() {
-      var curLine = findLyricIndexByDuration(
-        widget.controller.progress,
-        widget.lyrics,
-      );
-      if (widget.controller.oldLine != curLine) {
-        _lyricPainter.currentLyricIndex = curLine;
-        if (!widget.controller.isDragging) {
-          animationScrollY(curLine);
-        }
-        widget.controller.oldLine = curLine;
-      }
-    });
+    widget.controller.addListener(_controllerListener = _syncCurrentLine);
   }
 
   @override
   void dispose() {
     LogHelper.get().debug('dispose LyricWidget');
+    cancelTimer();
+    if (_controllerListener != null) {
+      widget.controller.removeListener(_controllerListener!);
+      _controllerListener = null;
+    }
     _animationController.dispose();
     widget.controller.reset();
     super.dispose();
   }
-
-  ///因空行高度与非空行高度不一致，获取非空行的位置
-  int getNotEmptyLineHeight(List<Lyric> lyrics) => lyrics.indexOf(
-    lyrics.firstWhere(
-      (lyric) => lyric.lyric.trim().isNotEmpty,
-      orElse: () => lyrics.first,
-    ),
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +195,8 @@ class _LyricWidgetState extends State<LyricWidget>
       widget.controller.progress,
       widget.lyrics,
     );
-    if (widget.controller.isDragging) {
+    if (widget.controller.isDragging &&
+        widget.controller.draggingOffset != null) {
       _lyricPainter.draggingLine = widget.controller.draggingLine;
       _lyricPainter.offset = widget.controller.draggingOffset!;
     } else {
@@ -200,17 +206,7 @@ class _LyricWidgetState extends State<LyricWidget>
       selector: (_, model) => model.position,
       builder: (_, value, Widget? child) {
         widget.controller.progress = value;
-        var curLine = findLyricIndexByDuration(
-          widget.controller.progress,
-          widget.lyrics,
-        );
-        if (widget.controller.oldLine != curLine) {
-          _lyricPainter.currentLyricIndex = curLine;
-          if (!widget.controller.isDragging) {
-            animationScrollY(curLine);
-          }
-          widget.controller.oldLine = curLine;
-        }
+        _syncCurrentLine();
         return child!;
       },
       child: widget.enableDrag
@@ -319,6 +315,9 @@ class _LyricWidgetState extends State<LyricWidget>
       };
     }
 
+    if (_animationListenerVoidCallbackFunc != null) {
+      _animationController.removeListener(_animationListenerVoidCallbackFunc!);
+    }
     _animationListenerVoidCallbackFunc = voidCallbackFunc(animation.hashCode);
     // 动画执行监听
     _animationController.addListener(_animationListenerVoidCallbackFunc!);
@@ -327,51 +326,108 @@ class _LyricWidgetState extends State<LyricWidget>
   }
 
   /// 根据当前时长获取歌词位置
-  int findLyricIndexByDuration(Duration curDuration, List<Lyric> lyrics) {
-    for (int i = 0; i < lyrics.length; i++) {
-      if (curDuration >= lyrics[i].startTime &&
-          curDuration <= lyrics[i].endTime!) {
-        return i;
+  int findLyricIndexByDuration(Duration curDuration, List<Lyric> lyrics) =>
+      LyricUtil.findIndexByDuration(curDuration, lyrics);
+
+  /// 根据当前进度同步高亮行，必要时触发滚动动画
+  void _syncCurrentLine() {
+    var curLine = findLyricIndexByDuration(
+      widget.controller.progress,
+      widget.lyrics,
+    );
+    if (widget.controller.oldLine != curLine) {
+      _lyricPainter.currentLyricIndex = curLine;
+      if (!widget.controller.isDragging) {
+        animationScrollY(curLine);
       }
+      widget.controller.oldLine = curLine;
     }
-    return 0;
   }
 
   /// 计算传入行和第一行的偏移量
   double computeScrollY(int curLine) {
-    double totalHeight = 0;
-    for (var i = 0; i < curLine; i++) {
+    if (curLine < 0) {
+      return 0;
+    }
+    _ensureLineOffsets();
+    double totalHeight = _lineOffsets[curLine];
+    if (widget.remarkLyrics != null && curLine < widget.lyrics.length) {
+      // 增加 当前行之前的翻译歌词的偏移量
+      totalHeight += _remarkOffsetBefore(widget.lyrics[curLine].endTime!);
+    }
+    return totalHeight;
+  }
+
+  /// 预计算每行歌词的累计偏移量以及翻译歌词的前缀和，避免重复布局
+  void _ensureLineOffsets() {
+    if (!_lineOffsetsDirty) {
+      return;
+    }
+    final maxWidth = widget.lyricMaxWidth ?? MediaQuery.of(context).size.width;
+    final int count = widget.lyrics.length;
+    final List<double> offsets = List<double>.filled(count + 1, 0);
+    double total = 0;
+    for (int i = 0; i < count; i++) {
+      offsets[i] = total;
       var currPaint = lyricTextPaints[i]
         ..text = TextSpan(
           text: widget.lyrics[i].lyric,
           style: widget.lyricStyle,
         );
-      currPaint.layout(
-        maxWidth: widget.lyricMaxWidth ?? MediaQuery.of(context).size.width,
+      currPaint.layout(maxWidth: maxWidth);
+      total += currPaint.height + widget.lyricGap;
+    }
+    offsets[count] = total;
+    _lineOffsets = offsets;
+
+    final remarkLyrics = widget.remarkLyrics;
+    if (remarkLyrics != null) {
+      final List<MapEntry<Duration, double>> entries = [];
+      for (int i = 0; i < remarkLyrics.length; i++) {
+        var currPaint = subLyricTextPaints[i]
+          ..text = TextSpan(
+            text: remarkLyrics[i].lyric,
+            style: widget.remarkStyle,
+          );
+        currPaint.layout(maxWidth: maxWidth);
+        entries.add(
+          MapEntry(
+            remarkLyrics[i].endTime!,
+            widget.remarkLyricGap + currPaint.height,
+          ),
+        );
+      }
+      entries.sort((a, b) => a.key.compareTo(b.key));
+      final List<double> prefix = List<double>.filled(entries.length + 1, 0);
+      final List<Duration> endTimes = List<Duration>.filled(
+        entries.length,
+        Duration.zero,
       );
-      totalHeight += currPaint.height + widget.lyricGap;
+      for (int i = 0; i < entries.length; i++) {
+        prefix[i + 1] = prefix[i] + entries[i].value;
+        endTimes[i] = entries[i].key;
+      }
+      _remarkPrefix = prefix;
+      _remarkEndTimes = endTimes;
+    } else {
+      _remarkPrefix = const [0];
+      _remarkEndTimes = const [];
     }
-    if (widget.remarkLyrics != null) {
-      // 增加 当前行之前的翻译歌词的偏移量
-      widget.remarkLyrics!
-          .where(
-            (subLyric) => subLyric.endTime! <= widget.lyrics[curLine].endTime!,
-          )
-          .toList()
-          .forEach((subLyric) {
-            var currentPaint =
-                subLyricTextPaints[widget.remarkLyrics!.indexOf(subLyric)]
-                  ..text = TextSpan(
-                    text: subLyric.lyric,
-                    style: widget.remarkStyle,
-                  );
-            currentPaint.layout(
-              maxWidth:
-                  widget.lyricMaxWidth ?? MediaQuery.of(context).size.width,
-            );
-            totalHeight += widget.remarkLyricGap + currentPaint.height;
-          });
+    _lineOffsetsDirty = false;
+  }
+
+  /// 返回结束时间不晚于 [endTime] 的翻译歌词高度之和
+  double _remarkOffsetBefore(Duration endTime) {
+    int low = 0;
+    int high = _remarkEndTimes.length;
+    while (low < high) {
+      int mid = low + ((high - low) >> 1);
+      if (_remarkEndTimes[mid] <= endTime) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
     }
-    return totalHeight;
+    return _remarkPrefix[low];
   }
 }
