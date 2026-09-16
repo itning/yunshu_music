@@ -134,6 +134,34 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('拖动后 3s 自动回弹到当前播放行居中', (tester) async {
+    final controller = LyricController();
+    await tester.pumpWidget(_app(controller));
+    final painter = _painterOf(tester);
+
+    // 当前播放第 0 行
+    controller.updatePosition(const Duration(seconds: 5));
+    // 拖动到第 1 行位置后松手
+    controller.beginDrag(
+      offset: -30,
+      line: 1,
+      progress: const Duration(seconds: 10, milliseconds: 1),
+    );
+    controller.endDrag();
+    await tester.pump();
+    expect(controller.isDragging, isTrue);
+    expect(painter.scrollOffset.value, -30);
+
+    // 3s 无操作自动回弹
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+
+    expect(controller.isDragging, isFalse);
+    expect(painter.scrollOffset.value, -painter.layout.offsetOf(0));
+
+    controller.dispose();
+  });
+
   testWidgets('dispose 时移除 controller 监听器', (tester) async {
     final controller = _CountingLyricController();
     await tester.pumpWidget(_app(controller));
