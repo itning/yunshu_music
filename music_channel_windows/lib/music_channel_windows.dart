@@ -255,9 +255,24 @@ class MusicChannelWindows extends MusicPlatform {
     }
   }
 
+  String _trayTitleLabel() {
+    final String title = _metaData.title;
+    final String subTitle = _metaData.subTitle;
+    if (title.isEmpty && subTitle.isEmpty) {
+      return '云舒音乐';
+    }
+    if (title.isEmpty) {
+      return subTitle;
+    }
+    if (subTitle.isEmpty) {
+      return title;
+    }
+    return '$title - $subTitle';
+  }
+
   List<Map<String, dynamic>> _buildTrayMenu() {
     return [
-      {'id': _trayMenuShow, 'label': '云舒音乐', 'separator': false},
+      {'id': _trayMenuShow, 'label': _trayTitleLabel(), 'separator': false},
       {'id': 0, 'label': '', 'separator': true},
       {'id': _trayMenuPrevious, 'label': '上一曲', 'separator': false},
       {'id': _trayMenuNext, 'label': '下一曲', 'separator': false},
@@ -318,6 +333,7 @@ class MusicChannelWindows extends MusicPlatform {
     _channel.invokeMethod('traySetToolTip', {
       'toolTip': '${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}',
     });
+    _upContextMenu();
     _smtc.updateMetadata(
       MusicMetadata(
         title: _metaData.title,
