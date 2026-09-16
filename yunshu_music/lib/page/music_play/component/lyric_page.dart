@@ -6,11 +6,10 @@ import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_controller.dart';
-import 'package:yunshu_music/component/lyric/lyric_widget.dart';
+import 'package:yunshu_music/component/lyric/lyric_view.dart';
 import 'package:yunshu_music/component/volume_slider.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
-import 'package:yunshu_music/util/common_utils.dart';
 
 /// 歌词页
 class LyricPage extends StatefulWidget {
@@ -22,8 +21,11 @@ class LyricPage extends StatefulWidget {
 
 class _LyricPageState extends State<LyricPage>
     with AutomaticKeepAliveClientMixin<LyricPage> {
+  final LyricController _controller = LyricController();
+
   @override
   void dispose() {
+    _controller.dispose();
     if (!kIsWeb && Platform.isAndroid) {
       FlutterWindowManagerPlus.clearFlags(
         FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON,
@@ -42,6 +44,13 @@ class _LyricPageState extends State<LyricPage>
           child: Stack(
             alignment: Alignment.center,
             children: <Widget>[
+              Selector<PlayStatusModel, Duration>(
+                selector: (_, model) => model.position,
+                builder: (_, value, _) {
+                  _controller.updatePosition(value);
+                  return const SizedBox.shrink();
+                },
+              ),
               Center(
                 child: Selector<MusicDataModel, List<Lyric>?>(
                   selector: (_, data) => data.lyricList,
@@ -51,34 +60,28 @@ class _LyricPageState extends State<LyricPage>
                         '该歌曲暂无歌词',
                         style: TextStyle(color: Colors.white),
                       );
-                    } else {
-                      return RepaintBoundary(
-                        child: LyricWidget(
-                          key: UniqueKey(),
-                          size: const Size(double.infinity, double.infinity),
-                          lyrics: value,
-                          controller: context.read<LyricController>(),
-                        ),
-                      );
                     }
+                    return RepaintBoundary(
+                      child: LyricView(
+                        key: ValueKey(value),
+                        size: const Size(double.infinity, double.infinity),
+                        lyrics: value,
+                        controller: _controller,
+                      ),
+                    );
                   },
                 ),
               ),
               Selector<LyricController, bool>(
-                selector: (_, c) => c.isDragging,
+                selector: (_, controller) => controller.isDragging,
                 builder: (BuildContext context, value, _) {
                   return Offstage(
                     offstage: !value,
                     child: GestureDetector(
                       onTap: () {
-                        //点击选择器后移动歌词到滑动位置;
-                        context.read<LyricController>().draggingComplete();
-                        //当前进度
-                        LogHelper.get().debug(
-                          "进度:${context.read<LyricController>().draggingProgress}",
-                        );
+                        _controller.completeDrag();
                         context.read<PlayStatusModel>().seek(
-                          context.read<LyricController>().draggingProgress,
+                          _controller.draggingProgress,
                         );
                       },
                       child: Row(

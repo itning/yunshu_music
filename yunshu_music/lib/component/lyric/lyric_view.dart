@@ -62,15 +62,16 @@ class _LyricViewState extends State<LyricView>
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    )..addListener(() {
-      final animation = _scrollAnimation;
-      if (animation != null) {
-        _scrollOffset.value = animation.value;
-      }
-    });
+    _animationController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 300),
+        )..addListener(() {
+          final animation = _scrollAnimation;
+          if (animation != null) {
+            _scrollOffset.value = animation.value;
+          }
+        });
     widget.controller.addListener(_onControllerChanged);
     widget.controller.onDraggingAutoReset = _resetDragging;
   }
@@ -179,11 +180,7 @@ class _LyricViewState extends State<LyricView>
         progress: progress,
       );
     } else {
-      widget.controller.beginDrag(
-        offset: next,
-        line: line,
-        progress: progress,
-      );
+      widget.controller.beginDrag(offset: next, line: line, progress: progress);
     }
   }
 

@@ -7,7 +7,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:yunshu_music/component/lyric/lyric_controller.dart';
 import 'package:yunshu_music/hotkey/intent.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/page/login/login_page.dart';
@@ -106,7 +105,6 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
         ChangeNotifierProvider(create: (_) => VolumeDataModel.get()),
         ChangeNotifierProvider(create: (_) => SettingModel.get()),
         ChangeNotifierProvider(create: (_) => MusicListStatusModel.get()),
-        ChangeNotifierProvider(create: (_) => LyricController()),
         ChangeNotifierProvider(create: (_) => SearchModel.get()),
       ],
       child: Consumer2<ThemeModel, SettingModel>(

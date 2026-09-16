@@ -19,52 +19,25 @@ limitations under the License.
 */
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
+/// 页面级歌词状态：播放进度 + 拖动状态。
 class LyricController extends ChangeNotifier {
-  /// 当前播放进度
-  Duration position = const Duration();
+  Duration position = Duration.zero;
 
-  /// 当前进度
-  Duration progress = const Duration();
-
-  //滑动保持器
-  Timer? draggingTimer;
-
-  //滑动保持时间
-  Duration? draggingTimerDuration;
-
-  bool _isDragging = false;
-
-  bool get isDragging => _isDragging;
-
-  set isDragging(bool value) {
-    _isDragging = value;
-    notifyListeners();
-  }
-
-  void reset() {
-    progress = const Duration();
-    draggingTimer = null;
-    draggingTimerDuration = null;
-    _isDragging = false;
-    draggingOffset = null;
-    previousRowOffset = 0;
-    oldLine = 0;
-    draggingLine = 0;
-  }
-
-  Duration draggingProgress = Duration.zero;
-
-  late Function draggingComplete;
+  bool isDragging = false;
 
   double? draggingOffset;
 
-  //动画 存放上一次偏移量
-  double previousRowOffset = 0;
-
-  int oldLine = 0;
   int draggingLine = 0;
+
+  Duration draggingProgress = Duration.zero;
+
+  /// 滑动保持时间；为空时默认 3 秒。
+  Duration? draggingTimerDuration;
+
+  /// 滑动保持器。
+  Timer? draggingTimer;
 
   /// 拖动结束且超时未跳转时触发，由视图实现回弹动画。
   VoidCallback? onDraggingAutoReset;
@@ -83,7 +56,7 @@ class LyricController extends ChangeNotifier {
     required Duration progress,
   }) {
     _cancelTimer();
-    _isDragging = true;
+    isDragging = true;
     draggingOffset = offset;
     draggingLine = line;
     draggingProgress = progress;
@@ -113,7 +86,7 @@ class LyricController extends ChangeNotifier {
   void completeDrag() {
     _cancelTimer();
     position = draggingProgress;
-    _isDragging = false;
+    isDragging = false;
     draggingOffset = null;
     notifyListeners();
   }
@@ -121,7 +94,7 @@ class LyricController extends ChangeNotifier {
   /// 自动回弹：退出拖动但保留播放进度。
   void cancelDragging() {
     _cancelTimer();
-    _isDragging = false;
+    isDragging = false;
     draggingOffset = null;
     notifyListeners();
   }
