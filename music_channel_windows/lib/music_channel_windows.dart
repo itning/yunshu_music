@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/services.dart';
@@ -288,7 +287,7 @@ class MusicChannelWindows extends MusicPlatform {
       case _trayMenuExit:
         await _channel.invokeMethod('smtcDisable');
         await _player.dispose();
-        exit(0);
+        await _channel.invokeMethod('quit');
       default:
         break;
     }

@@ -9,9 +9,17 @@ namespace {
 // Must match the name used in main.cpp.
 constexpr wchar_t kActivateMessageName[] = L"yunshu_music.activate";
 
+// Posted by the plugin to request a graceful shutdown.
+constexpr wchar_t kQuitMessageName[] = L"yunshu_music.quit";
+
 // Returns the registered message id broadcast by a secondary instance.
 UINT GetActivateMessage() {
   static const UINT message = ::RegisterWindowMessageW(kActivateMessageName);
+  return message;
+}
+
+UINT GetQuitMessage() {
+  static const UINT message = ::RegisterWindowMessageW(kQuitMessageName);
   return message;
 }
 
@@ -85,6 +93,16 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   const UINT activate_message = GetActivateMessage();
   if (activate_message != 0 && message == activate_message) {
     BringWindowToFront(hwnd);
+    return 0;
+  }
+
+  // Graceful shutdown requested (e.g. the tray exit item). Destroying the
+  // window tears down the Flutter engine and plugins, then the message loop
+  // ends so all destructors run normally.
+  const UINT quit_message = GetQuitMessage();
+  if (quit_message != 0 && message == quit_message) {
+    ::DestroyWindow(hwnd);
+    ::PostQuitMessage(0);
     return 0;
   }
 

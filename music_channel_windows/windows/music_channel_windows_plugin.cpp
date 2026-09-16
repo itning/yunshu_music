@@ -244,11 +244,6 @@ MusicChannelWindowsPlugin::MusicChannelWindowsPlugin(
 }
 
 MusicChannelWindowsPlugin::~MusicChannelWindowsPlugin() {
-  if (channel_ != nullptr) {
-    // The messenger owns a copy of the handler capturing `this`; drop it so
-    // it can't be invoked after the plugin is destroyed.
-    channel_->SetMethodCallHandler(nullptr);
-  }
   tray_.Destroy();
   smtc_.Shutdown();
   if (registrar_ != nullptr && window_proc_id_ != -1) {
@@ -512,6 +507,14 @@ void MusicChannelWindowsPlugin::HandleMethodCall(
           static_cast<uint64_t>(GetInt64(*args, "completed"));
       const uint64_t total = static_cast<uint64_t>(GetInt64(*args, "total"));
       taskbar_.SetProgress(GetMainWindow(), completed, total);
+    }
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("quit") == 0) {
+    // Ask the runner to shut down gracefully (destroy window + WM_QUIT) instead
+    // of hard-terminating the process.
+    HWND hwnd = GetMainWindow();
+    if (hwnd != nullptr) {
+      ::PostMessageW(hwnd, ::RegisterWindowMessageW(L"yunshu_music.quit"), 0, 0);
     }
     result->Success(flutter::EncodableValue(true));
   } else if (method.compare("taskbarSetProgressState") == 0) {
