@@ -50,4 +50,9 @@ abstract class MusicPlatform extends PlatformInterface {
   /// Pushes the current track's cover image bytes to the platform (used by the
   /// Windows system media controls). No-op by default.
   Future<void> setCover(Uint8List bytes) async {}
+
+  /// Emits the current play mode (lower-case, e.g. "sequence") whenever it is
+  /// changed from outside the app, such as the Windows system media controls.
+  /// Empty by default.
+  Stream<dynamic> get playModeEvent => const Stream.empty();
 }

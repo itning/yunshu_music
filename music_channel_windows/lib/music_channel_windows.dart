@@ -86,6 +86,13 @@ class MusicChannelWindows extends MusicPlatform {
   int _smtcPositionMs = 0;
   int _smtcEndMs = 0;
 
+  /// 播放模式变更事件（系统媒体控件触发时通知 App）
+  final StreamController<dynamic> _playModeEventController =
+      StreamController<dynamic>.broadcast();
+
+  @override
+  Stream<dynamic> get playModeEvent => _playModeEventController.stream;
+
   @override
   Future<void> init(
     StreamController<dynamic> metadataEventController,
@@ -108,6 +115,7 @@ class MusicChannelWindows extends MusicPlatform {
     _playMode = valueOf(
       _sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE',
     );
+    _syncSmtcPlayMode(_playMode);
 
     _player = FfmpegPlayer();
 
@@ -203,9 +211,41 @@ class MusicChannelWindows extends MusicPlatform {
           await _onSmtcButton(arguments['button'] as String);
         }
         break;
+      case 'onSmtcSeek':
+        final dynamic arguments = call.arguments;
+        if (arguments is Map && arguments['position'] is int) {
+          await seekTo(Duration(milliseconds: arguments['position'] as int));
+        }
+        break;
+      case 'onSmtcShuffle':
+        final dynamic arguments = call.arguments;
+        if (arguments is Map && arguments['enabled'] is bool) {
+          await _applyPlayMode(
+            (arguments['enabled'] as bool)
+                ? MusicPlayMode.RANDOMLY
+                : MusicPlayMode.SEQUENCE,
+          );
+        }
+        break;
+      case 'onSmtcRepeat':
+        final dynamic arguments = call.arguments;
+        if (arguments is Map && arguments['mode'] is String) {
+          await _applyPlayMode(
+            (arguments['mode'] as String) == 'none'
+                ? MusicPlayMode.SEQUENCE
+                : MusicPlayMode.LOOP,
+          );
+        }
+        break;
       default:
         break;
     }
+  }
+
+  /// 系统媒体控件改变了播放模式：同步到 App。
+  Future<void> _applyPlayMode(MusicPlayMode mode) async {
+    await setPlayMode(mode.name().toLowerCase());
+    _playModeEventController.add(mode.name().toLowerCase());
   }
 
   Future<void> _onSmtcButton(String button) async {
@@ -420,6 +460,10 @@ class MusicChannelWindows extends MusicPlatform {
   @override
   Future<void> seekTo(Duration position) async {
     _player.seek(position);
+    // Paused playback emits no position events, so refresh the SMTC timeline
+    // here to reflect the new position immediately.
+    _smtcPositionMs = position.inMilliseconds;
+    _updateSmtcTimeline();
   }
 
   @override
@@ -427,6 +471,27 @@ class MusicChannelWindows extends MusicPlatform {
     MusicPlayMode musicPlayMode = valueOf(mode.toString().toUpperCase());
     _playMode = musicPlayMode;
     _sharedPreferences.setString(_playModeKey, musicPlayMode.name());
+    await _syncSmtcPlayMode(musicPlayMode);
+  }
+
+  /// 把 App 的播放模式映射到系统媒体控件的随机/循环按钮。
+  Future<void> _syncSmtcPlayMode(MusicPlayMode mode) async {
+    bool shuffle = false;
+    String repeat = 'none';
+    switch (mode) {
+      case MusicPlayMode.RANDOMLY:
+        shuffle = true;
+        break;
+      case MusicPlayMode.LOOP:
+        repeat = 'list';
+        break;
+      case MusicPlayMode.SEQUENCE:
+        break;
+    }
+    await _channel.invokeMethod('smtcSetPlayMode', {
+      'shuffle': shuffle,
+      'repeat': repeat,
+    });
   }
 
   @override

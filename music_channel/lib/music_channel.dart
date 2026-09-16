@@ -66,3 +66,5 @@ Future<void> setVolume(double value) {
 Future<void> setCover(Uint8List bytes) {
   return MusicPlatform.instance.setCover(bytes);
 }
+
+Stream<dynamic> get playModeEvent => MusicPlatform.instance.playModeEvent;

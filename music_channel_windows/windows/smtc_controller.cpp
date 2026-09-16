@@ -21,8 +21,12 @@ namespace yunshu {
 namespace {
 
 using winrt::Windows::Foundation::TimeSpan;
+using winrt::Windows::Media::AutoRepeatModeChangeRequestedEventArgs;
+using winrt::Windows::Media::MediaPlaybackAutoRepeatMode;
 using winrt::Windows::Media::MediaPlaybackStatus;
 using winrt::Windows::Media::MediaPlaybackType;
+using winrt::Windows::Media::PlaybackPositionChangeRequestedEventArgs;
+using winrt::Windows::Media::ShuffleEnabledChangeRequestedEventArgs;
 using winrt::Windows::Media::SystemMediaTransportControls;
 using winrt::Windows::Media::SystemMediaTransportControlsButton;
 using winrt::Windows::Media::SystemMediaTransportControlsButtonPressedEventArgs;
@@ -39,6 +43,10 @@ TimeSpan ToTimeSpan(int64_t milliseconds) {
   }
   return std::chrono::duration_cast<TimeSpan>(
       std::chrono::milliseconds(milliseconds));
+}
+
+int64_t ToMilliseconds(TimeSpan value) {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(value).count();
 }
 
 MediaPlaybackStatus StatusFromString(const std::string& status) {
@@ -68,13 +76,31 @@ SmtcButton ButtonFromNative(SystemMediaTransportControlsButton button) {
   }
 }
 
+SmtcRepeatMode RepeatFromNative(MediaPlaybackAutoRepeatMode mode) {
+  switch (mode) {
+    case MediaPlaybackAutoRepeatMode::Track:
+      return SmtcRepeatMode::kTrack;
+    case MediaPlaybackAutoRepeatMode::List:
+      return SmtcRepeatMode::kList;
+    default:
+      return SmtcRepeatMode::kNone;
+  }
+}
+
 }  // namespace
 
 struct SmtcController::Impl {
   SystemMediaTransportControls controls{nullptr};
-  ButtonCallback on_button;
+  SmtcCallbacks callbacks;
+
   winrt::event_token button_token{};
+  winrt::event_token position_token{};
+  winrt::event_token shuffle_token{};
+  winrt::event_token repeat_token{};
   bool button_registered = false;
+  bool position_registered = false;
+  bool shuffle_registered = false;
+  bool repeat_registered = false;
 
   winrt::hstring title;
   winrt::hstring artist;
@@ -100,11 +126,11 @@ SmtcController::SmtcController() : impl_(std::make_unique<Impl>()) {}
 
 SmtcController::~SmtcController() { Shutdown(); }
 
-void SmtcController::Initialize(HWND hwnd, ButtonCallback on_button) {
+void SmtcController::Initialize(HWND hwnd, SmtcCallbacks callbacks) {
   if (hwnd == nullptr) {
     return;
   }
-  impl_->on_button = std::move(on_button);
+  impl_->callbacks = std::move(callbacks);
 
   auto interop = winrt::get_activation_factory<
       SystemMediaTransportControls, ISystemMediaTransportControlsInterop>();
@@ -128,11 +154,40 @@ void SmtcController::Initialize(HWND hwnd, ButtonCallback on_button) {
   impl_->button_token = controls.ButtonPressed(
       [this](SystemMediaTransportControls const&,
              SystemMediaTransportControlsButtonPressedEventArgs const& args) {
-        if (impl_->on_button) {
-          impl_->on_button(ButtonFromNative(args.Button()));
+        if (impl_->callbacks.on_button) {
+          impl_->callbacks.on_button(ButtonFromNative(args.Button()));
         }
       });
   impl_->button_registered = true;
+
+  impl_->position_token = controls.PlaybackPositionChangeRequested(
+      [this](SystemMediaTransportControls const&,
+             PlaybackPositionChangeRequestedEventArgs const& args) {
+        if (impl_->callbacks.on_position_change) {
+          impl_->callbacks.on_position_change(
+              ToMilliseconds(args.RequestedPlaybackPosition()));
+        }
+      });
+  impl_->position_registered = true;
+
+  impl_->shuffle_token = controls.ShuffleEnabledChangeRequested(
+      [this](SystemMediaTransportControls const&,
+             ShuffleEnabledChangeRequestedEventArgs const& args) {
+        if (impl_->callbacks.on_shuffle_change) {
+          impl_->callbacks.on_shuffle_change(args.RequestedShuffleEnabled());
+        }
+      });
+  impl_->shuffle_registered = true;
+
+  impl_->repeat_token = controls.AutoRepeatModeChangeRequested(
+      [this](SystemMediaTransportControls const&,
+             AutoRepeatModeChangeRequestedEventArgs const& args) {
+        if (impl_->callbacks.on_repeat_change) {
+          impl_->callbacks.on_repeat_change(
+              RepeatFromNative(args.RequestedAutoRepeatMode()));
+        }
+      });
+  impl_->repeat_registered = true;
 }
 
 void SmtcController::SetEnabled(bool enabled) {
@@ -198,6 +253,26 @@ void SmtcController::SetTimeline(int64_t position_ms, int64_t end_ms) {
   impl_->controls.UpdateTimelineProperties(properties);
 }
 
+void SmtcController::SetPlayMode(bool shuffle, SmtcRepeatMode repeat_mode) {
+  if (!impl_->controls) {
+    return;
+  }
+  impl_->controls.ShuffleEnabled(shuffle);
+  MediaPlaybackAutoRepeatMode mode = MediaPlaybackAutoRepeatMode::None;
+  switch (repeat_mode) {
+    case SmtcRepeatMode::kTrack:
+      mode = MediaPlaybackAutoRepeatMode::Track;
+      break;
+    case SmtcRepeatMode::kList:
+      mode = MediaPlaybackAutoRepeatMode::List;
+      break;
+    case SmtcRepeatMode::kNone:
+      mode = MediaPlaybackAutoRepeatMode::None;
+      break;
+  }
+  impl_->controls.AutoRepeatMode(mode);
+}
+
 void SmtcController::Shutdown() {
   if (!impl_ || !impl_->controls) {
     return;
@@ -205,6 +280,18 @@ void SmtcController::Shutdown() {
   if (impl_->button_registered) {
     impl_->controls.ButtonPressed(impl_->button_token);
     impl_->button_registered = false;
+  }
+  if (impl_->position_registered) {
+    impl_->controls.PlaybackPositionChangeRequested(impl_->position_token);
+    impl_->position_registered = false;
+  }
+  if (impl_->shuffle_registered) {
+    impl_->controls.ShuffleEnabledChangeRequested(impl_->shuffle_token);
+    impl_->shuffle_registered = false;
+  }
+  if (impl_->repeat_registered) {
+    impl_->controls.AutoRepeatModeChangeRequested(impl_->repeat_token);
+    impl_->repeat_registered = false;
   }
   impl_->controls.IsEnabled(false);
   impl_->controls = nullptr;

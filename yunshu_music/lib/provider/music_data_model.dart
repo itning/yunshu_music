@@ -78,6 +78,10 @@ class MusicDataModel extends ChangeNotifier {
 
   Future<void> init() async {
     _playMode = await MusicChannel.get().getPlayMode();
+    MusicChannel.get().playModeEvent.listen((event) {
+      _playMode = event.toString();
+      notifyListeners();
+    });
   }
 
   Future<void> nextPlayMode() async {

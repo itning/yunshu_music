@@ -142,6 +142,18 @@ const char* SmtcButtonName(yunshu::SmtcButton button) {
   return "play";
 }
 
+const char* SmtcRepeatModeName(yunshu::SmtcRepeatMode mode) {
+  switch (mode) {
+    case yunshu::SmtcRepeatMode::kTrack:
+      return "track";
+    case yunshu::SmtcRepeatMode::kList:
+      return "list";
+    case yunshu::SmtcRepeatMode::kNone:
+      return "none";
+  }
+  return "none";
+}
+
 class MusicChannelWindowsPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
@@ -158,6 +170,8 @@ class MusicChannelWindowsPlugin : public flutter::Plugin {
 
   void EnsureTrayInitialized();
   void EnsureSmtcInitialized();
+  void InvokeOnPlatformThread(const char *method,
+                              flutter::EncodableMap args);
   HWND GetMainWindow();
 
   flutter::PluginRegistrarWindows *registrar_ = nullptr;
@@ -260,6 +274,20 @@ void MusicChannelWindowsPlugin::EnsureTrayInitialized() {
       });
 }
 
+void MusicChannelWindowsPlugin::InvokeOnPlatformThread(
+    const char *method, flutter::EncodableMap args) {
+  // SMTC callbacks arrive on an arbitrary WinRT thread; hop back to the
+  // platform thread before touching the method channel.
+  yunshu::PlatformTaskQueue::Instance().Post(
+      [this, method = std::string(method), args = std::move(args)]() {
+        if (channel_ == nullptr) {
+          return;
+        }
+        channel_->InvokeMethod(method,
+                               std::make_unique<flutter::EncodableValue>(args));
+      });
+}
+
 void MusicChannelWindowsPlugin::EnsureSmtcInitialized() {
   if (smtc_initialized_) {
     return;
@@ -268,20 +296,32 @@ void MusicChannelWindowsPlugin::EnsureSmtcInitialized() {
   if (hwnd == nullptr) {
     return;
   }
-  smtc_.Initialize(hwnd, [this](yunshu::SmtcButton button) {
-    // Button events arrive on an arbitrary WinRT thread; hop back to the
-    // platform thread before touching the method channel.
-    yunshu::PlatformTaskQueue::Instance().Post([this, button]() {
-      if (channel_ == nullptr) {
-        return;
-      }
-      flutter::EncodableMap args;
-      args[flutter::EncodableValue("button")] =
-          flutter::EncodableValue(SmtcButtonName(button));
-      channel_->InvokeMethod("onSmtcButton",
-                             std::make_unique<flutter::EncodableValue>(args));
-    });
-  });
+  yunshu::SmtcCallbacks callbacks;
+  callbacks.on_button = [this](yunshu::SmtcButton button) {
+    flutter::EncodableMap args;
+    args[flutter::EncodableValue("button")] =
+        flutter::EncodableValue(SmtcButtonName(button));
+    InvokeOnPlatformThread("onSmtcButton", std::move(args));
+  };
+  callbacks.on_position_change = [this](int64_t position_ms) {
+    flutter::EncodableMap args;
+    args[flutter::EncodableValue("position")] =
+        flutter::EncodableValue(position_ms);
+    InvokeOnPlatformThread("onSmtcSeek", std::move(args));
+  };
+  callbacks.on_shuffle_change = [this](bool enabled) {
+    flutter::EncodableMap args;
+    args[flutter::EncodableValue("enabled")] =
+        flutter::EncodableValue(enabled);
+    InvokeOnPlatformThread("onSmtcShuffle", std::move(args));
+  };
+  callbacks.on_repeat_change = [this](yunshu::SmtcRepeatMode mode) {
+    flutter::EncodableMap args;
+    args[flutter::EncodableValue("mode")] =
+        flutter::EncodableValue(SmtcRepeatModeName(mode));
+    InvokeOnPlatformThread("onSmtcRepeat", std::move(args));
+  };
+  smtc_.Initialize(hwnd, std::move(callbacks));
   smtc_initialized_ = true;
 }
 
@@ -417,6 +457,27 @@ void MusicChannelWindowsPlugin::HandleMethodCall(
                            : nullptr;
     if (args != nullptr) {
       smtc_.SetTimeline(GetInt64(*args, "position"), GetInt64(*args, "end"));
+    }
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("smtcSetPlayMode") == 0) {
+    EnsureSmtcInitialized();
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    if (args != nullptr) {
+      const auto *shuffle = std::get_if<bool>(ValueOrNull(*args, "shuffle"));
+      const auto *repeat =
+          std::get_if<std::string>(ValueOrNull(*args, "repeat"));
+      yunshu::SmtcRepeatMode repeat_mode = yunshu::SmtcRepeatMode::kNone;
+      if (repeat != nullptr) {
+        if (*repeat == "track") {
+          repeat_mode = yunshu::SmtcRepeatMode::kTrack;
+        } else if (*repeat == "list") {
+          repeat_mode = yunshu::SmtcRepeatMode::kList;
+        }
+      }
+      smtc_.SetPlayMode(shuffle != nullptr && *shuffle, repeat_mode);
     }
     result->Success(flutter::EncodableValue(true));
   } else if (method.compare("smtcDisable") == 0) {

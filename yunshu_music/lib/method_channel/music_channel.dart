@@ -27,6 +27,14 @@ class MusicChannel {
     return kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isIOS;
   }
 
+  /// 播放模式变更事件（如系统媒体控件触发的随机/循环切换）
+  Stream<dynamic> get playModeEvent {
+    if (supportMusicChannel()) {
+      return channel.playModeEvent;
+    }
+    return const Stream.empty();
+  }
+
   Future<void> init() async {
     _methodChannel.setMethodCallHandler((call) async {
       switch (call.method) {
