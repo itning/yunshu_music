@@ -10,20 +10,82 @@
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <sstream>
+#include <string>
+#include <vector>
 
-#include "include/music_channel_windows/music_channel_windows_plugin.h"
 #include "ffmpeg_engine.h"
+#include "tray_icon.h"
 
 namespace {
+
+const flutter::EncodableValue* ValueOrNull(const flutter::EncodableMap& map,
+                                           const char* key) {
+  auto it = map.find(flutter::EncodableValue(key));
+  if (it == map.end()) {
+    return nullptr;
+  }
+  return &(it->second);
+}
+
+int GetInt(const flutter::EncodableMap& map, const char* key,
+           int fallback = 0) {
+  const auto* value = ValueOrNull(map, key);
+  if (value == nullptr) {
+    return fallback;
+  }
+  if (const auto* v32 = std::get_if<int32_t>(value)) {
+    return *v32;
+  }
+  if (const auto* v64 = std::get_if<int64_t>(value)) {
+    return static_cast<int>(*v64);
+  }
+  return fallback;
+}
+
+std::wstring Utf8ToWide(const std::string& input) {
+  if (input.empty()) {
+    return std::wstring();
+  }
+  int size = MultiByteToWideChar(CP_UTF8, 0, input.data(),
+                                 static_cast<int>(input.size()), nullptr, 0);
+  if (size <= 0) {
+    return std::wstring();
+  }
+  std::wstring output(static_cast<size_t>(size), L'\0');
+  MultiByteToWideChar(CP_UTF8, 0, input.data(), static_cast<int>(input.size()),
+                      output.data(), size);
+  return output;
+}
+
+// Resolves a Flutter asset key (e.g. "asserts/icon/app_icon.ico") to an
+// absolute path under "<exe dir>/data/flutter_assets".
+std::wstring ResolveAssetPath(const std::string& relative_path) {
+  wchar_t exe_path[MAX_PATH] = {0};
+  DWORD length = GetModuleFileNameW(nullptr, exe_path, MAX_PATH);
+  std::wstring directory(exe_path, length);
+  size_t slash = directory.find_last_of(L"\\/");
+  if (slash != std::wstring::npos) {
+    directory = directory.substr(0, slash + 1);
+  }
+
+  std::wstring relative = Utf8ToWide(relative_path);
+  for (auto& ch : relative) {
+    if (ch == L'/') {
+      ch = L'\\';
+    }
+  }
+  return directory + L"data\\flutter_assets\\" + relative;
+}
 
 class MusicChannelWindowsPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
 
-  MusicChannelWindowsPlugin();
+  explicit MusicChannelWindowsPlugin(flutter::PluginRegistrarWindows *registrar);
 
   virtual ~MusicChannelWindowsPlugin();
 
@@ -32,19 +94,26 @@ class MusicChannelWindowsPlugin : public flutter::Plugin {
   void HandleMethodCall(
       const flutter::MethodCall<flutter::EncodableValue> &method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+
+  void EnsureTrayInitialized();
+  HWND GetMainWindow();
+
+  flutter::PluginRegistrarWindows *registrar_ = nullptr;
+  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
+  yunshu::TrayIcon tray_;
+  int window_proc_id_ = -1;
 };
 
 // static
 void MusicChannelWindowsPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows *registrar) {
-  auto channel =
+  auto plugin = std::make_unique<MusicChannelWindowsPlugin>(registrar);
+  plugin->channel_ =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           registrar->messenger(), "music_channel_windows",
           &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<MusicChannelWindowsPlugin>();
-
-  channel->SetMethodCallHandler(
+  plugin->channel_->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto &call, auto result) {
         plugin_pointer->HandleMethodCall(call, std::move(result));
       });
@@ -54,16 +123,70 @@ void MusicChannelWindowsPlugin::RegisterWithRegistrar(
   yunshu::FfmpegEngine::Instance()->Init(registrar);
 }
 
-MusicChannelWindowsPlugin::MusicChannelWindowsPlugin() {}
+MusicChannelWindowsPlugin::MusicChannelWindowsPlugin(
+    flutter::PluginRegistrarWindows *registrar)
+    : registrar_(registrar) {
+  window_proc_id_ = registrar->RegisterTopLevelWindowProcDelegate(
+      [this](HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
+        return tray_.HandleWindowMessage(hwnd, message, wparam, lparam);
+      });
+}
 
 MusicChannelWindowsPlugin::~MusicChannelWindowsPlugin() {
+  if (channel_ != nullptr) {
+    // The messenger owns a copy of the handler capturing `this`; drop it so
+    // it can't be invoked after the plugin is destroyed.
+    channel_->SetMethodCallHandler(nullptr);
+  }
+  tray_.Destroy();
+  if (registrar_ != nullptr && window_proc_id_ != -1) {
+    registrar_->UnregisterTopLevelWindowProcDelegate(window_proc_id_);
+  }
   yunshu::FfmpegEngine::Instance()->Shutdown();
+}
+
+HWND MusicChannelWindowsPlugin::GetMainWindow() {
+  if (registrar_ == nullptr) {
+    return nullptr;
+  }
+  auto *view = registrar_->GetView();
+  if (view == nullptr) {
+    return nullptr;
+  }
+  return ::GetAncestor(view->GetNativeWindow(), GA_ROOT);
+}
+
+void MusicChannelWindowsPlugin::EnsureTrayInitialized() {
+  if (tray_.has_window()) {
+    return;
+  }
+  tray_.Initialize(
+      GetMainWindow(),
+      [this](int id) {
+        if (channel_ == nullptr) {
+          return;
+        }
+        flutter::EncodableMap args;
+        args[flutter::EncodableValue("id")] = flutter::EncodableValue(id);
+        channel_->InvokeMethod("onTrayMenuItemClick",
+                               std::make_unique<flutter::EncodableValue>(args));
+      },
+      [this](bool right_button) {
+        if (channel_ == nullptr) {
+          return;
+        }
+        channel_->InvokeMethod(
+            right_button ? "onTrayIconRightMouseDown" : "onTrayIconMouseDown",
+            std::make_unique<flutter::EncodableValue>());
+      });
 }
 
 void MusicChannelWindowsPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-  if (method_call.method_name().compare("getPlatformVersion") == 0) {
+  const std::string &method = method_call.method_name();
+
+  if (method.compare("getPlatformVersion") == 0) {
     std::ostringstream version_stream;
     version_stream << "Windows ";
     if (IsWindows10OrGreater()) {
@@ -74,6 +197,70 @@ void MusicChannelWindowsPlugin::HandleMethodCall(
       version_stream << "7";
     }
     result->Success(flutter::EncodableValue(version_stream.str()));
+  } else if (method.compare("traySetIcon") == 0) {
+    EnsureTrayInitialized();
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    if (args != nullptr) {
+      if (const auto *icon_path =
+              std::get_if<std::string>(ValueOrNull(*args, "iconPath"))) {
+        tray_.SetIcon(ResolveAssetPath(*icon_path));
+      }
+    }
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("traySetToolTip") == 0) {
+    EnsureTrayInitialized();
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    if (args != nullptr) {
+      if (const auto *tool_tip =
+              std::get_if<std::string>(ValueOrNull(*args, "toolTip"))) {
+        tray_.SetToolTip(Utf8ToWide(*tool_tip));
+      }
+    }
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("traySetContextMenu") == 0) {
+    EnsureTrayInitialized();
+    std::vector<yunshu::TrayMenuItem> menu_items;
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    if (args != nullptr) {
+      if (const auto *items =
+              std::get_if<flutter::EncodableList>(ValueOrNull(*args, "items"))) {
+        for (const auto &value : *items) {
+          const auto *item_map = std::get_if<flutter::EncodableMap>(&value);
+          if (item_map == nullptr) {
+            continue;
+          }
+          yunshu::TrayMenuItem item;
+          item.id = GetInt(*item_map, "id");
+          if (const auto *label =
+                  std::get_if<std::string>(ValueOrNull(*item_map, "label"))) {
+            item.label = Utf8ToWide(*label);
+          }
+          if (const auto *separator =
+                  std::get_if<bool>(ValueOrNull(*item_map, "separator"))) {
+            item.is_separator = *separator;
+          }
+          menu_items.push_back(std::move(item));
+        }
+      }
+    }
+    tray_.SetContextMenu(menu_items);
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("trayPopUpContextMenu") == 0) {
+    EnsureTrayInitialized();
+    tray_.PopUpContextMenu();
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("trayDestroy") == 0) {
+    tray_.Destroy();
+    result->Success(flutter::EncodableValue(true));
   } else {
     result->NotImplemented();
   }

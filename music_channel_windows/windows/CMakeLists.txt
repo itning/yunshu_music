@@ -31,6 +31,7 @@ file(GLOB FFMPEG_DLLS
 
 add_library(${PLUGIN_NAME} SHARED
   "music_channel_windows_plugin.cpp"
+  "tray_icon.cpp"
   "wasapi_output.cpp"
   "ffmpeg_decoder.cpp"
   "ffmpeg_engine.cpp"
@@ -44,6 +45,7 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(${PLUGIN_NAME} PRIVATE "${FFMPEG_ROOT}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin ole32
+  shell32 user32
   "${FFMPEG_ROOT}/lib/avcodec.lib"
   "${FFMPEG_ROOT}/lib/avformat.lib"
   "${FFMPEG_ROOT}/lib/avutil.lib"

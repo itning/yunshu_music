@@ -10,13 +10,12 @@ import 'package:music_platform_interface/music_play_mode.dart';
 import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smtc_windows/smtc_windows.dart';
-import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
 import 'ffmpeg_player.dart';
 
-class MusicChannelWindows extends MusicPlatform with TrayListener {
+class MusicChannelWindows extends MusicPlatform {
   static void registerWith() {
     MusicPlatform.instance = MusicChannelWindows();
   }
@@ -31,6 +30,16 @@ class MusicChannelWindows extends MusicPlatform with TrayListener {
   static const String _nowPlayMusicIdKey = "NOW_PLAY_MEDIA_ID_KEY";
   static const String _playModeKey = "PLAY_MODE";
   static const String _playListKey = "PLAY_LIST";
+
+  /// 托盘图标资源（相对于 flutter_assets）
+  static const String _trayIconAsset = "asserts/icon/app_icon.ico";
+
+  /// 托盘菜单项 ID
+  static const int _trayMenuShow = 1;
+  static const int _trayMenuPrevious = 2;
+  static const int _trayMenuNext = 3;
+  static const int _trayMenuPlayStatus = 4;
+  static const int _trayMenuExit = 5;
 
   /// 播放实例
   late FfmpegPlayer _player;
@@ -73,8 +82,6 @@ class MusicChannelWindows extends MusicPlatform with TrayListener {
 
   bool _isPlayNow = false;
 
-  late Menu _menu;
-
   late Map<String, dynamic> _authorizationData;
 
   late SMTCWindows _smtc;
@@ -102,28 +109,7 @@ class MusicChannelWindows extends MusicPlatform with TrayListener {
 
     _player = FfmpegPlayer();
 
-    _menu = Menu(
-      items: [
-        MenuItem(label: '云舒音乐', onClick: (_) => windowManager.show()),
-        MenuItem.separator(),
-        MenuItem(label: '上一曲', onClick: (_) => skipToPrevious()),
-        MenuItem(label: '下一曲', onClick: (_) => skipToNext()),
-        MenuItem(
-          label: '播放',
-          key: 'PlayStatus',
-          onClick: (_) => _isPlayNow ? pause() : play(),
-        ),
-        MenuItem.separator(),
-        MenuItem(
-          label: '退出',
-          onClick: (_) async {
-            await _smtc.disableSmtc();
-            await _player.dispose();
-            exit(0);
-          },
-        ),
-      ],
-    );
+    _channel.setMethodCallHandler(_handleNativeCall);
 
     _player.onPositionChanged.listen((Duration event) {
       int position = event.inMilliseconds;
@@ -212,26 +198,81 @@ class MusicChannelWindows extends MusicPlatform with TrayListener {
       }
     });
 
-    await trayManager.setIcon("asserts/icon/app_icon.ico");
-    await trayManager.setContextMenu(_menu);
-    trayManager.addListener(this);
+    await _channel.invokeMethod('traySetIcon', {'iconPath': _trayIconAsset});
+    await _channel.invokeMethod('traySetContextMenu', {
+      'items': _buildTrayMenu(),
+    });
   }
 
-  @override
-  void onTrayIconMouseDown() {
-    windowManager.isVisible().then(
-      (visible) => visible ? windowManager.hide() : windowManager.show(),
-    );
+  Future<void> _handleNativeCall(MethodCall call) async {
+    switch (call.method) {
+      case 'onTrayIconMouseDown':
+        final bool visible = await windowManager.isVisible();
+        if (visible) {
+          await windowManager.hide();
+        } else {
+          await windowManager.show();
+        }
+        break;
+      case 'onTrayIconRightMouseDown':
+        await _channel.invokeMethod('trayPopUpContextMenu');
+        break;
+      case 'onTrayMenuItemClick':
+        final dynamic arguments = call.arguments;
+        if (arguments is Map && arguments['id'] is int) {
+          await _onTrayMenuItemClick(arguments['id'] as int);
+        }
+        break;
+      default:
+        break;
+    }
   }
 
-  @override
-  void onTrayIconRightMouseDown() {
-    trayManager.popUpContextMenu();
+  Future<void> _onTrayMenuItemClick(int id) async {
+    switch (id) {
+      case _trayMenuShow:
+        await windowManager.show();
+        break;
+      case _trayMenuPrevious:
+        await skipToPrevious();
+        break;
+      case _trayMenuNext:
+        await skipToNext();
+        break;
+      case _trayMenuPlayStatus:
+        if (_isPlayNow) {
+          await pause();
+        } else {
+          await play();
+        }
+        break;
+      case _trayMenuExit:
+        await _smtc.disableSmtc();
+        await _player.dispose();
+        exit(0);
+      default:
+        break;
+    }
+  }
+
+  List<Map<String, dynamic>> _buildTrayMenu() {
+    return [
+      {'id': _trayMenuShow, 'label': '云舒音乐', 'separator': false},
+      {'id': 0, 'label': '', 'separator': true},
+      {'id': _trayMenuPrevious, 'label': '上一曲', 'separator': false},
+      {'id': _trayMenuNext, 'label': '下一曲', 'separator': false},
+      {
+        'id': _trayMenuPlayStatus,
+        'label': _isPlayNow ? '暂停' : '播放',
+        'separator': false,
+      },
+      {'id': 0, 'label': '', 'separator': true},
+      {'id': _trayMenuExit, 'label': '退出', 'separator': false},
+    ];
   }
 
   void _upContextMenu() {
-    _menu.getMenuItem('PlayStatus')!.label = _isPlayNow ? '暂停' : '播放';
-    trayManager.setContextMenu(_menu);
+    _channel.invokeMethod('traySetContextMenu', {'items': _buildTrayMenu()});
   }
 
   void initPlay({bool autoStart = false}) {
@@ -274,7 +315,9 @@ class MusicChannelWindows extends MusicPlatform with TrayListener {
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
     windowManager.setTitle("${_metaData.title}-${_metaData.subTitle}");
-    trayManager.setToolTip('${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}');
+    _channel.invokeMethod('traySetToolTip', {
+      'toolTip': '${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}',
+    });
     _smtc.updateMetadata(
       MusicMetadata(
         title: _metaData.title,
