@@ -98,4 +98,67 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     expect(reset, isFalse);
   });
+
+  testWidgets('completeDrag 后忽略向前跳转的旧位置回传', (tester) async {
+    final controller = LyricController();
+    controller.updatePosition(const Duration(seconds: 10));
+    controller.beginDrag(
+      offset: -30,
+      line: 2,
+      progress: const Duration(seconds: 30),
+    );
+    controller.completeDrag();
+    expect(controller.position, const Duration(seconds: 30));
+
+    controller.updatePosition(const Duration(seconds: 10));
+    expect(controller.position, const Duration(seconds: 30));
+
+    controller.updatePosition(const Duration(seconds: 30));
+    expect(controller.position, const Duration(seconds: 30));
+
+    controller.updatePosition(const Duration(seconds: 31));
+    expect(controller.position, const Duration(seconds: 31));
+
+    controller.dispose();
+  });
+
+  testWidgets('completeDrag 后忽略向后跳转的旧位置回传', (tester) async {
+    final controller = LyricController();
+    controller.updatePosition(const Duration(seconds: 60));
+    controller.beginDrag(
+      offset: -30,
+      line: 1,
+      progress: const Duration(seconds: 20),
+    );
+    controller.completeDrag();
+    expect(controller.position, const Duration(seconds: 20));
+
+    controller.updatePosition(const Duration(seconds: 61));
+    expect(controller.position, const Duration(seconds: 20));
+
+    controller.updatePosition(const Duration(seconds: 20));
+    expect(controller.position, const Duration(seconds: 20));
+
+    controller.updatePosition(const Duration(seconds: 21));
+    expect(controller.position, const Duration(seconds: 21));
+
+    controller.dispose();
+  });
+
+  testWidgets('等待超时后恢复位置更新', (tester) async {
+    final controller = LyricController();
+    controller.updatePosition(const Duration(seconds: 10));
+    controller.beginDrag(
+      offset: -30,
+      line: 2,
+      progress: const Duration(seconds: 30),
+    );
+    controller.completeDrag();
+
+    await tester.pump(const Duration(seconds: 2));
+    controller.updatePosition(const Duration(seconds: 11));
+    expect(controller.position, const Duration(seconds: 11));
+
+    controller.dispose();
+  });
 }

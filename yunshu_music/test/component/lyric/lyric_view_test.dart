@@ -110,6 +110,30 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('点击跳转后旧位置回传不会让歌词回滚', (tester) async {
+    final controller = LyricController();
+    await tester.pumpWidget(_app(controller));
+    final painter = _painterOf(tester);
+
+    controller.updatePosition(const Duration(seconds: 5));
+    controller.beginDrag(
+      offset: -30,
+      line: 1,
+      progress: const Duration(seconds: 10, milliseconds: 1),
+    );
+    await tester.pump();
+    controller.completeDrag();
+    await tester.pump();
+
+    // seek 生效前播放器仍回传旧位置
+    controller.updatePosition(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    expect(painter.scrollOffset.value, -painter.layout.offsetOf(1));
+
+    controller.dispose();
+  });
+
   testWidgets('dispose 时移除 controller 监听器', (tester) async {
     final controller = _CountingLyricController();
     await tester.pumpWidget(_app(controller));

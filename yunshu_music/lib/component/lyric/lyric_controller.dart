@@ -42,7 +42,25 @@ class LyricController extends ChangeNotifier {
   /// 拖动结束且超时未跳转时触发，由视图实现回弹动画。
   VoidCallback? onDraggingAutoReset;
 
+  /// 点击跳转的目标进度；播放器回传到达前忽略过渡位置。
+  Duration? _pendingSeek;
+  Duration? _pendingSeekFrom;
+  Timer? _pendingSeekTimer;
+
+  static const Duration _seekTimeout = Duration(seconds: 2);
+
   void updatePosition(Duration value) {
+    final Duration? target = _pendingSeek;
+    if (target != null) {
+      final Duration from = _pendingSeekFrom ?? target;
+      // 向前跳转需等待回传 >= 目标；向后跳转需等待回传 < 跳转前位置。
+      // 这样可过滤 seek 生效前播放器仍回传的旧位置。
+      final bool reached = target >= from ? value >= target : value < from;
+      if (!reached) {
+        return;
+      }
+      _clearPendingSeek();
+    }
     if (value == position) {
       return;
     }
@@ -56,6 +74,7 @@ class LyricController extends ChangeNotifier {
     required Duration progress,
   }) {
     _cancelTimer();
+    _clearPendingSeek();
     isDragging = true;
     draggingOffset = offset;
     draggingLine = line;
@@ -85,7 +104,11 @@ class LyricController extends ChangeNotifier {
   /// 点击跳转：进度切到拖动位置并退出拖动。
   void completeDrag() {
     _cancelTimer();
+    _pendingSeekFrom = position;
     position = draggingProgress;
+    _pendingSeek = draggingProgress;
+    _pendingSeekTimer?.cancel();
+    _pendingSeekTimer = Timer(_seekTimeout, _clearPendingSeek);
     isDragging = false;
     draggingOffset = null;
     notifyListeners();
@@ -104,6 +127,13 @@ class LyricController extends ChangeNotifier {
     draggingTimer = null;
   }
 
+  void _clearPendingSeek() {
+    _pendingSeek = null;
+    _pendingSeekFrom = null;
+    _pendingSeekTimer?.cancel();
+    _pendingSeekTimer = null;
+  }
+
   /// 取消未触发的回弹定时器（视图 dispose 时调用）。
   void cancelDragTimer() {
     _cancelTimer();
@@ -112,6 +142,7 @@ class LyricController extends ChangeNotifier {
   @override
   void dispose() {
     _cancelTimer();
+    _clearPendingSeek();
     super.dispose();
   }
 }
