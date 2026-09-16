@@ -72,4 +72,52 @@ void main() {
 
     expect(layout.totalOffset, 0);
   });
+
+  test('当前行在视口垂直居中', () {
+    final layout = LyricLayout(
+      lyrics: _lyrics(3),
+      style: style,
+      maxWidth: 300,
+      lineGap: 5,
+      measure: _fakeMeasure,
+    );
+    const double viewport = 400;
+    const double currentHeight = 50;
+    const int currentIndex = 2;
+    final double scroll = -layout.offsetOf(currentIndex);
+
+    expect(
+      layout.lineTop(currentIndex, scroll, viewport, currentHeight),
+      viewport / 2 - currentHeight / 2,
+    );
+  });
+
+  test('非当前行相对当前行按偏移量排列', () {
+    final layout = LyricLayout(
+      lyrics: _lyrics(3),
+      style: style,
+      maxWidth: 300,
+      lineGap: 5,
+      measure: _fakeMeasure,
+    );
+    const double viewport = 400;
+    const double currentHeight = 50;
+    const int currentIndex = 2;
+    final double scroll = -layout.offsetOf(currentIndex);
+    final double currentTop = layout.lineTop(
+      currentIndex,
+      scroll,
+      viewport,
+      currentHeight,
+    );
+
+    expect(
+      layout.lineTop(0, scroll, viewport, currentHeight),
+      currentTop + layout.offsetOf(0) - layout.offsetOf(currentIndex),
+    );
+    expect(
+      layout.lineTop(1, scroll, viewport, currentHeight),
+      currentTop + layout.offsetOf(1) - layout.offsetOf(currentIndex),
+    );
+  });
 }

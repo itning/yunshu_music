@@ -64,4 +64,20 @@ class LyricLayout {
 
   /// 拖动边界：最后一行的偏移量（不含最后一行高度）。
   double get totalOffset => length == 0 ? 0 : _offsets[length - 1];
+
+  /// 第 [index] 行在视口中的顶部 Y 坐标。
+  ///
+  /// [scrollOffset] 为内容滚动偏移（当前行居中时应为 `-offsetOf(currentIndex)`），
+  /// [viewportHeight] 为视口高度，[currentLineHeight] 为当前行高度。
+  double lineTop(
+    int index,
+    double scrollOffset,
+    double viewportHeight,
+    double currentLineHeight,
+  ) {
+    return scrollOffset +
+        viewportHeight / 2 -
+        currentLineHeight / 2 +
+        offsetOf(index);
+  }
 }

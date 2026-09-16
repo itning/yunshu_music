@@ -70,6 +70,25 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('切换行时滚动偏移经过中间值（有动画）', (tester) async {
+    final controller = LyricController();
+    await tester.pumpWidget(_app(controller));
+
+    controller.updatePosition(const Duration(seconds: 25));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    final painter = _painterOf(tester);
+    final double target = -painter.layout.offsetOf(2);
+    expect(painter.scrollOffset.value, lessThan(0));
+    expect(painter.scrollOffset.value, greaterThan(target));
+
+    await tester.pumpAndSettle();
+    expect(painter.scrollOffset.value, target);
+
+    controller.dispose();
+  });
+
   testWidgets('dispose 时移除 controller 监听器', (tester) async {
     final controller = _CountingLyricController();
     await tester.pumpWidget(_app(controller));

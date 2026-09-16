@@ -253,9 +253,7 @@ class LyricPainter extends CustomPainter {
       currentIndex,
       currLyricStyle,
     );
-    final double base =
-        scrollOffset.value + size.height / 2 - currentPainter.height / 2;
-    final double currentOffset = layout.offsetOf(currentIndex);
+    final double currentLineHeight = currentPainter.height;
 
     for (int i = 0; i < lyrics.length; i++) {
       final bool isCurrent = i == currentIndex;
@@ -264,7 +262,12 @@ class LyricPainter extends CustomPainter {
       final TextPainter painter = isCurrent
           ? currentPainter
           : _layoutLine(i, isDragging ? draggingLyricStyle : lyricStyle);
-      final double y = base + (layout.offsetOf(i) - currentOffset);
+      final double y = layout.lineTop(
+        i,
+        scrollOffset.value,
+        size.height,
+        currentLineHeight,
+      );
       if (y < size.height && y > 0) {
         painter.paint(canvas, Offset((size.width - painter.width) / 2, y));
       }
