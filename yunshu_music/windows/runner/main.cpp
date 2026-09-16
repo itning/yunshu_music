@@ -1,7 +1,15 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <flutter_windows.h>
+#include <appmodel.h>
+#include <knownfolders.h>
+#include <propidl.h>
+#include <propkey.h>
+#include <shlobj.h>
+#include <shobjidl_core.h>
 #include <windows.h>
+
+#include <string>
 
 #include "flutter_window.h"
 #include "utils.h"
@@ -14,6 +22,166 @@ constexpr wchar_t kSingleInstanceMutexName[] = L"yunshu_music.instance.mutex";
 // Message broadcast by a secondary instance to ask the running instance to
 // bring its window to the foreground. See flutter_window.cpp.
 constexpr wchar_t kActivateMessageName[] = L"yunshu_music.activate";
+
+// AppUserModelID and display name shown by Windows (taskbar, notifications and
+// the media controls). Matches the MSIX identity_name.
+constexpr wchar_t kAppUserModelId[] = L"top.itning.yunshumusic";
+constexpr wchar_t kAppDisplayName[] = L"\u4E91\u8212\u97F3\u4E50";
+
+bool RegistryStringMatches(HKEY key, const wchar_t* name,
+                           const std::wstring& expected) {
+  DWORD type = 0;
+  DWORD size = 0;
+  if (::RegQueryValueExW(key, name, nullptr, &type, nullptr, &size) !=
+          ERROR_SUCCESS ||
+      type != REG_SZ) {
+    return false;
+  }
+  std::wstring value(size / sizeof(wchar_t), L'\0');
+  if (::RegQueryValueExW(key, name, nullptr, nullptr,
+                         reinterpret_cast<BYTE*>(value.data()),
+                         &size) != ERROR_SUCCESS) {
+    return false;
+  }
+  while (!value.empty() && value.back() == L'\0') {
+    value.pop_back();
+  }
+  return value == expected;
+}
+
+void WriteRegistryString(HKEY key, const wchar_t* name,
+                         const std::wstring& value) {
+  if (RegistryStringMatches(key, name, value)) {
+    return;
+  }
+  ::RegSetValueExW(key, name, 0, REG_SZ,
+                   reinterpret_cast<const BYTE*>(value.c_str()),
+                   static_cast<DWORD>((value.size() + 1) * sizeof(wchar_t)));
+}
+
+// Unpackaged Win32 apps have no package identity, so Windows shows "Unknown
+// app" in the media controls unless the AppUserModelID is registered under
+// HKCU. The packaged (MSIX) build gets its name from the package manifest.
+void RegisterAppUserModelId() {
+  ::SetCurrentProcessExplicitAppUserModelID(kAppUserModelId);
+
+  wchar_t exe_path[MAX_PATH] = {0};
+  DWORD length = ::GetModuleFileNameW(nullptr, exe_path, MAX_PATH);
+  std::wstring directory(exe_path, length);
+  const size_t slash = directory.find_last_of(L"\\/");
+  if (slash != std::wstring::npos) {
+    directory = directory.substr(0, slash + 1);
+  }
+  const std::wstring icon_uri =
+      directory + L"data\\flutter_assets\\asserts\\icon\\app_icon.ico";
+
+  const std::wstring key_path =
+      std::wstring(L"Software\\Classes\\AppUserModelId\\") + kAppUserModelId;
+  HKEY key = nullptr;
+  if (::RegCreateKeyExW(HKEY_CURRENT_USER, key_path.c_str(), 0, nullptr,
+                        REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nullptr, &key,
+                        nullptr) != ERROR_SUCCESS) {
+    return;
+  }
+  WriteRegistryString(key, L"DisplayName", kAppDisplayName);
+  WriteRegistryString(key, L"IconUri", icon_uri);
+  ::RegCloseKey(key);
+}
+
+bool IsRunningPackaged() {
+  UINT32 length = 0;
+  const LONG result = ::GetCurrentPackageFullName(&length, nullptr);
+  return result != APPMODEL_ERROR_NO_PACKAGE;
+}
+
+bool ShortcutPointsTo(const std::wstring& shortcut_path,
+                      const std::wstring& exe_path) {
+  if (::GetFileAttributesW(shortcut_path.c_str()) == INVALID_FILE_ATTRIBUTES) {
+    return false;
+  }
+  IShellLinkW* link = nullptr;
+  if (FAILED(::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
+                                IID_PPV_ARGS(&link)))) {
+    return false;
+  }
+  bool matches = false;
+  IPersistFile* file = nullptr;
+  if (SUCCEEDED(link->QueryInterface(IID_PPV_ARGS(&file)))) {
+    if (SUCCEEDED(file->Load(shortcut_path.c_str(), STGM_READ))) {
+      wchar_t target[MAX_PATH] = {0};
+      if (SUCCEEDED(link->GetPath(target, MAX_PATH, nullptr, SLGP_UNCPRIORITY))) {
+        matches = (_wcsicmp(target, exe_path.c_str()) == 0);
+      }
+    }
+    file->Release();
+  }
+  link->Release();
+  return matches;
+}
+
+// Windows SMTC resolves an AppUserModelID to a display name through a Start
+// Menu shortcut (or an MSIX package identity). Unpackaged builds have neither,
+// so create the shortcut ourselves; packaged builds are left to the OS.
+void EnsureStartMenuShortcut() {
+  if (IsRunningPackaged()) {
+    return;
+  }
+
+  wchar_t exe_path[MAX_PATH] = {0};
+  if (::GetModuleFileNameW(nullptr, exe_path, MAX_PATH) == 0) {
+    return;
+  }
+
+  PWSTR programs_path = nullptr;
+  if (FAILED(::SHGetKnownFolderPath(FOLDERID_Programs, KF_FLAG_DEFAULT, nullptr,
+                                    &programs_path))) {
+    return;
+  }
+  const std::wstring shortcut_path =
+      std::wstring(programs_path) + L"\\" + kAppDisplayName + L".lnk";
+  ::CoTaskMemFree(programs_path);
+
+  if (ShortcutPointsTo(shortcut_path, exe_path)) {
+    return;
+  }
+
+  IShellLinkW* shell_link = nullptr;
+  if (FAILED(::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
+                                IID_PPV_ARGS(&shell_link)))) {
+    return;
+  }
+  shell_link->SetPath(exe_path);
+  shell_link->SetDescription(kAppDisplayName);
+
+  std::wstring directory(exe_path);
+  const size_t slash = directory.find_last_of(L"\\/");
+  if (slash != std::wstring::npos) {
+    directory = directory.substr(0, slash + 1);
+  }
+  const std::wstring icon_path =
+      directory + L"data\\flutter_assets\\asserts\\icon\\app_icon.ico";
+  if (::GetFileAttributesW(icon_path.c_str()) != INVALID_FILE_ATTRIBUTES) {
+    shell_link->SetIconLocation(icon_path.c_str(), 0);
+  }
+
+  IPropertyStore* store = nullptr;
+  if (SUCCEEDED(shell_link->QueryInterface(IID_PPV_ARGS(&store)))) {
+    PROPVARIANT value;
+    ::PropVariantInit(&value);
+    value.vt = VT_LPWSTR;
+    value.pwszVal = const_cast<LPWSTR>(kAppUserModelId);
+    store->SetValue(PKEY_AppUserModel_ID, value);
+    store->Commit();
+    store->Release();
+  }
+
+  IPersistFile* file = nullptr;
+  if (SUCCEEDED(shell_link->QueryInterface(IID_PPV_ARGS(&file)))) {
+    file->Save(shortcut_path.c_str(), TRUE);
+    file->Release();
+  }
+  shell_link->Release();
+}
 
 // Default window size, in logical pixels.
 constexpr int kDefaultWindowWidth = 1200;
@@ -76,6 +244,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     return EXIT_SUCCESS;
   }
 
+  RegisterAppUserModelId();
+
   // Attach to console when present (e.g., 'flutter run') or create a
   // new console when running with a debugger.
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {
@@ -85,6 +255,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // Initialize COM, so that it is available for use in the library and/or
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
+  EnsureStartMenuShortcut();
 
   flutter::DartProject project(L"data");
 
