@@ -22,6 +22,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 class LyricController extends ChangeNotifier {
+  /// 当前播放进度
+  Duration position = const Duration();
+
   /// 当前进度
   Duration progress = const Duration();
 
@@ -51,7 +54,7 @@ class LyricController extends ChangeNotifier {
     draggingLine = 0;
   }
 
-  late Duration draggingProgress;
+  Duration draggingProgress = Duration.zero;
 
   late Function draggingComplete;
 
@@ -62,4 +65,75 @@ class LyricController extends ChangeNotifier {
 
   int oldLine = 0;
   int draggingLine = 0;
+
+  /// 拖动结束且超时未跳转时触发，由视图实现回弹动画。
+  VoidCallback? onDraggingAutoReset;
+
+  void updatePosition(Duration value) {
+    if (value == position) {
+      return;
+    }
+    position = value;
+    notifyListeners();
+  }
+
+  void beginDrag({
+    required double offset,
+    required int line,
+    required Duration progress,
+  }) {
+    _cancelTimer();
+    _isDragging = true;
+    draggingOffset = offset;
+    draggingLine = line;
+    draggingProgress = progress;
+    notifyListeners();
+  }
+
+  void updateDrag({
+    required double offset,
+    required int line,
+    required Duration progress,
+  }) {
+    draggingOffset = offset;
+    draggingLine = line;
+    draggingProgress = progress;
+    notifyListeners();
+  }
+
+  void endDrag() {
+    _cancelTimer();
+    draggingTimer = Timer(
+      draggingTimerDuration ?? const Duration(seconds: 3),
+      () => onDraggingAutoReset?.call(),
+    );
+  }
+
+  /// 点击跳转：进度切到拖动位置并退出拖动。
+  void completeDrag() {
+    _cancelTimer();
+    position = draggingProgress;
+    _isDragging = false;
+    draggingOffset = null;
+    notifyListeners();
+  }
+
+  /// 自动回弹：退出拖动但保留播放进度。
+  void cancelDragging() {
+    _cancelTimer();
+    _isDragging = false;
+    draggingOffset = null;
+    notifyListeners();
+  }
+
+  void _cancelTimer() {
+    draggingTimer?.cancel();
+    draggingTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _cancelTimer();
+    super.dispose();
+  }
 }
