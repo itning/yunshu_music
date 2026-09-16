@@ -67,6 +67,7 @@ add_library(${PLUGIN_NAME} SHARED
   "music_channel_windows_plugin.cpp"
   "tray_icon.cpp"
   "smtc_controller.cpp"
+  "taskbar_progress.cpp"
   "wasapi_output.cpp"
   "ffmpeg_decoder.cpp"
   "ffmpeg_engine.cpp"

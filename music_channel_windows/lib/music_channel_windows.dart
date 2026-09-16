@@ -9,7 +9,6 @@ import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
 import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:windows_taskbar/windows_taskbar.dart';
 
 import 'ffmpeg_player.dart';
 
@@ -127,7 +126,7 @@ class MusicChannelWindows extends MusicPlatform {
       playbackStateController.sink.add(_playbackState.toMap());
       _isWindowVisible().then((visible) {
         if (visible) {
-          WindowsTaskbar.setProgress(position, _metaData.duration);
+          _setTaskbarProgress(position, _metaData.duration);
         }
       });
       _smtcPositionMs = position;
@@ -139,9 +138,7 @@ class MusicChannelWindows extends MusicPlatform {
       playbackStateController.sink.add(_playbackState.toMap());
       _isWindowVisible().then((visible) {
         if (visible) {
-          WindowsTaskbar.setProgressMode(
-            playing ? TaskbarProgressMode.normal : TaskbarProgressMode.paused,
-          );
+          _setTaskbarProgressState(playing ? 'normal' : 'paused');
         }
       });
       _setSmtcPlaybackStatus(playing ? 'playing' : 'paused');
@@ -156,7 +153,7 @@ class MusicChannelWindows extends MusicPlatform {
         metadataEventController.sink.add(_metaData.toMap());
         _isWindowVisible().then((visible) {
           if (visible) {
-            WindowsTaskbar.setProgress(_playbackState.position, ms);
+            _setTaskbarProgress(_playbackState.position, ms);
           }
         });
         _smtcEndMs = ms;
@@ -169,7 +166,7 @@ class MusicChannelWindows extends MusicPlatform {
       _playbackStateController.sink.add(_playbackState.toMap());
       _isWindowVisible().then((visible) {
         if (visible) {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
+          _setTaskbarProgressState('none');
         }
       });
       _setSmtcPlaybackStatus('stopped');
@@ -354,6 +351,17 @@ class MusicChannelWindows extends MusicPlatform {
     await _channel.invokeMethod('windowHide');
   }
 
+  Future<void> _setTaskbarProgress(int completed, int total) async {
+    await _channel.invokeMethod('taskbarSetProgress', {
+      'completed': completed,
+      'total': total,
+    });
+  }
+
+  Future<void> _setTaskbarProgressState(String state) async {
+    await _channel.invokeMethod('taskbarSetProgressState', {'state': state});
+  }
+
   Future<void> _setSmtcMetadata(String title, String artist) async {
     await _channel.invokeMethod('smtcSetMetadata', {
       'title': title,
@@ -383,7 +391,7 @@ class MusicChannelWindows extends MusicPlatform {
     _playbackStateController.sink.add(_playbackState.toMap());
     _isWindowVisible().then((visible) {
       if (visible) {
-        WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
+          _setTaskbarProgressState('indeterminate');
       }
     });
 

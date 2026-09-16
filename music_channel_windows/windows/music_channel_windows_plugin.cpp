@@ -21,6 +21,7 @@
 #include "ffmpeg_engine.h"
 #include "platform_task_queue.h"
 #include "smtc_controller.h"
+#include "taskbar_progress.h"
 #include "tray_icon.h"
 
 namespace {
@@ -142,6 +143,23 @@ const char* SmtcButtonName(yunshu::SmtcButton button) {
   return "play";
 }
 
+yunshu::TaskbarProgressState TaskbarProgressStateFromString(
+    const std::string& state) {
+  if (state == "indeterminate") {
+    return yunshu::TaskbarProgressState::kIndeterminate;
+  }
+  if (state == "normal") {
+    return yunshu::TaskbarProgressState::kNormal;
+  }
+  if (state == "error") {
+    return yunshu::TaskbarProgressState::kError;
+  }
+  if (state == "paused") {
+    return yunshu::TaskbarProgressState::kPaused;
+  }
+  return yunshu::TaskbarProgressState::kNone;
+}
+
 const char* SmtcRepeatModeName(yunshu::SmtcRepeatMode mode) {
   switch (mode) {
     case yunshu::SmtcRepeatMode::kTrack:
@@ -178,6 +196,7 @@ class MusicChannelWindowsPlugin : public flutter::Plugin {
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
   yunshu::TrayIcon tray_;
   yunshu::SmtcController smtc_;
+  yunshu::TaskbarProgress taskbar_;
   bool smtc_initialized_ = false;
   int window_proc_id_ = -1;
 
@@ -482,6 +501,30 @@ void MusicChannelWindowsPlugin::HandleMethodCall(
     result->Success(flutter::EncodableValue(true));
   } else if (method.compare("smtcDisable") == 0) {
     smtc_.SetEnabled(false);
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("taskbarSetProgress") == 0) {
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    if (args != nullptr) {
+      const uint64_t completed =
+          static_cast<uint64_t>(GetInt64(*args, "completed"));
+      const uint64_t total = static_cast<uint64_t>(GetInt64(*args, "total"));
+      taskbar_.SetProgress(GetMainWindow(), completed, total);
+    }
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("taskbarSetProgressState") == 0) {
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    if (args != nullptr) {
+      if (const auto *state =
+              std::get_if<std::string>(ValueOrNull(*args, "state"))) {
+        taskbar_.SetState(GetMainWindow(), TaskbarProgressStateFromString(*state));
+      }
+    }
     result->Success(flutter::EncodableValue(true));
   } else if (method.compare("windowSetTitle") == 0) {
     const auto *args = method_call.arguments()
