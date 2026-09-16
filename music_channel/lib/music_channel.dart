@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:music_platform_interface/music_platform_interface.dart';
 
@@ -60,4 +61,8 @@ Future<void> clearPlayList() {
 
 Future<void> setVolume(double value) {
   return MusicPlatform.instance.setVolume(value);
+}
+
+Future<void> setCover(Uint8List bytes) {
+  return MusicPlatform.instance.setCover(bytes);
 }

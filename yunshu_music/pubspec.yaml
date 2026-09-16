@@ -33,11 +33,6 @@ dependencies:
   motion_toast: ^2.15.0
   path: ^1.9.1
 
-dependency_overrides:
-  # smtc_windows 1.1.0 内置的 rust 生成代码基于 flutter_rust_bridge 2.11.1，
-  # 运行时版本必须与 codegen 版本一致，故钉死版本
-  flutter_rust_bridge: 2.11.1
-
 dev_dependencies:
   flutter_test:
     sdk: flutter

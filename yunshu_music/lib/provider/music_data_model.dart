@@ -200,9 +200,11 @@ class MusicDataModel extends ChangeNotifier {
     if (coverBytes.item2 == null) {
       _coverBase64 = await getDefaultCover();
       notifyListeners();
+      MusicChannel.get().setCover(_coverBase64!);
       return;
     }
     _coverBase64 = Uint8List.fromList(coverBytes.item2!);
     notifyListeners();
+    MusicChannel.get().setCover(_coverBase64!);
   }
 }

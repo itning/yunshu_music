@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:music_platform_interface/unimplemented_music.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -45,4 +46,8 @@ abstract class MusicPlatform extends PlatformInterface {
   Future<void> clearPlayList();
 
   Future<void> setVolume(double value);
+
+  /// Pushes the current track's cover image bytes to the platform (used by the
+  /// Windows system media controls). No-op by default.
+  Future<void> setCover(Uint8List bytes) async {}
 }

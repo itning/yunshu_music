@@ -29,9 +29,44 @@ file(GLOB FFMPEG_DLLS
   "${FFMPEG_ROOT}/bin/swresample-*.dll"
 )
 
+# Locate the C++/WinRT headers shipped with the Windows SDK (needed for SMTC).
+set(WINDOWS_SDK_ROOT "$ENV{WindowsSdkDir}")
+if(NOT WINDOWS_SDK_ROOT)
+  set(WINDOWS_SDK_ROOT "C:/Program Files (x86)/Windows Kits/10")
+endif()
+
+set(WINDOWS_SDK_VERSION "${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
+if(NOT WINDOWS_SDK_VERSION)
+  set(WINDOWS_SDK_VERSION "$ENV{WindowsSDKVersion}")
+endif()
+string(REPLACE "\\" "" WINDOWS_SDK_VERSION "${WINDOWS_SDK_VERSION}")
+
+if(NOT EXISTS "${WINDOWS_SDK_ROOT}/Include/${WINDOWS_SDK_VERSION}/cppwinrt/winrt/windows.media.h")
+  file(GLOB WINSDK_VERSIONS RELATIVE "${WINDOWS_SDK_ROOT}/Include"
+    "${WINDOWS_SDK_ROOT}/Include/*")
+  list(SORT WINSDK_VERSIONS COMPARE NATURAL ORDER DESCENDING)
+  foreach(version ${WINSDK_VERSIONS})
+    if(EXISTS "${WINDOWS_SDK_ROOT}/Include/${version}/cppwinrt/winrt/windows.media.h")
+      set(WINDOWS_SDK_VERSION "${version}")
+      break()
+    endif()
+  endforeach()
+endif()
+
+set(CPPWINRT_INCLUDE_DIR
+  "${WINDOWS_SDK_ROOT}/Include/${WINDOWS_SDK_VERSION}/cppwinrt")
+if(NOT EXISTS "${CPPWINRT_INCLUDE_DIR}/winrt/windows.media.h")
+  message(FATAL_ERROR "C++/WinRT headers not found under ${CPPWINRT_INCLUDE_DIR}")
+endif()
+
+# WinRT ABI headers (needed by SystemMediaTransportControlsInterop.h).
+set(WINSDK_WINRT_INCLUDE_DIR
+  "${WINDOWS_SDK_ROOT}/Include/${WINDOWS_SDK_VERSION}/winrt")
+
 add_library(${PLUGIN_NAME} SHARED
   "music_channel_windows_plugin.cpp"
   "tray_icon.cpp"
+  "smtc_controller.cpp"
   "wasapi_output.cpp"
   "ffmpeg_decoder.cpp"
   "ffmpeg_engine.cpp"
@@ -44,8 +79,10 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL NOMINMAX)
 target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(${PLUGIN_NAME} PRIVATE "${FFMPEG_ROOT}/include")
+target_include_directories(${PLUGIN_NAME} PRIVATE "${CPPWINRT_INCLUDE_DIR}")
+target_include_directories(${PLUGIN_NAME} PRIVATE "${WINSDK_WINRT_INCLUDE_DIR}")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin ole32
-  shell32 user32
+  shell32 user32 windowsapp
   "${FFMPEG_ROOT}/lib/avcodec.lib"
   "${FFMPEG_ROOT}/lib/avformat.lib"
   "${FFMPEG_ROOT}/lib/avutil.lib"

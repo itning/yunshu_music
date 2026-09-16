@@ -9,7 +9,6 @@ import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
 import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smtc_windows/smtc_windows.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
 import 'ffmpeg_player.dart';
@@ -83,7 +82,9 @@ class MusicChannelWindows extends MusicPlatform {
 
   late Map<String, dynamic> _authorizationData;
 
-  late SMTCWindows _smtc;
+  /// SMTC 时间轴（毫秒）
+  int _smtcPositionMs = 0;
+  int _smtcEndMs = 0;
 
   @override
   Future<void> init(
@@ -91,7 +92,7 @@ class MusicChannelWindows extends MusicPlatform {
     StreamController<dynamic> playbackStateController,
     StreamController<double> volumeController,
   ) async {
-    await SMTCWindows.initialize();
+    await _channel.invokeMethod('smtcInit');
     _setWindowTitle("云舒音乐");
     await _channel.invokeMethod('windowSetMinimumSize', {
       'width': 450.0,
@@ -121,7 +122,8 @@ class MusicChannelWindows extends MusicPlatform {
           WindowsTaskbar.setProgress(position, _metaData.duration);
         }
       });
-      _smtc.setPosition(event);
+      _smtcPositionMs = position;
+      _updateSmtcTimeline();
     });
 
     _player.onPlayerStateChanged.listen((bool playing) {
@@ -134,9 +136,7 @@ class MusicChannelWindows extends MusicPlatform {
           );
         }
       });
-      _smtc.setPlaybackStatus(
-        playing ? PlaybackStatus.playing : PlaybackStatus.paused,
-      );
+      _setSmtcPlaybackStatus(playing ? 'playing' : 'paused');
       _isPlayNow = playing;
       _upContextMenu();
     });
@@ -151,7 +151,8 @@ class MusicChannelWindows extends MusicPlatform {
             WindowsTaskbar.setProgress(_playbackState.position, ms);
           }
         });
-        _smtc.setEndTime(duration);
+        _smtcEndMs = ms;
+        _updateSmtcTimeline();
       }
     });
 
@@ -163,41 +164,12 @@ class MusicChannelWindows extends MusicPlatform {
           WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
         }
       });
-      _smtc.setPlaybackStatus(PlaybackStatus.stopped);
+      _setSmtcPlaybackStatus('stopped');
       next(false);
       initPlay(autoStart: true);
     });
 
     _playbackState.state = MusicStatus.none;
-
-    _smtc = SMTCWindows(
-      status: PlaybackStatus.stopped,
-      config: const SMTCConfig(
-        fastForwardEnabled: false,
-        nextEnabled: true,
-        pauseEnabled: true,
-        playEnabled: true,
-        rewindEnabled: true,
-        prevEnabled: true,
-        stopEnabled: true,
-      ),
-    );
-
-    _smtc.buttonPressStream.listen((event) {
-      switch (event) {
-        case PressedButton.play:
-          play();
-        case PressedButton.pause:
-          pause();
-        case PressedButton.next:
-          skipToNext();
-        case PressedButton.previous:
-          skipToPrevious();
-        case PressedButton.stop:
-          pause();
-        default:
-      }
-    });
 
     await _channel.invokeMethod('traySetIcon', {'iconPath': _trayIconAsset});
     await _channel.invokeMethod('traySetContextMenu', {
@@ -225,6 +197,34 @@ class MusicChannelWindows extends MusicPlatform {
           await _onTrayMenuItemClick(arguments['id'] as int);
         }
         break;
+      case 'onSmtcButton':
+        final dynamic arguments = call.arguments;
+        if (arguments is Map && arguments['button'] is String) {
+          await _onSmtcButton(arguments['button'] as String);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  Future<void> _onSmtcButton(String button) async {
+    switch (button) {
+      case 'play':
+        await play();
+        break;
+      case 'pause':
+        await pause();
+        break;
+      case 'next':
+        await skipToNext();
+        break;
+      case 'previous':
+        await skipToPrevious();
+        break;
+      case 'stop':
+        await pause();
+        break;
       default:
         break;
     }
@@ -249,7 +249,7 @@ class MusicChannelWindows extends MusicPlatform {
         }
         break;
       case _trayMenuExit:
-        await _smtc.disableSmtc();
+        await _channel.invokeMethod('smtcDisable');
         await _player.dispose();
         exit(0);
       default:
@@ -314,6 +314,24 @@ class MusicChannelWindows extends MusicPlatform {
     await _channel.invokeMethod('windowHide');
   }
 
+  Future<void> _setSmtcMetadata(String title, String artist) async {
+    await _channel.invokeMethod('smtcSetMetadata', {
+      'title': title,
+      'artist': artist,
+    });
+  }
+
+  Future<void> _setSmtcPlaybackStatus(String status) async {
+    await _channel.invokeMethod('smtcSetPlaybackStatus', {'status': status});
+  }
+
+  void _updateSmtcTimeline() {
+    _channel.invokeMethod('smtcSetTimeline', {
+      'position': _smtcPositionMs,
+      'end': _smtcEndMs,
+    });
+  }
+
   void initPlay({bool autoStart = false}) {
     if (_nowPlayMusic == null) {
       return;
@@ -330,16 +348,9 @@ class MusicChannelWindows extends MusicPlatform {
     });
 
     String url = _nowPlayMusic!.musicUri!;
-    String coverUri = _nowPlayMusic!.coverUri!;
     if (_authorizationData["ENABLE"]) {
       url = sign(
         url: _nowPlayMusic!.musicUri!,
-        pkey: _authorizationData['SIGN'],
-        signParamName: _authorizationData['SIGN_PARAM'],
-        timeParamName: _authorizationData['TIME_PARAM'],
-      );
-      coverUri = sign(
-        url: _nowPlayMusic!.coverUri!,
         pkey: _authorizationData['SIGN'],
         signParamName: _authorizationData['SIGN_PARAM'],
         timeParamName: _authorizationData['TIME_PARAM'],
@@ -358,13 +369,7 @@ class MusicChannelWindows extends MusicPlatform {
       'toolTip': '${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}',
     });
     _upContextMenu();
-    _smtc.updateMetadata(
-      MusicMetadata(
-        title: _metaData.title,
-        artist: _metaData.subTitle,
-        thumbnail: coverUri,
-      ),
-    );
+    _setSmtcMetadata(_metaData.title, _metaData.subTitle);
   }
 
   @override
@@ -474,6 +479,11 @@ class MusicChannelWindows extends MusicPlatform {
   Future<void> setVolume(double value) async {
     await _player.setVolume(value);
     _volumeController.sink.add(_player.volume);
+  }
+
+  @override
+  Future<void> setCover(Uint8List bytes) async {
+    await _channel.invokeMethod('smtcSetCover', {'bytes': bytes});
   }
 
   void addMusic(List<Music> data) {

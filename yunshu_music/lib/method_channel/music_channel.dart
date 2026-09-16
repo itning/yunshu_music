@@ -168,4 +168,10 @@ class MusicChannel {
     }
     throw UnimplementedError('android not impl set volume');
   }
+
+  Future<void> setCover(Uint8List bytes) async {
+    if (supportMusicChannel()) {
+      return await channel.setCover(bytes);
+    }
+  }
 }

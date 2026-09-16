@@ -19,6 +19,8 @@
 #include <vector>
 
 #include "ffmpeg_engine.h"
+#include "platform_task_queue.h"
+#include "smtc_controller.h"
 #include "tray_icon.h"
 
 namespace {
@@ -43,6 +45,21 @@ int GetInt(const flutter::EncodableMap& map, const char* key,
   }
   if (const auto* v64 = std::get_if<int64_t>(value)) {
     return static_cast<int>(*v64);
+  }
+  return fallback;
+}
+
+int64_t GetInt64(const flutter::EncodableMap& map, const char* key,
+                 int64_t fallback = 0) {
+  const auto* value = ValueOrNull(map, key);
+  if (value == nullptr) {
+    return fallback;
+  }
+  if (const auto* v32 = std::get_if<int32_t>(value)) {
+    return *v32;
+  }
+  if (const auto* v64 = std::get_if<int64_t>(value)) {
+    return *v64;
   }
   return fallback;
 }
@@ -109,6 +126,22 @@ double GetWindowScale(HWND hwnd) {
   return static_cast<double>(dpi) / 96.0;
 }
 
+const char* SmtcButtonName(yunshu::SmtcButton button) {
+  switch (button) {
+    case yunshu::SmtcButton::kPlay:
+      return "play";
+    case yunshu::SmtcButton::kPause:
+      return "pause";
+    case yunshu::SmtcButton::kNext:
+      return "next";
+    case yunshu::SmtcButton::kPrevious:
+      return "previous";
+    case yunshu::SmtcButton::kStop:
+      return "stop";
+  }
+  return "play";
+}
+
 class MusicChannelWindowsPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
@@ -124,11 +157,14 @@ class MusicChannelWindowsPlugin : public flutter::Plugin {
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 
   void EnsureTrayInitialized();
+  void EnsureSmtcInitialized();
   HWND GetMainWindow();
 
   flutter::PluginRegistrarWindows *registrar_ = nullptr;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
   yunshu::TrayIcon tray_;
+  yunshu::SmtcController smtc_;
+  bool smtc_initialized_ = false;
   int window_proc_id_ = -1;
 
   // Minimum window size in logical pixels; enforced in WM_GETMINMAXINFO.
@@ -181,6 +217,7 @@ MusicChannelWindowsPlugin::~MusicChannelWindowsPlugin() {
     channel_->SetMethodCallHandler(nullptr);
   }
   tray_.Destroy();
+  smtc_.Shutdown();
   if (registrar_ != nullptr && window_proc_id_ != -1) {
     registrar_->UnregisterTopLevelWindowProcDelegate(window_proc_id_);
   }
@@ -221,6 +258,31 @@ void MusicChannelWindowsPlugin::EnsureTrayInitialized() {
             right_button ? "onTrayIconRightMouseDown" : "onTrayIconMouseDown",
             std::make_unique<flutter::EncodableValue>());
       });
+}
+
+void MusicChannelWindowsPlugin::EnsureSmtcInitialized() {
+  if (smtc_initialized_) {
+    return;
+  }
+  HWND hwnd = GetMainWindow();
+  if (hwnd == nullptr) {
+    return;
+  }
+  smtc_.Initialize(hwnd, [this](yunshu::SmtcButton button) {
+    // Button events arrive on an arbitrary WinRT thread; hop back to the
+    // platform thread before touching the method channel.
+    yunshu::PlatformTaskQueue::Instance().Post([this, button]() {
+      if (channel_ == nullptr) {
+        return;
+      }
+      flutter::EncodableMap args;
+      args[flutter::EncodableValue("button")] =
+          flutter::EncodableValue(SmtcButtonName(button));
+      channel_->InvokeMethod("onSmtcButton",
+                             std::make_unique<flutter::EncodableValue>(args));
+    });
+  });
+  smtc_initialized_ = true;
 }
 
 void MusicChannelWindowsPlugin::HandleMethodCall(
@@ -302,6 +364,63 @@ void MusicChannelWindowsPlugin::HandleMethodCall(
     result->Success(flutter::EncodableValue(true));
   } else if (method.compare("trayDestroy") == 0) {
     tray_.Destroy();
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("smtcInit") == 0) {
+    EnsureSmtcInitialized();
+    result->Success(flutter::EncodableValue(smtc_initialized_));
+  } else if (method.compare("smtcSetMetadata") == 0) {
+    EnsureSmtcInitialized();
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    if (args != nullptr) {
+      const auto *title = std::get_if<std::string>(ValueOrNull(*args, "title"));
+      const auto *artist =
+          std::get_if<std::string>(ValueOrNull(*args, "artist"));
+      smtc_.SetMetadata(title != nullptr ? Utf8ToWide(*title) : std::wstring(),
+                        artist != nullptr ? Utf8ToWide(*artist)
+                                          : std::wstring());
+    }
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("smtcSetCover") == 0) {
+    EnsureSmtcInitialized();
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    if (args != nullptr) {
+      if (const auto *bytes =
+              std::get_if<std::vector<uint8_t>>(ValueOrNull(*args, "bytes"))) {
+        smtc_.SetCover(*bytes);
+      }
+    }
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("smtcSetPlaybackStatus") == 0) {
+    EnsureSmtcInitialized();
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    if (args != nullptr) {
+      if (const auto *status =
+              std::get_if<std::string>(ValueOrNull(*args, "status"))) {
+        smtc_.SetPlaybackStatus(*status);
+      }
+    }
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("smtcSetTimeline") == 0) {
+    EnsureSmtcInitialized();
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    if (args != nullptr) {
+      smtc_.SetTimeline(GetInt64(*args, "position"), GetInt64(*args, "end"));
+    }
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("smtcDisable") == 0) {
+    smtc_.SetEnabled(false);
     result->Success(flutter::EncodableValue(true));
   } else if (method.compare("windowSetTitle") == 0) {
     const auto *args = method_call.arguments()
