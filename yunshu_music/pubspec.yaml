@@ -1,7 +1,7 @@
 name: yunshu_music
 description: YunShu Music
 publish_to: 'none'
-version: 1.4.1+66
+version: 1.4.2+67
 
 environment:
   sdk: ^3.8.1
