@@ -8,14 +8,17 @@ set(PLUGIN_NAME "music_channel_windows_plugin")
 
 set(FFMPEG_VERSION "n8.1-latest-win64-lgpl-shared-8.1")
 set(FFMPEG_URL "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-${FFMPEG_VERSION}.zip")
-set(FFMPEG_SHA256 "639f52d1b5627ee63ac2eac96b11a467c85f0253e81c5aa387605d096b8b2be8")
 set(FFMPEG_CACHE_DIR "$ENV{TEMP}/yunshu_music_ffmpeg")
 set(FFMPEG_ROOT "${FFMPEG_CACHE_DIR}/ffmpeg-${FFMPEG_VERSION}")
 
 if(NOT EXISTS "${FFMPEG_ROOT}/include/libavformat/avformat.h")
   set(FFMPEG_ZIP "${FFMPEG_CACHE_DIR}/ffmpeg-${FFMPEG_VERSION}.zip")
-  file(DOWNLOAD "${FFMPEG_URL}" "${FFMPEG_ZIP}" SHOW_PROGRESS
-       EXPECTED_HASH SHA256=${FFMPEG_SHA256})
+  file(DOWNLOAD "${FFMPEG_URL}" "${FFMPEG_ZIP}" SHOW_PROGRESS STATUS FFMPEG_DL_STATUS)
+  list(GET FFMPEG_DL_STATUS 0 FFMPEG_DL_CODE)
+  if(NOT FFMPEG_DL_CODE EQUAL 0)
+    file(REMOVE ${FFMPEG_ZIP})
+    message(FATAL_ERROR "Failed to download FFmpeg: ${FFMPEG_DL_STATUS}")
+  endif()
   file(ARCHIVE_EXTRACT INPUT ${FFMPEG_ZIP} DESTINATION ${FFMPEG_CACHE_DIR})
 endif()
 
