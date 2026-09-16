@@ -131,6 +131,11 @@ class LyricController extends ChangeNotifier {
     draggingTimer = null;
   }
 
+  /// 取消未触发的回弹定时器（视图 dispose 时调用）。
+  void cancelDragTimer() {
+    _cancelTimer();
+  }
+
   @override
   void dispose() {
     _cancelTimer();
