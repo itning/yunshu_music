@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -42,6 +43,24 @@ int GetInt(const flutter::EncodableMap& map, const char* key,
   }
   if (const auto* v64 = std::get_if<int64_t>(value)) {
     return static_cast<int>(*v64);
+  }
+  return fallback;
+}
+
+double GetDouble(const flutter::EncodableMap& map, const char* key,
+                 double fallback = 0.0) {
+  const auto* value = ValueOrNull(map, key);
+  if (value == nullptr) {
+    return fallback;
+  }
+  if (const auto* v = std::get_if<double>(value)) {
+    return *v;
+  }
+  if (const auto* v32 = std::get_if<int32_t>(value)) {
+    return static_cast<double>(*v32);
+  }
+  if (const auto* v64 = std::get_if<int64_t>(value)) {
+    return static_cast<double>(*v64);
   }
   return fallback;
 }
@@ -81,6 +100,15 @@ std::wstring ResolveAssetPath(const std::string& relative_path) {
   return directory + L"data\\flutter_assets\\" + relative;
 }
 
+// Returns the DPI scale factor of the monitor hosting |hwnd|.
+double GetWindowScale(HWND hwnd) {
+  UINT dpi = hwnd != nullptr ? ::GetDpiForWindow(hwnd) : 0;
+  if (dpi == 0) {
+    dpi = 96;
+  }
+  return static_cast<double>(dpi) / 96.0;
+}
+
 class MusicChannelWindowsPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
@@ -102,6 +130,9 @@ class MusicChannelWindowsPlugin : public flutter::Plugin {
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
   yunshu::TrayIcon tray_;
   int window_proc_id_ = -1;
+
+  // Minimum window size in logical pixels; enforced in WM_GETMINMAXINFO.
+  POINT minimum_size_{0, 0};
 };
 
 // static
@@ -127,7 +158,18 @@ MusicChannelWindowsPlugin::MusicChannelWindowsPlugin(
     flutter::PluginRegistrarWindows *registrar)
     : registrar_(registrar) {
   window_proc_id_ = registrar->RegisterTopLevelWindowProcDelegate(
-      [this](HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
+      [this](HWND hwnd, UINT message, WPARAM wparam,
+             LPARAM lparam) -> std::optional<LRESULT> {
+        if (message == WM_GETMINMAXINFO && minimum_size_.x > 0 &&
+            minimum_size_.y > 0) {
+          auto *info = reinterpret_cast<MINMAXINFO *>(lparam);
+          const double scale = GetWindowScale(hwnd);
+          info->ptMinTrackSize.x =
+              static_cast<LONG>(minimum_size_.x * scale);
+          info->ptMinTrackSize.y =
+              static_cast<LONG>(minimum_size_.y * scale);
+          return 0;
+        }
         return tray_.HandleWindowMessage(hwnd, message, wparam, lparam);
       });
 }
@@ -261,6 +303,64 @@ void MusicChannelWindowsPlugin::HandleMethodCall(
   } else if (method.compare("trayDestroy") == 0) {
     tray_.Destroy();
     result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("windowSetTitle") == 0) {
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    HWND hwnd = GetMainWindow();
+    if (args != nullptr && hwnd != nullptr) {
+      if (const auto *title =
+              std::get_if<std::string>(ValueOrNull(*args, "title"))) {
+        ::SetWindowTextW(hwnd, Utf8ToWide(*title).c_str());
+      }
+    }
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("windowSetMinimumSize") == 0) {
+    const auto *args = method_call.arguments()
+                           ? std::get_if<flutter::EncodableMap>(
+                                 method_call.arguments())
+                           : nullptr;
+    if (args != nullptr) {
+      const double width = GetDouble(*args, "width");
+      const double height = GetDouble(*args, "height");
+      if (width > 0 && height > 0) {
+        minimum_size_.x = static_cast<LONG>(width);
+        minimum_size_.y = static_cast<LONG>(height);
+      }
+    }
+    result->Success(flutter::EncodableValue(true));
+  } else if (method.compare("windowIsVisible") == 0) {
+    HWND hwnd = GetMainWindow();
+    result->Success(flutter::EncodableValue(hwnd != nullptr &&
+                                            ::IsWindowVisible(hwnd) != FALSE));
+  } else if (method.compare("windowShow") == 0) {
+    HWND hwnd = GetMainWindow();
+    if (hwnd != nullptr) {
+      if (::IsIconic(hwnd)) {
+        // SW_SHOW does not restore a minimized window.
+        ::ShowWindow(hwnd, SW_RESTORE);
+      } else {
+        const LONG style = ::GetWindowLongW(hwnd, GWL_STYLE);
+        if ((style & WS_VISIBLE) == 0) {
+          ::SetWindowLongW(hwnd, GWL_STYLE, style | WS_VISIBLE);
+          ::SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+        }
+        ::ShowWindowAsync(hwnd, SW_SHOW);
+      }
+      ::SetForegroundWindow(hwnd);
+    }
+    result->Success(flutter::EncodableValue(hwnd != nullptr));
+  } else if (method.compare("windowIsMinimized") == 0) {
+    HWND hwnd = GetMainWindow();
+    result->Success(flutter::EncodableValue(hwnd != nullptr &&
+                                            ::IsIconic(hwnd) != FALSE));
+  } else if (method.compare("windowHide") == 0) {
+    HWND hwnd = GetMainWindow();
+    if (hwnd != nullptr) {
+      ::ShowWindow(hwnd, SW_HIDE);
+    }
+    result->Success(flutter::EncodableValue(hwnd != nullptr));
   } else {
     result->NotImplemented();
   }

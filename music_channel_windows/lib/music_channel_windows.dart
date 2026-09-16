@@ -10,7 +10,6 @@ import 'package:music_platform_interface/music_play_mode.dart';
 import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smtc_windows/smtc_windows.dart';
-import 'package:window_manager/window_manager.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
 import 'ffmpeg_player.dart';
@@ -92,10 +91,12 @@ class MusicChannelWindows extends MusicPlatform {
     StreamController<dynamic> playbackStateController,
     StreamController<double> volumeController,
   ) async {
-    await windowManager.ensureInitialized();
     await SMTCWindows.initialize();
-    windowManager.setTitle("云舒音乐");
-    windowManager.setMinimumSize(const Size(450, 900));
+    _setWindowTitle("云舒音乐");
+    await _channel.invokeMethod('windowSetMinimumSize', {
+      'width': 450.0,
+      'height': 900.0,
+    });
 
     _metadataEventController = metadataEventController;
     _playbackStateController = playbackStateController;
@@ -115,7 +116,7 @@ class MusicChannelWindows extends MusicPlatform {
       int position = event.inMilliseconds;
       _playbackState.position = position;
       playbackStateController.sink.add(_playbackState.toMap());
-      windowManager.isVisible().then((visible) {
+      _isWindowVisible().then((visible) {
         if (visible) {
           WindowsTaskbar.setProgress(position, _metaData.duration);
         }
@@ -126,7 +127,7 @@ class MusicChannelWindows extends MusicPlatform {
     _player.onPlayerStateChanged.listen((bool playing) {
       _playbackState.state = playing ? MusicStatus.playing : MusicStatus.paused;
       playbackStateController.sink.add(_playbackState.toMap());
-      windowManager.isVisible().then((visible) {
+      _isWindowVisible().then((visible) {
         if (visible) {
           WindowsTaskbar.setProgressMode(
             playing ? TaskbarProgressMode.normal : TaskbarProgressMode.paused,
@@ -145,7 +146,7 @@ class MusicChannelWindows extends MusicPlatform {
         int ms = duration.inMilliseconds;
         _metaData.duration = ms;
         metadataEventController.sink.add(_metaData.toMap());
-        windowManager.isVisible().then((visible) {
+        _isWindowVisible().then((visible) {
           if (visible) {
             WindowsTaskbar.setProgress(_playbackState.position, ms);
           }
@@ -157,7 +158,7 @@ class MusicChannelWindows extends MusicPlatform {
     _player.onComplete.listen((_) {
       _playbackState.state = MusicStatus.none;
       _playbackStateController.sink.add(_playbackState.toMap());
-      windowManager.isVisible().then((visible) {
+      _isWindowVisible().then((visible) {
         if (visible) {
           WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
         }
@@ -207,11 +208,12 @@ class MusicChannelWindows extends MusicPlatform {
   Future<void> _handleNativeCall(MethodCall call) async {
     switch (call.method) {
       case 'onTrayIconMouseDown':
-        final bool visible = await windowManager.isVisible();
-        if (visible) {
-          await windowManager.hide();
+        final bool visible = await _isWindowVisible();
+        final bool minimized = await _isWindowMinimized();
+        if (visible && !minimized) {
+          await _hideWindow();
         } else {
-          await windowManager.show();
+          await _showWindow();
         }
         break;
       case 'onTrayIconRightMouseDown':
@@ -231,7 +233,7 @@ class MusicChannelWindows extends MusicPlatform {
   Future<void> _onTrayMenuItemClick(int id) async {
     switch (id) {
       case _trayMenuShow:
-        await windowManager.show();
+        await _showWindow();
         break;
       case _trayMenuPrevious:
         await skipToPrevious();
@@ -290,6 +292,28 @@ class MusicChannelWindows extends MusicPlatform {
     _channel.invokeMethod('traySetContextMenu', {'items': _buildTrayMenu()});
   }
 
+  Future<void> _setWindowTitle(String title) async {
+    await _channel.invokeMethod('windowSetTitle', {'title': title});
+  }
+
+  Future<bool> _isWindowVisible() async {
+    final bool? visible = await _channel.invokeMethod('windowIsVisible');
+    return visible ?? false;
+  }
+
+  Future<bool> _isWindowMinimized() async {
+    final bool? minimized = await _channel.invokeMethod('windowIsMinimized');
+    return minimized ?? false;
+  }
+
+  Future<void> _showWindow() async {
+    await _channel.invokeMethod('windowShow');
+  }
+
+  Future<void> _hideWindow() async {
+    await _channel.invokeMethod('windowHide');
+  }
+
   void initPlay({bool autoStart = false}) {
     if (_nowPlayMusic == null) {
       return;
@@ -299,7 +323,7 @@ class MusicChannelWindows extends MusicPlatform {
     }
     _playbackState.state = MusicStatus.connecting;
     _playbackStateController.sink.add(_playbackState.toMap());
-    windowManager.isVisible().then((visible) {
+    _isWindowVisible().then((visible) {
       if (visible) {
         WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
       }
@@ -329,7 +353,7 @@ class MusicChannelWindows extends MusicPlatform {
     }
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
-    windowManager.setTitle("${_metaData.title}-${_metaData.subTitle}");
+    _setWindowTitle("${_metaData.title}-${_metaData.subTitle}");
     _channel.invokeMethod('traySetToolTip', {
       'toolTip': '${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}',
     });
