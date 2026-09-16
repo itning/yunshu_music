@@ -25,7 +25,7 @@ import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_controller.dart';
 import 'package:yunshu_music/component/lyric/lyric_painter.dart';
-import 'package:yunshu_music/component/lyric/lyric_util.dart';
+import 'package:yunshu_music/component/lyric/lyric_parser.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
@@ -116,7 +116,7 @@ class _LyricWidgetState extends State<LyricWidget>
     lyricTextPaints = widget.lyrics
         .map(
           (l) => TextPainter(
-            text: TextSpan(text: l.lyric, style: widget.lyricStyle),
+            text: TextSpan(text: l.text, style: widget.lyricStyle),
             textDirection: TextDirection.ltr,
           ),
         )
@@ -126,7 +126,7 @@ class _LyricWidgetState extends State<LyricWidget>
         widget.remarkLyrics
             ?.map(
               (l) => TextPainter(
-                text: TextSpan(text: l.lyric, style: widget.remarkStyle),
+                text: TextSpan(text: l.text, style: widget.remarkStyle),
                 textDirection: TextDirection.ltr,
               ),
             )
@@ -327,7 +327,7 @@ class _LyricWidgetState extends State<LyricWidget>
 
   /// 根据当前时长获取歌词位置
   int findLyricIndexByDuration(Duration curDuration, List<Lyric> lyrics) =>
-      LyricUtil.findIndexByDuration(curDuration, lyrics);
+      LyricParser.indexAt(curDuration, lyrics);
 
   /// 根据当前进度同步高亮行，必要时触发滚动动画
   void _syncCurrentLine() {
@@ -353,7 +353,7 @@ class _LyricWidgetState extends State<LyricWidget>
     double totalHeight = _lineOffsets[curLine];
     if (widget.remarkLyrics != null && curLine < widget.lyrics.length) {
       // 增加 当前行之前的翻译歌词的偏移量
-      totalHeight += _remarkOffsetBefore(widget.lyrics[curLine].endTime!);
+      totalHeight += _remarkOffsetBefore(widget.lyrics[curLine].endTime);
     }
     return totalHeight;
   }
@@ -371,7 +371,7 @@ class _LyricWidgetState extends State<LyricWidget>
       offsets[i] = total;
       var currPaint = lyricTextPaints[i]
         ..text = TextSpan(
-          text: widget.lyrics[i].lyric,
+          text: widget.lyrics[i].text,
           style: widget.lyricStyle,
         );
       currPaint.layout(maxWidth: maxWidth);
@@ -386,13 +386,13 @@ class _LyricWidgetState extends State<LyricWidget>
       for (int i = 0; i < remarkLyrics.length; i++) {
         var currPaint = subLyricTextPaints[i]
           ..text = TextSpan(
-            text: remarkLyrics[i].lyric,
+            text: remarkLyrics[i].text,
             style: widget.remarkStyle,
           );
         currPaint.layout(maxWidth: maxWidth);
         entries.add(
           MapEntry(
-            remarkLyrics[i].endTime!,
+            remarkLyrics[i].endTime,
             widget.remarkLyricGap + currPaint.height,
           ),
         );

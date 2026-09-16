@@ -151,7 +151,7 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
     _layoutLyric(
       currentLyricIndex,
       currLyricTextStyle,
-      lyrics[currentLyricIndex].lyric,
+      lyrics[currentLyricIndex].text,
     );
     var currentLyricY =
         _offset +
@@ -170,7 +170,7 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
             : isDraggingLine
             ? draggingLyricTextStyle
             : lyricTextStyle,
-        currentLyric.lyric,
+        currentLyric.text,
       );
       var currentLyricTextPaint = lyricTextPaints[lyricIndex];
       var currentLyricHeight = currentLyricTextPaint.height;
@@ -194,10 +194,10 @@ class LyricPainter extends CustomPainter with ChangeNotifier {
         for (var subIndex = 0; subIndex < subLyrics!.length; subIndex++) {
           var remarkLyric = subLyrics![subIndex];
           if (remarkLyric.startTime < currentLyric.startTime ||
-              remarkLyric.endTime! > currentLyric.endTime!) {
+              remarkLyric.endTime > currentLyric.endTime) {
             continue;
           }
-          _layoutSubLyric(subIndex, subStyle, remarkLyric.lyric);
+          _layoutSubLyric(subIndex, subStyle, remarkLyric.text);
           var currentSubPaint = subLyricTextPaints[subIndex];
           //仅绘制在屏幕内的歌词
           if (currentLyricY < size.height && currentLyricY > 0) {

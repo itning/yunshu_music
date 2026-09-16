@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
-import 'package:yunshu_music/component/lyric/lyric_util.dart';
+import 'package:yunshu_music/component/lyric/lyric_parser.dart';
 import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/net/http_helper.dart';
 import 'package:yunshu_music/net/model/music_entity.dart';
@@ -192,7 +192,7 @@ class MusicDataModel extends ChangeNotifier {
 
   Future<void> _initLyric(String lyricId, String lyricUri) async {
     String? lyric = await HttpHelper.get().getLyric(lyricUri);
-    List<Lyric>? list = LyricUtil.formatLyric(lyric);
+    List<Lyric>? list = LyricParser.parse(lyric);
     _lyricList = list;
     notifyListeners();
   }

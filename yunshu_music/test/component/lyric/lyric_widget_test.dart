@@ -40,9 +40,9 @@ void main() {
     final controller = _CountingLyricController();
     final playStatus = PlayStatusModel();
     final lyrics = [
-      Lyric('第一行', startTime: Duration.zero, endTime: const Duration(hours: 1)),
+      Lyric(text: '第一行', startTime: Duration.zero, endTime: const Duration(hours: 1)),
       Lyric(
-        '第二行',
+        text: '第二行',
         startTime: const Duration(hours: 1),
         endTime: const Duration(hours: 2),
       ),
@@ -81,7 +81,7 @@ void main() {
     final controller = LyricController();
     final playStatus = PlayStatusModel();
     final lyrics = [
-      Lyric('第一行', startTime: Duration.zero, endTime: const Duration(hours: 1)),
+      Lyric(text: '第一行', startTime: Duration.zero, endTime: const Duration(hours: 1)),
     ];
 
     await tester.pumpWidget(
@@ -117,7 +117,7 @@ void main() {
     final controller = LyricController();
     final playStatus = PlayStatusModel();
     final lyrics = [
-      Lyric('第一行', startTime: Duration.zero, endTime: const Duration(hours: 1)),
+      Lyric(text: '第一行', startTime: Duration.zero, endTime: const Duration(hours: 1)),
     ];
 
     Widget buildTree(Size size) => MultiProvider(
@@ -145,17 +145,17 @@ void main() {
     final playStatus = PlayStatusModel();
     final lyrics = [
       Lyric(
-        '一',
+        text: '一',
         startTime: Duration.zero,
         endTime: const Duration(seconds: 10),
       ),
       Lyric(
-        '二',
+        text: '二',
         startTime: const Duration(seconds: 10),
         endTime: const Duration(seconds: 20),
       ),
       Lyric(
-        '三',
+        text: '三',
         startTime: const Duration(seconds: 20),
         endTime: const Duration(seconds: 30),
       ),
