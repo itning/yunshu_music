@@ -1,12 +1,41 @@
 #include "wasapi_output.h"
 
+#include <mmreg.h>
 #include <objbase.h>
+
+extern "C" {
+#include <libavutil/samplefmt.h>
+}
 
 namespace yunshu {
 
 namespace {
 constexpr REFERENCE_TIME kBufferDuration =
     static_cast<REFERENCE_TIME>(200 * 10000);
+
+int DetectSampleFormat(const WAVEFORMATEX* mix) {
+  WORD tag = mix->wFormatTag;
+  const WORD bits = mix->wBitsPerSample;
+  if (tag == WAVE_FORMAT_EXTENSIBLE) {
+    const auto* ext = reinterpret_cast<const WAVEFORMATEXTENSIBLE*>(mix);
+    tag = static_cast<WORD>(ext->SubFormat.Data1);
+  }
+  if (tag == WAVE_FORMAT_IEEE_FLOAT) {
+    return AV_SAMPLE_FMT_FLT;
+  }
+  if (tag == WAVE_FORMAT_PCM) {
+    if (bits == 8) {
+      return AV_SAMPLE_FMT_U8;
+    }
+    if (bits == 16) {
+      return AV_SAMPLE_FMT_S16;
+    }
+    if (bits == 24 || bits == 32) {
+      return AV_SAMPLE_FMT_S32;
+    }
+  }
+  return AV_SAMPLE_FMT_FLT;
+}
 }  // namespace
 
 bool WasapiOutput::Start(Filler filler, ProgressCb on_progress) {
@@ -15,8 +44,15 @@ bool WasapiOutput::Start(Filler filler, ProgressCb on_progress) {
   event_ = CreateEventW(nullptr, FALSE, FALSE, nullptr);
   running_ = true;
   paused_ = true;
+  {
+    std::lock_guard<std::mutex> lock(init_mutex_);
+    init_done_ = false;
+    initialized_ = false;
+  }
   thread_ = std::thread(&WasapiOutput::RenderLoop, this);
-  return true;
+  std::unique_lock<std::mutex> lock(init_mutex_);
+  init_cv_.wait(lock, [this] { return init_done_; });
+  return initialized_;
 }
 
 void WasapiOutput::RenderLoop() {
@@ -60,6 +96,7 @@ void WasapiOutput::RenderLoop() {
     sample_rate_ = mix->nSamplesPerSec;
     channels_ = mix->nChannels;
     block_align_ = mix->nBlockAlign;
+    sample_format_ = DetectSampleFormat(mix);
     BYTE* data = nullptr;
     if (SUCCEEDED(render_->GetBuffer(buffer_frames_, &data))) {
       ZeroMemory(data, static_cast<size_t>(buffer_frames_) * mix->nBlockAlign);
@@ -75,7 +112,14 @@ void WasapiOutput::RenderLoop() {
   if (enumerator != nullptr) {
     enumerator->Release();
   }
-  if (FAILED(hr)) {
+  const bool initialized = SUCCEEDED(hr);
+  {
+    std::lock_guard<std::mutex> lock(init_mutex_);
+    initialized_ = initialized;
+    init_done_ = true;
+  }
+  init_cv_.notify_all();
+  if (!initialized) {
     running_ = false;
     return;
   }

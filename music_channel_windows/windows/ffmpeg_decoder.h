@@ -19,6 +19,7 @@ namespace yunshu {
 struct AudioTargetFormat {
   int sample_rate;
   int channels;
+  int sample_format = 3;  // AV_SAMPLE_FMT_FLT
 };
 
 class FfmpegDecoder {

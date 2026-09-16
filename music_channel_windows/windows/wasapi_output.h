@@ -6,8 +6,10 @@
 
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <cstdint>
 #include <functional>
+#include <mutex>
 #include <thread>
 
 namespace yunshu {
@@ -27,6 +29,8 @@ class WasapiOutput {
 
   int sample_rate() const { return sample_rate_.load(); }
   int channels() const { return channels_.load(); }
+  int sample_format() const { return sample_format_.load(); }
+  uint32_t block_align() const { return block_align_.load(); }
 
  private:
   void RenderLoop();
@@ -43,8 +47,14 @@ class WasapiOutput {
   UINT32 buffer_frames_ = 0;
   std::atomic<int> sample_rate_{48000};
   std::atomic<int> channels_{2};
+  std::atomic<int> sample_format_{3};  // AV_SAMPLE_FMT_FLT
   std::atomic<uint32_t> block_align_{8};
   std::atomic<uint64_t> submitted_frames_{0};
+
+  std::mutex init_mutex_;
+  std::condition_variable init_cv_;
+  bool init_done_ = false;
+  bool initialized_ = false;
 
   Filler filler_;
   ProgressCb on_progress_;

@@ -92,14 +92,13 @@ bool FfmpegDecoder::Prepare(const std::string& url) {
     return false;
   }
 
-  AVChannelLayout out_layout = AV_CHANNEL_LAYOUT_STEREO;
-  if (target_.channels == 1) {
-    out_layout = AV_CHANNEL_LAYOUT_MONO;
-  }
-  ret = swr_alloc_set_opts2(&swr_, &out_layout, AV_SAMPLE_FMT_FLT,
-                            target_.sample_rate, &codec_->ch_layout,
-                            codec_->sample_fmt, codec_->sample_rate, 0,
-                            nullptr);
+  AVChannelLayout out_layout;
+  av_channel_layout_default(&out_layout, target_.channels);
+  ret = swr_alloc_set_opts2(
+      &swr_, &out_layout, static_cast<AVSampleFormat>(target_.sample_format),
+      target_.sample_rate, &codec_->ch_layout, codec_->sample_fmt,
+      codec_->sample_rate, 0, nullptr);
+  av_channel_layout_uninit(&out_layout);
   if (ret < 0 || swr_ == nullptr) {
     callbacks_.on_error("SWR_INIT_FAILED", AvErr(ret));
     return false;
@@ -140,8 +139,10 @@ void FfmpegDecoder::Run(std::string url, bool start_paused) {
 void FfmpegDecoder::DecodeLoop() {
   AVPacket* packet = av_packet_alloc();
   AVFrame* frame = av_frame_alloc();
+  const size_t bytes_per_sample = static_cast<size_t>(av_get_bytes_per_sample(
+      static_cast<AVSampleFormat>(target_.sample_format)));
   const size_t bytes_per_frame =
-      static_cast<size_t>(target_.channels) * sizeof(float);
+      static_cast<size_t>(target_.channels) * bytes_per_sample;
   const size_t frames_per_convert = 8192;
   swr_buffer_size_ = frames_per_convert * bytes_per_frame;
   swr_buffer_ = static_cast<uint8_t*>(av_malloc(swr_buffer_size_));

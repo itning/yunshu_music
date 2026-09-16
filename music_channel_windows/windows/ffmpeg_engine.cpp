@@ -4,6 +4,7 @@
 
 extern "C" {
 #include <libavformat/avformat.h>
+#include <libavutil/samplefmt.h>
 }
 
 namespace yunshu {
@@ -139,8 +140,15 @@ bool FfmpegEngine::Init(flutter::PluginRegistrarWindows* registrar) {
   if (!output_->Start(filler, progress)) {
     return false;
   }
-  target_ = {output_->sample_rate(), output_->channels()};
-  block_align_ = static_cast<size_t>(target_.channels) * sizeof(float);
+  target_ = {output_->sample_rate(), output_->channels(),
+             output_->sample_format()};
+  int bytes_per_sample = av_get_bytes_per_sample(
+      static_cast<AVSampleFormat>(target_.sample_format));
+  if (bytes_per_sample <= 0) {
+    bytes_per_sample = static_cast<int>(sizeof(float));
+    target_.sample_format = AV_SAMPLE_FMT_FLT;
+  }
+  block_align_ = static_cast<size_t>(target_.channels) * bytes_per_sample;
   ring_ = std::make_unique<RingBuffer>(
       static_cast<size_t>(target_.sample_rate) * block_align_ / 2);
   return true;
