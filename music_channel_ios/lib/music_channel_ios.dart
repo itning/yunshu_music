@@ -266,6 +266,7 @@ class MusicChannelIos extends MusicPlatform {
   Future<void> setPlayMode(String mode) async {
     MusicPlayMode musicPlayMode = valueOf(mode.toString().toUpperCase());
     _playMode = musicPlayMode;
+    _randomSet.clear();
     _sharedPreferences.setString(_playModeKey, musicPlayMode.name());
   }
 
@@ -292,7 +293,16 @@ class MusicChannelIos extends MusicPlatform {
     if (_nowPlayMusic != null && _nowPlayMusic!.musicId == mediaId) {
       return;
     }
-    _playList.removeWhere((element) => mediaId == element.musicId);
+    int removeIndex = _playList.indexWhere(
+      (element) => mediaId == element.musicId,
+    );
+    if (-1 == removeIndex) {
+      return;
+    }
+    _playList.removeAt(removeIndex);
+    if (removeIndex < _nowPlayIndex) {
+      _nowPlayIndex--;
+    }
     _sharedPreferences.setStringList(
       _playListKey,
       _playList.map((e) => e.musicId!).toList(),
@@ -301,6 +311,7 @@ class MusicChannelIos extends MusicPlatform {
 
   @override
   Future<void> clearPlayList() async {
+    _randomSet.clear();
     _playList.clear();
     if (_nowPlayMusic != null) {
       _playList.add(_nowPlayMusic!);
@@ -322,6 +333,8 @@ class MusicChannelIos extends MusicPlatform {
   }
 
   void addMusic(List<Music> data) {
+    _playList.clear();
+    _nowPlayIndex = -1;
     List<String> playListMusicIdList =
         _sharedPreferences.getStringList(_playListKey) ?? [];
     List<Music> playList = [];
@@ -379,6 +392,9 @@ class MusicChannelIos extends MusicPlatform {
   }
 
   void previous(bool userTrigger) {
+    if (_musicList.isEmpty) {
+      return;
+    }
     if (_nowPlayIndex - 1 < 0) {
       // 需要新增
       switch (_playMode.name()) {
@@ -418,6 +434,9 @@ class MusicChannelIos extends MusicPlatform {
   }
 
   void next(bool userTrigger) {
+    if (_musicList.isEmpty) {
+      return;
+    }
     if (_nowPlayIndex + 1 >= _playList.length) {
       // 需要新增
       switch (_playMode.name()) {
@@ -426,14 +445,14 @@ class MusicChannelIos extends MusicPlatform {
           _nowPlayMusic = _musicList[randomMusicListIndex];
           _playList.remove(_nowPlayMusic);
           _playList.add(_nowPlayMusic!);
-          _nowPlayIndex++;
+          _nowPlayIndex = _playList.length - 1;
           break;
         case 'SEQUENCE':
           int sequenceMusicListIndex = toSequenceNext();
           _nowPlayMusic = _musicList[sequenceMusicListIndex];
           _playList.remove(_nowPlayMusic);
           _playList.add(_nowPlayMusic!);
-          _nowPlayIndex++;
+          _nowPlayIndex = _playList.length - 1;
           break;
         case 'LOOP':
           if (userTrigger) {
@@ -441,7 +460,7 @@ class MusicChannelIos extends MusicPlatform {
             _nowPlayMusic = _musicList[sequenceMusicListIndex];
             _playList.remove(_nowPlayMusic);
             _playList.add(_nowPlayMusic!);
-            _nowPlayIndex++;
+            _nowPlayIndex = _playList.length - 1;
           }
           break;
       }
@@ -463,6 +482,11 @@ class MusicChannelIos extends MusicPlatform {
         .toList();
     if (canPlayList.isEmpty) {
       _randomSet.clear();
+      canPlayList = _musicList
+          .where((item) => item != _nowPlayMusic)
+          .toList();
+    }
+    if (canPlayList.isEmpty) {
       canPlayList = _musicList;
     }
     Random random = Random();

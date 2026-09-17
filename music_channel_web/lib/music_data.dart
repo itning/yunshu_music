@@ -38,11 +38,15 @@ class MusicData {
 
   set playMode(MusicPlayMode value) {
     _playMode = value;
+    _randomSet.clear();
     _storage[_playModeKey] = value.name();
   }
 
   void addMusic(List<Music> data) {
+    _musicList.clear();
     _musicList.addAll(data);
+    _playList.clear();
+    _nowPlayIndex = -1;
     String playListString = _storage[_playListKey] ?? '';
     List<String> playListMusicIdList = playListString.split("@").toList();
     List<Music> playList = [];
@@ -75,13 +79,21 @@ class MusicData {
     if (_nowPlayMusic != null && _nowPlayMusic!.musicId == mediaId) {
       return;
     }
-    _playList.removeWhere((element) => mediaId == element.musicId);
+    int removeIndex = _playList.indexWhere((element) => mediaId == element.musicId);
+    if (-1 == removeIndex) {
+      return;
+    }
+    _playList.removeAt(removeIndex);
+    if (removeIndex < _nowPlayIndex) {
+      _nowPlayIndex--;
+    }
 
     String playListString = _playList.map((e) => e.musicId).join('@');
     _storage[_playListKey] = playListString;
   }
 
   void clearPlayList() {
+    _randomSet.clear();
     _playList.clear();
     if (_nowPlayMusic != null) {
       _playList.add(_nowPlayMusic!);
@@ -120,6 +132,9 @@ class MusicData {
   }
 
   void previous(bool userTrigger) {
+    if (_musicList.isEmpty) {
+      return;
+    }
     if (_nowPlayIndex - 1 < 0) {
       // 需要新增
       switch (_playMode.name()) {
@@ -157,6 +172,9 @@ class MusicData {
   }
 
   void next(bool userTrigger) {
+    if (_musicList.isEmpty) {
+      return;
+    }
     if (_nowPlayIndex + 1 >= _playList.length) {
       // 需要新增
       switch (_playMode.name()) {
@@ -165,22 +183,22 @@ class MusicData {
           _nowPlayMusic = _musicList[randomMusicListIndex];
           _playList.remove(_nowPlayMusic);
           _playList.add(_nowPlayMusic!);
-          _nowPlayIndex++;
+          _nowPlayIndex = _playList.length - 1;
           break;
         case 'SEQUENCE':
           int sequenceMusicListIndex = toSequenceNext();
           _nowPlayMusic = _musicList[sequenceMusicListIndex];
-          _playList.remove(nowPlayMusic);
-          _playList.add(nowPlayMusic!);
-          _nowPlayIndex++;
+          _playList.remove(_nowPlayMusic);
+          _playList.add(_nowPlayMusic!);
+          _nowPlayIndex = _playList.length - 1;
           break;
         case 'LOOP':
           if (userTrigger) {
             int sequenceMusicListIndex = toSequenceNext();
             _nowPlayMusic = _musicList[sequenceMusicListIndex];
-            _playList.remove(nowPlayMusic);
-            _playList.add(nowPlayMusic!);
-            _nowPlayIndex++;
+            _playList.remove(_nowPlayMusic);
+            _playList.add(_nowPlayMusic!);
+            _nowPlayIndex = _playList.length - 1;
           }
           break;
       }
@@ -200,6 +218,11 @@ class MusicData {
         .toList();
     if (canPlayList.isEmpty) {
       _randomSet.clear();
+      canPlayList = _musicList
+          .where((item) => item != _nowPlayMusic)
+          .toList();
+    }
+    if (canPlayList.isEmpty) {
       canPlayList = _musicList;
     }
     Random random = Random();

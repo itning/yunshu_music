@@ -212,17 +212,33 @@ void showPlayList(BuildContext context) {
   );
 }
 
-class _PlayList extends StatelessWidget {
+class _PlayList extends StatefulWidget {
   final ScrollController? scrollController;
   final List<dynamic> data;
 
   const _PlayList({this.scrollController, required this.data});
 
   @override
+  State<_PlayList> createState() => _PlayListState();
+}
+
+class _PlayListState extends State<_PlayList> {
+  late List<dynamic> _data;
+
+  @override
+  void initState() {
+    super.initState();
+    _data = List<dynamic>.from(widget.data);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    List<dynamic> reversed = data.reversed.toList();
+    if (_data.isEmpty) {
+      return const Center(child: Text('播放列表为空'));
+    }
+    List<dynamic> reversed = _data.reversed.toList();
     return ListView.builder(
-      controller: scrollController,
+      controller: widget.scrollController,
       itemCount: reversed.length + 1,
       itemBuilder: (BuildContext context, int index) {
         if (index == 0) {
@@ -275,10 +291,24 @@ class _PlayList extends StatelessWidget {
           );
         }
         index -= 1;
+        String mediaId = reversed[index]['mediaId'];
         return Dismissible(
-          key: Key(reversed[index]['mediaId']),
+          key: Key(mediaId),
+          confirmDismiss: (DismissDirection direction) async {
+            if (context.read<MusicDataModel>().getNowPlayMusic()?.musicId ==
+                mediaId) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('正在播放的歌曲不能删除')),
+              );
+              return false;
+            }
+            return true;
+          },
           onDismissed: (DismissDirection direction) {
-            MusicChannel.get().delPlayListByMediaId(reversed[index]['mediaId']);
+            MusicChannel.get().delPlayListByMediaId(mediaId);
+            setState(() {
+              _data.removeWhere((e) => e['mediaId'] == mediaId);
+            });
           },
           child: InkWell(
             onTap: () {

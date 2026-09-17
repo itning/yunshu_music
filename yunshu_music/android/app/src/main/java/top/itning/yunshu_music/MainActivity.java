@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -188,6 +189,21 @@ public class MainActivity extends FlutterActivity {
                         Log.e(TAG, "clearPlayList error", e);
                         result.error("-1", null, null);
                     }
+                    break;
+                case "setKeepScreenOn":
+                    if (!call.hasArgument("on")) {
+                        result.error("-1", null, null);
+                        break;
+                    }
+                    boolean keepScreenOn = Boolean.TRUE.equals(call.argument("on"));
+                    runOnUiThread(() -> {
+                        if (keepScreenOn) {
+                            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                        } else {
+                            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                        }
+                    });
+                    result.success(null);
                     break;
                 default:
                     result.notImplemented();

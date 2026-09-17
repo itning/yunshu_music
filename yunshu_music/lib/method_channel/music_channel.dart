@@ -182,4 +182,12 @@ class MusicChannel {
       return await channel.setCover(bytes);
     }
   }
+
+  /// Android 端设置屏幕常亮（歌词页展示时使用）
+  Future<void> setKeepScreenOn(bool on) async {
+    if (kIsWeb || !Platform.isAndroid) {
+      return;
+    }
+    await _methodChannel.invokeMethod('setKeepScreenOn', {'on': on});
+  }
 }

@@ -119,12 +119,26 @@ public class MusicPlayDataService {
         if (nowPlayMusic != null && mediaId.equals(nowPlayMusic.mediaId)) {
             return;
         }
-        PLAY_LIST.removeIf(it -> mediaId.equals(it.mediaId));
+        int removeIndex = -1;
+        for (int i = 0; i < PLAY_LIST.size(); i++) {
+            if (mediaId.equals(PLAY_LIST.get(i).mediaId)) {
+                removeIndex = i;
+                break;
+            }
+        }
+        if (-1 == removeIndex) {
+            return;
+        }
+        PLAY_LIST.remove(removeIndex);
+        if (removeIndex < nowPlayIndex) {
+            nowPlayIndex--;
+        }
         String playListString = PLAY_LIST.stream().map(it -> it.mediaId).collect(Collectors.joining("@"));
         kv.encode(PLAY_LIST_KEY, playListString);
     }
 
     public void clearPlayList() {
+        RANDOM_SET.clear();
         PLAY_LIST.clear();
         if (nowPlayMusic != null) {
             PLAY_LIST.add(nowPlayMusic);
@@ -139,11 +153,15 @@ public class MusicPlayDataService {
 
     public void setPlayMode(MusicPlayMode playMode) {
         this.playMode = playMode;
+        RANDOM_SET.clear();
         kv.encode(PLAY_MODE_KEY, playMode.name());
     }
 
     public void addMusic(List<MediaItem> musicList) {
+        MUSIC_LIST.clear();
         MUSIC_LIST.addAll(musicList);
+        PLAY_LIST.clear();
+        nowPlayIndex = -1;
         String playListString = kv.decodeString(PLAY_LIST_KEY, "");
 
         List<String> playListMusicIdList = Arrays.asList(playListString.split("@"));
@@ -247,14 +265,14 @@ public class MusicPlayDataService {
                     nowPlayMusic = MUSIC_LIST.get(randomMusicListIndex);
                     PLAY_LIST.remove(nowPlayMusic);
                     PLAY_LIST.add(nowPlayMusic);
-                    nowPlayIndex++;
+                    nowPlayIndex = PLAY_LIST.size() - 1;
                     break;
                 case SEQUENCE:
                     int sequenceMusicListIndex = toSequenceNext();
                     nowPlayMusic = MUSIC_LIST.get(sequenceMusicListIndex);
                     PLAY_LIST.remove(nowPlayMusic);
                     PLAY_LIST.add(nowPlayMusic);
-                    nowPlayIndex++;
+                    nowPlayIndex = PLAY_LIST.size() - 1;
                     break;
                 case LOOP:
                     if (userTrigger) {
@@ -262,7 +280,7 @@ public class MusicPlayDataService {
                         nowPlayMusic = MUSIC_LIST.get(loopMusicListIndex);
                         PLAY_LIST.remove(nowPlayMusic);
                         PLAY_LIST.add(nowPlayMusic);
-                        nowPlayIndex++;
+                        nowPlayIndex = PLAY_LIST.size() - 1;
                     }
                     break;
             }
@@ -282,6 +300,11 @@ public class MusicPlayDataService {
                 .collect(Collectors.toList());
         if (canPlayList.isEmpty()) {
             RANDOM_SET.clear();
+            canPlayList = MUSIC_LIST.stream()
+                    .filter(item -> !item.equals(nowPlayMusic))
+                    .collect(Collectors.toList());
+        }
+        if (canPlayList.isEmpty()) {
             canPlayList = MUSIC_LIST;
         }
         Random random = new Random();

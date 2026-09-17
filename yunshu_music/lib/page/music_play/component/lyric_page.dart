@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/lyric/lyric.dart';
 import 'package:yunshu_music/component/lyric/lyric_controller.dart';
 import 'package:yunshu_music/component/lyric/lyric_view.dart';
 import 'package:yunshu_music/component/volume_slider.dart';
+import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 import 'package:yunshu_music/provider/play_status_model.dart';
 
@@ -45,11 +45,7 @@ class _LyricPageState extends State<LyricPage>
   void dispose() {
     _playStatus?.removeListener(_onPositionChanged);
     _controller.dispose();
-    if (!kIsWeb && Platform.isAndroid) {
-      FlutterWindowManagerPlus.clearFlags(
-        FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON,
-      );
-    }
+    MusicChannel.get().setKeepScreenOn(false);
     super.dispose();
   }
 
