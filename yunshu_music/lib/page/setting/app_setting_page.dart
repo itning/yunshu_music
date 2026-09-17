@@ -6,6 +6,7 @@ import 'package:motion_toast/motion_toast.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
@@ -288,6 +289,35 @@ class AppSettingPage extends StatelessWidget {
                 ),
               ],
             ),
+            if (kIsWeb)
+              StreamBuilder<bool>(
+                stream: MusicChannel.get().pwaInstallAvailability,
+                initialData: MusicChannel.get().canInstallPwa,
+                builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                  if (snapshot.data != true) {
+                    return const SizedBox.shrink();
+                  }
+                  return InkWell(
+                    onTap: () => MusicChannel.get().promptPwaInstall(),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text(
+                            '添加到主屏幕',
+                            style: TextStyle(fontSize: 17.0),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Icon(Icons.install_desktop, size: 17.0),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),

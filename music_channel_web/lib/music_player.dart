@@ -1,15 +1,17 @@
-import 'dart:html' as html;
-import 'dart:js' as js;
+import 'dart:js_interop';
 
 import 'package:flutter/services.dart';
+import 'package:music_channel_web/browser_console.dart';
+import 'package:music_channel_web/media_session.dart';
 import 'package:music_channel_web/music_channel_web.dart';
 import 'package:music_channel_web/music_data.dart';
 import 'package:music_platform_interface/encryption_tool.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_status.dart';
+import 'package:web/web.dart' as web;
 
 class MusicPlayer {
-  final html.AudioElement _audio = html.AudioElement();
+  final web.HTMLAudioElement _audio = web.HTMLAudioElement();
 
   static MusicPlayer? _instance;
 
@@ -22,103 +24,120 @@ class MusicPlayer {
 
   final MusicMetaData _metaData = MusicMetaData();
 
+  bool _playNow = false;
+
   int numSecond2Millisecond(num second) {
     return (second * 1000).toInt();
   }
 
-  bool _playNow = false;
+  MusicPlayer() {
+    _listen('timeupdate', _onPositionChanged);
+    _listen('durationchange', _onPositionChanged);
+    // 播放完成
+    _listen('ended', _onEnded);
+    _listen('canplay', _onCanPlay);
+    _listen('play', () => _setState(MusicStatus.playing));
+    _listen('pause', () => _setState(MusicStatus.paused));
+    _listen('volumechange', _onVolumeChanged);
 
-  void musicChangeEventHandlers(dynamic) {
-    if (!_audio.currentTime.isNaN && !_audio.duration.isNaN) {
-      _playbackState.position = numSecond2Millisecond(_audio.currentTime);
-      var timeRanges = _audio.buffered;
-      var length = timeRanges.length;
-      _playbackState.bufferedPosition = numSecond2Millisecond(length == 0
-          ? 0
-          : timeRanges.end(length - 1) / _audio.duration * _audio.duration);
-      _metaData.duration = numSecond2Millisecond(_audio.duration);
-      MusicChannel.get()
-          .playbackStateController
-          .sink
-          .add(_playbackState.toMap());
-      MusicChannel.get().metadataEventController.sink.add(_metaData.toMap());
-      js.context.callMethod("setPositionStateFromDart",
-          [_audio.duration, 1.0, _audio.currentTime]);
+    _listen('abort', () => _logWarn('不是因为出错而导致的媒体数据下载中止。'));
+    _listen('error', () => _logWarn('媒体下载过程中错误。例如突然无网络了。或者文件地址不对。'));
+    _listen('stalled', () => _logWarn('媒体数据意外地不再可用。'));
+
+    _setState(MusicStatus.none);
+    _setupMediaSession();
+  }
+
+  void _listen(String type, void Function() handler) {
+    _audio.addEventListener(type, handler.toJS);
+  }
+
+  void _logWarn(String message) {
+    browserConsole.warn(message.toJS);
+  }
+
+  /// 统一更新播放状态，并同步浏览器 Media Session 的 playbackState。
+  void _setState(MusicStatus state) {
+    _playbackState.state = state;
+    MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+    if (state == MusicStatus.playing) {
+      WebMediaSession.setPlaybackState(true);
+    } else if (state == MusicStatus.paused || state == MusicStatus.none) {
+      WebMediaSession.setPlaybackState(false);
     }
   }
 
-  MusicPlayer() {
-    _audio.onTimeUpdate.listen(musicChangeEventHandlers);
-    _audio.onDurationChange.listen(musicChangeEventHandlers);
-    // 播放完成
-    _audio.onEnded.listen((event) {
-      html.window.console.info('onEnd');
-      _playbackState.state = MusicStatus.none;
-      MusicChannel.get()
-          .playbackStateController
-          .sink
-          .add(_playbackState.toMap());
-      onSkipToNext(false);
-    });
-
-    _audio.onCanPlay.listen((event) {
-      html.window.console.info('onCanPlay');
-      if (_playNow) {
-        onPlay();
-      } else {
-        _playbackState.state = MusicStatus.paused;
-        MusicChannel.get()
-            .playbackStateController
-            .sink
-            .add(_playbackState.toMap());
-        _playNow = true;
+  /// 注册系统媒体控件（锁屏/通知/耳机按键）动作。
+  void _setupMediaSession() {
+    WebMediaSession.setActionHandler('play', onPlay);
+    WebMediaSession.setActionHandler('pause', onPause);
+    WebMediaSession.setActionHandler('stop', onStop);
+    WebMediaSession.setActionHandler(
+      'previoustrack',
+      () => onSkipToPrevious(true),
+    );
+    WebMediaSession.setActionHandler('nexttrack', () => onSkipToNext(true));
+    WebMediaSession.setActionHandlerWithDetails(
+      'seekbackward',
+      (details) => _seekBy(details.seekOffset?.round() ?? -10),
+    );
+    WebMediaSession.setActionHandlerWithDetails(
+      'seekforward',
+      (details) => _seekBy(details.seekOffset?.round() ?? 10),
+    );
+    WebMediaSession.setActionHandlerWithDetails('seekto', (details) {
+      final double? seekTime = details.seekTime;
+      if (seekTime != null) {
+        onSeekTo(numSecond2Millisecond(seekTime));
       }
     });
+  }
 
-    _audio.onPlay.listen((event) {
-      html.window.console.info('onPlayStream');
-      _playbackState.state = MusicStatus.playing;
-      MusicChannel.get()
-          .playbackStateController
-          .sink
-          .add(_playbackState.toMap());
-    });
+  void _seekBy(int offsetSeconds) {
+    if (_audio.duration.isNaN) {
+      return;
+    }
+    onSeekTo(numSecond2Millisecond(_audio.currentTime) + offsetSeconds * 1000);
+  }
 
-    _audio.onPause.listen((event) {
-      html.window.console.info('onPauseStream');
-      _playbackState.state = MusicStatus.paused;
-      MusicChannel.get()
-          .playbackStateController
-          .sink
-          .add(_playbackState.toMap());
-    });
+  void _onPositionChanged() {
+    if (_audio.currentTime.isNaN || _audio.duration.isNaN) {
+      return;
+    }
+    _playbackState.position = numSecond2Millisecond(_audio.currentTime);
+    web.TimeRanges buffered = _audio.buffered;
+    int length = buffered.length;
+    _playbackState.bufferedPosition = numSecond2Millisecond(
+      length == 0
+          ? 0
+          : buffered.end(length - 1) / _audio.duration * _audio.duration,
+    );
+    _metaData.duration = numSecond2Millisecond(_audio.duration);
+    MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+    MusicChannel.get().metadataEventController.sink.add(_metaData.toMap());
+    WebMediaSession.setPositionState(
+      duration: _audio.duration,
+      position: _audio.currentTime,
+    );
+  }
 
-    _audio.onAbort.listen((event) {
-      html.window.console.warn('不是因为出错而导致的媒体数据下载中止。');
-      html.window.console.warn(event);
-    });
-    _audio.onError.listen((event) {
-      html.window.console.warn('媒体下载过程中错误。例如突然无网络了。或者文件地址不对。');
-      html.window.console.warn(event);
-    });
-    _audio.onStalled.listen((event) {
-      html.window.console.warn('媒体数据意外地不再可用。');
-      html.window.console.warn(event);
-    });
+  void _onVolumeChanged() {
+    MusicChannel.get().volumeController.sink.add(_audio.volume);
+  }
 
-    _audio.onVolumeChange.listen((event) {
-      print(_audio.volume.toDouble());
-      MusicChannel.get().volumeController.sink.add(_audio.volume.toDouble());
-    });
+  void _onEnded() {
+    browserConsole.info('onEnd'.toJS);
+    _setState(MusicStatus.none);
+    onSkipToNext(false);
+  }
 
-    _playbackState.state = MusicStatus.none;
-    // Media Session API
-    if (html.window.navigator.mediaSession != null) {
-      html.window.console.info('Support MediaSession And Add ActionHandler');
-      html.window.navigator.mediaSession
-          ?.setActionHandler('previoustrack', () => onSkipToPrevious(true));
-      html.window.navigator.mediaSession
-          ?.setActionHandler('nexttrack', () => onSkipToNext(false));
+  void _onCanPlay() {
+    browserConsole.info('onCanPlay'.toJS);
+    if (_playNow) {
+      onPlay();
+    } else {
+      _setState(MusicStatus.paused);
+      _playNow = true;
     }
   }
 
@@ -128,28 +147,27 @@ class MusicPlayer {
   }
 
   void onPlay() {
-    html.window.console.info('onPlay');
-    _audio.play().then((value) {
-      _playbackState.state = MusicStatus.playing;
-      MusicChannel.get()
-          .playbackStateController
-          .sink
-          .add(_playbackState.toMap());
-    }).catchError((error) {
-      html.window.console.error(error);
-      _playbackState.state = MusicStatus.playing;
-      MusicChannel.get()
-          .playbackStateController
-          .sink
-          .add(_playbackState.toMap());
-    });
+    browserConsole.info('onPlay'.toJS);
+    _audio.play().toDart.then(
+      (_) => _setState(MusicStatus.playing),
+      onError: (Object error) {
+        // 浏览器自动播放策略拦截时会走到这里，此时并未真正播放。
+        browserConsole.error('$error'.toJS);
+        _setState(MusicStatus.paused);
+      },
+    );
   }
 
   void onPause() {
-    html.window.console.info('onPause');
+    browserConsole.info('onPause'.toJS);
     _audio.pause();
-    _playbackState.state = MusicStatus.paused;
-    MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+    _setState(MusicStatus.paused);
+  }
+
+  void onStop() {
+    browserConsole.info('onStop'.toJS);
+    _audio.pause();
+    _setState(MusicStatus.none);
   }
 
   void onSeekTo(int position) {
@@ -163,35 +181,33 @@ class MusicPlayer {
   }
 
   void onSkipToPrevious(bool userTrigger) {
-    html.window.console.info('onSkipToPrevious');
-    _playbackState.state = MusicStatus.skippingToPrevious;
-    MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+    browserConsole.info('onSkipToPrevious'.toJS);
+    _setState(MusicStatus.skippingToPrevious);
     MusicData.get().previous(userTrigger);
     initPlay();
   }
 
   void onSkipToNext(bool userTrigger) {
-    html.window.console.info('onSkipToNext');
-    _playbackState.state = MusicStatus.skippingToNext;
-    MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+    browserConsole.info('onSkipToNext'.toJS);
+    _setState(MusicStatus.skippingToNext);
     MusicData.get().next(userTrigger);
     initPlay();
   }
 
   void initPlay() {
-    html.window.console.info('initPlay');
+    browserConsole.info('initPlay'.toJS);
     Music? nowPlayMusic = MusicData.get().nowPlayMusic;
     if (nowPlayMusic == null) {
-      html.window.console.info('nowPlayMusic == null');
+      browserConsole.info('nowPlayMusic == null'.toJS);
       return;
     }
     if (nowPlayMusic.musicUri == null) {
-      html.window.console.info('nowPlayMusic.musicUri == null');
+      browserConsole.info('nowPlayMusic.musicUri == null'.toJS);
       return;
     }
 
     String uri = nowPlayMusic.musicUri!;
-    String coverUri = nowPlayMusic.coverUri!;
+    String coverUri = nowPlayMusic.coverUri ?? '';
     if (MusicChannel.get().authorizationData["ENABLE"]) {
       uri = sign(
         url: nowPlayMusic.musicUri!,
@@ -199,24 +215,29 @@ class MusicPlayer {
         signParamName: MusicChannel.get().authorizationData['SIGN_PARAM'],
         timeParamName: MusicChannel.get().authorizationData['TIME_PARAM'],
       );
-      coverUri = sign(
-        url: nowPlayMusic.coverUri!,
-        pkey: MusicChannel.get().authorizationData['SIGN'],
-        signParamName: MusicChannel.get().authorizationData['SIGN_PARAM'],
-        timeParamName: MusicChannel.get().authorizationData['TIME_PARAM'],
-      );
+      if (coverUri.isNotEmpty) {
+        coverUri = sign(
+          url: coverUri,
+          pkey: MusicChannel.get().authorizationData['SIGN'],
+          signParamName: MusicChannel.get().authorizationData['SIGN_PARAM'],
+          timeParamName: MusicChannel.get().authorizationData['TIME_PARAM'],
+        );
+      }
     }
     _audio.src = uri;
-    _playbackState.state = MusicStatus.connecting;
-    MusicChannel.get().playbackStateController.sink.add(_playbackState.toMap());
+    _setState(MusicStatus.connecting);
     _metaData.from(nowPlayMusic);
     MusicChannel.get().metadataEventController.sink.add(_metaData.toMap());
-    // Media Session API
-    js.context.callMethod("setMediaMetadataInfoFromDart",
-        [_metaData.title, _metaData.subTitle, coverUri]);
+    WebMediaSession.setMetadata(
+      title: _metaData.title,
+      artist: _metaData.subTitle,
+      coverUri: coverUri,
+    );
     SystemChrome.setApplicationSwitcherDescription(
-        ApplicationSwitcherDescription(
-            label: '${_metaData.title}-${_metaData.subTitle}'));
+      ApplicationSwitcherDescription(
+        label: '${_metaData.title}-${_metaData.subTitle}',
+      ),
+    );
     _audio.load();
     _audio.pause();
   }
@@ -224,12 +245,4 @@ class MusicPlayer {
   void setVolume(double value) {
     _audio.volume = value;
   }
-}
-
-class ArtWork {
-  String src = '';
-  String? sizes;
-  String? type;
-
-  ArtWork(this.src, [this.sizes, this.type]);
 }

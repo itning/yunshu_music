@@ -68,3 +68,16 @@ Future<void> setCover(Uint8List bytes) {
 }
 
 Stream<dynamic> get playModeEvent => MusicPlatform.instance.playModeEvent;
+
+Future<void> setKeepScreenOn(bool on) {
+  return MusicPlatform.instance.setKeepScreenOn(on);
+}
+
+bool get canInstallPwa => MusicPlatform.instance.canInstallPwa;
+
+Stream<bool> get pwaInstallAvailability =>
+    MusicPlatform.instance.pwaInstallAvailability;
+
+Future<void> promptPwaInstall() {
+  return MusicPlatform.instance.promptPwaInstall();
+}
