@@ -190,4 +190,12 @@ class MusicChannel {
     }
     await _methodChannel.invokeMethod('setKeepScreenOn', {'on': on});
   }
+
+  /// Android 13+ 请求通知权限（后台播放的媒体通知需要）
+  Future<void> requestNotificationPermission() async {
+    if (kIsWeb || !Platform.isAndroid) {
+      return;
+    }
+    await _methodChannel.invokeMethod('requestNotificationPermission');
+  }
 }

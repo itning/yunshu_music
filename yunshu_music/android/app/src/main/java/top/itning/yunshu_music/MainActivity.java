@@ -2,10 +2,13 @@ package top.itning.yunshu_music;
 
 import static top.itning.yunshu_music.channel.MusicChannel.methodChannel;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ComponentName;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -44,6 +47,7 @@ import top.itning.yunshu_music.service.MusicSessionService;
 
 public class MainActivity extends FlutterActivity {
     private static final String TAG = "MainActivity";
+    private static final int REQUEST_NOTIFICATION_PERMISSION = 1001;
     private MediaController controller;
     private final PlaybackStateEvent playbackStateEvent = new PlaybackStateEvent();
     private final MetadataEvent metadataEvent = new MetadataEvent();
@@ -205,11 +209,25 @@ public class MainActivity extends FlutterActivity {
                     });
                     result.success(null);
                     break;
+                case "requestNotificationPermission":
+                    requestNotificationPermission();
+                    result.success(null);
+                    break;
                 default:
                     result.notImplemented();
             }
         });
         super.configureFlutterEngine(flutterEngine);
+    }
+
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return;
+        }
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_NOTIFICATION_PERMISSION);
     }
 
     private void connectController() {
