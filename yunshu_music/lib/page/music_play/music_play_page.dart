@@ -1,13 +1,12 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:yunshu_music/component/image_fade.dart';
 import 'package:yunshu_music/hotkey/action.dart';
 import 'package:yunshu_music/hotkey/intent.dart';
+import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/page/music_play/component/cover_page.dart';
 import 'package:yunshu_music/page/music_play/component/lyric_page.dart';
 import 'package:yunshu_music/page/music_play/component/player_page_bottom_navigation_bar.dart';
@@ -102,17 +101,7 @@ class MusicPlayPage extends StatelessWidget {
         }
       },
       onPageChanged: (index) {
-        if (!kIsWeb && Platform.isAndroid) {
-          if (index == 0) {
-            FlutterWindowManagerPlus.clearFlags(
-              FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON,
-            );
-          } else {
-            FlutterWindowManagerPlus.addFlags(
-              FlutterWindowManagerPlus.FLAG_KEEP_SCREEN_ON,
-            );
-          }
-        }
+        MusicChannel.get().setKeepScreenOn(index != 0);
       },
     );
   }

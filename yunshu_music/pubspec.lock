@@ -285,14 +285,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_windowmanager_plus:
-    dependency: "direct main"
-    description:
-      name: flutter_windowmanager_plus
-      sha256: "180a364c07f5ae24daf679bba51d0e4efa65e860b81e9aa1732fd2d6d30ed999"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.0"
   get_it:
     dependency: transitive
     description:
