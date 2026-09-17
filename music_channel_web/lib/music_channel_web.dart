@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'dart:js_interop';
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:music_channel_web/browser_console.dart';
 import 'package:music_channel_web/music_data.dart';
 import 'package:music_channel_web/music_player.dart';
+import 'package:music_channel_web/pwa_install.dart';
+import 'package:music_channel_web/screen_wakelock.dart';
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
@@ -35,6 +39,7 @@ class MusicChannel extends MusicPlatform {
     this.metadataEventController = metadataEventController;
     this.playbackStateController = playbackStateController;
     this.volumeController = volumeController;
+    PwaInstall.init();
   }
 
   @override
@@ -66,7 +71,7 @@ class MusicChannel extends MusicPlatform {
       MusicPlayer.get()
           .onPlayFromMediaId(MusicData.get().nowPlayMusic!.musicId!);
     } catch (e) {
-      print(e);
+      browserConsole.error('$e'.toJS);
     }
   }
 
@@ -108,5 +113,25 @@ class MusicChannel extends MusicPlatform {
   @override
   Future<void> setVolume(double value) async {
     MusicPlayer.get().setVolume(value);
+  }
+
+  @override
+  Future<void> setKeepScreenOn(bool on) async {
+    if (on) {
+      await ScreenWakeLock.request();
+    } else {
+      await ScreenWakeLock.release();
+    }
+  }
+
+  @override
+  bool get canInstallPwa => PwaInstall.canInstall;
+
+  @override
+  Stream<bool> get pwaInstallAvailability => PwaInstall.availability;
+
+  @override
+  Future<void> promptPwaInstall() {
+    return PwaInstall.promptInstall();
   }
 }

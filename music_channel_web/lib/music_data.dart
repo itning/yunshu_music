@@ -1,8 +1,8 @@
-import 'dart:html' as html;
 import 'dart:math';
 
 import 'package:music_platform_interface/music_model.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
+import 'package:web/web.dart' as web;
 
 class MusicData {
   static const String _nowPlaymusicIdKey = "NOW_PLAY_MEDIA_ID_KEY";
@@ -22,11 +22,11 @@ class MusicData {
   late int _nowPlayIndex;
   Music? _nowPlayMusic;
   late MusicPlayMode _playMode;
-  final html.Storage _storage = html.window.localStorage;
+  final web.Storage _storage = web.window.localStorage;
 
   MusicData() {
     _nowPlayIndex = -1;
-    String mode = _storage[_playModeKey] ?? 'SEQUENCE';
+    String mode = _storage.getItem(_playModeKey) ?? 'SEQUENCE';
     _playMode = valueOf(mode);
   }
 
@@ -39,7 +39,7 @@ class MusicData {
   set playMode(MusicPlayMode value) {
     _playMode = value;
     _randomSet.clear();
-    _storage[_playModeKey] = value.name();
+    _storage.setItem(_playModeKey, value.name());
   }
 
   void addMusic(List<Music> data) {
@@ -47,7 +47,7 @@ class MusicData {
     _musicList.addAll(data);
     _playList.clear();
     _nowPlayIndex = -1;
-    String playListString = _storage[_playListKey] ?? '';
+    String playListString = _storage.getItem(_playListKey) ?? '';
     List<String> playListMusicIdList = playListString.split("@").toList();
     List<Music> playList = [];
     for (String musicId in playListMusicIdList) {
@@ -60,7 +60,7 @@ class MusicData {
     }
     _playList.addAll(playList);
 
-    String? nowPlaymusicId = _storage[_nowPlaymusicIdKey];
+    String? nowPlaymusicId = _storage.getItem(_nowPlaymusicIdKey);
     if (null != nowPlaymusicId) {
       for (int i = 0; i < _playList.length; i++) {
         if (nowPlaymusicId == _playList[i].musicId) {
@@ -89,7 +89,7 @@ class MusicData {
     }
 
     String playListString = _playList.map((e) => e.musicId).join('@');
-    _storage[_playListKey] = playListString;
+    _storage.setItem(_playListKey, playListString);
   }
 
   void clearPlayList() {
@@ -99,10 +99,10 @@ class MusicData {
       _playList.add(_nowPlayMusic!);
       _nowPlayIndex = 0;
       String playListString = _playList.map((e) => e.musicId).join('@');
-      _storage[_playListKey] = playListString;
+      _storage.setItem(_playListKey, playListString);
     } else {
       _nowPlayIndex = -1;
-      _storage[_playListKey] = '';
+      _storage.setItem(_playListKey, '');
     }
   }
 
@@ -127,8 +127,8 @@ class MusicData {
       _nowPlayIndex = playListIndex;
     }
     String playListString = _playList.map((e) => e.musicId).join('@');
-    _storage[_playListKey] = playListString;
-    _storage[_nowPlaymusicIdKey] = _nowPlayMusic!.musicId!;
+    _storage.setItem(_playListKey, playListString);
+    _storage.setItem(_nowPlaymusicIdKey, _nowPlayMusic!.musicId!);
   }
 
   void previous(bool userTrigger) {
@@ -167,8 +167,8 @@ class MusicData {
       _nowPlayMusic = _playList[_nowPlayIndex];
     }
     String playListString = _playList.map((e) => e.musicId).join('@');
-    _storage[_playListKey] = playListString;
-    _storage[_nowPlaymusicIdKey] = _nowPlayMusic!.musicId!;
+    _storage.setItem(_playListKey, playListString);
+    _storage.setItem(_nowPlaymusicIdKey, _nowPlayMusic!.musicId!);
   }
 
   void next(bool userTrigger) {
@@ -207,8 +207,8 @@ class MusicData {
       _nowPlayMusic = _playList[_nowPlayIndex];
     }
     String playListString = _playList.map((e) => e.musicId).join('@');
-    _storage[_playListKey] = playListString;
-    _storage[_nowPlaymusicIdKey] = _nowPlayMusic!.musicId!;
+    _storage.setItem(_playListKey, playListString);
+    _storage.setItem(_nowPlaymusicIdKey, _nowPlayMusic!.musicId!);
   }
 
   int getRandom() {

@@ -183,12 +183,28 @@ class MusicChannel {
     }
   }
 
-  /// Android 端设置屏幕常亮（歌词页展示时使用）
+  /// 设置屏幕常亮（歌词页展示时使用）：web 用 Screen Wake Lock，Android 用原生标志位
   Future<void> setKeepScreenOn(bool on) async {
-    if (kIsWeb || !Platform.isAndroid) {
-      return;
+    if (kIsWeb) {
+      return channel.setKeepScreenOn(on);
     }
-    await _methodChannel.invokeMethod('setKeepScreenOn', {'on': on});
+    if (Platform.isAndroid) {
+      await _methodChannel.invokeMethod('setKeepScreenOn', {'on': on});
+    }
+  }
+
+  /// web 端「添加到主屏幕」是否可用
+  bool get canInstallPwa => kIsWeb && channel.canInstallPwa;
+
+  /// web 端「添加到主屏幕」可用性变化
+  Stream<bool> get pwaInstallAvailability =>
+      supportMusicChannel() ? channel.pwaInstallAvailability : const Stream.empty();
+
+  /// 触发 web 端「添加到主屏幕」安装弹窗
+  Future<void> promptPwaInstall() async {
+    if (kIsWeb) {
+      await channel.promptPwaInstall();
+    }
   }
 
   /// Android 13+ 请求通知权限（后台播放的媒体通知需要）

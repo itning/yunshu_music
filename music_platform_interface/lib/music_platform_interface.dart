@@ -55,4 +55,18 @@ abstract class MusicPlatform extends PlatformInterface {
   /// changed from outside the app, such as the Windows system media controls.
   /// Empty by default.
   Stream<dynamic> get playModeEvent => const Stream.empty();
+
+  /// Keeps the screen awake while showing lyrics (web Screen Wake Lock).
+  /// No-op by default.
+  Future<void> setKeepScreenOn(bool on) async {}
+
+  /// Whether a PWA "add to home screen" prompt is currently available (web only).
+  /// False by default.
+  bool get canInstallPwa => false;
+
+  /// Emits when PWA install availability changes (web only). Empty by default.
+  Stream<bool> get pwaInstallAvailability => const Stream.empty();
+
+  /// Triggers the PWA install prompt (web only). No-op by default.
+  Future<void> promptPwaInstall() async {}
 }

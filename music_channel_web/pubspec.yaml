@@ -2,9 +2,10 @@ name: music_channel_web
 description: A new Flutter project.
 version: 0.0.1
 homepage:
+publish_to: none
 
 environment:
-  sdk: ">=2.16.1 <3.0.0"
+  sdk: ">=3.8.1 <4.0.0"
   flutter: ">=1.17.0"
 
 flutter:
@@ -22,6 +23,7 @@ dependencies:
     sdk: flutter
   music_platform_interface:
     path: ../music_platform_interface
+  web: ^1.1.0
 
 dev_dependencies:
   flutter_test:
