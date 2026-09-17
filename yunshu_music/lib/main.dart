@@ -33,6 +33,8 @@ void main() async {
   await SettingModel.get().init(sharedPreferences);
   runApp(const YunShuMusicApp());
   if (!kIsWeb && Platform.isAndroid) {
+    // Android 13+ 通知权限，后台播放的媒体通知需要
+    MusicChannel.get().requestNotificationPermission();
     // 沉浸式状态栏
     // 写在组件渲染之后，是为了在渲染后进行设置赋值，覆盖状态栏，写在渲染之前对MaterialApp组件会覆盖这个值。
     SystemUiOverlayStyle systemUiOverlayStyle = const SystemUiOverlayStyle(
