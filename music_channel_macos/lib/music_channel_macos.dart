@@ -205,6 +205,13 @@ class MusicChannelMacOS extends MusicPlatform {
       tooltip: _trayTooltip,
       isPlaying: _isPlayNow,
     );
+    _shell.updateDockMenu(
+      title: _metaData.title,
+      artist: _metaData.subTitle,
+      isPlaying: _isPlayNow,
+      canSkipPrevious: _musicList.isNotEmpty,
+      canSkipNext: _musicList.isNotEmpty,
+    );
   }
 
   void _updateNowPlayingMetadata() {

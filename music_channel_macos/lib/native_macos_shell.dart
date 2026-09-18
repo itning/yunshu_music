@@ -5,10 +5,14 @@ enum NativeTrayAction { show, previous, next, toggle, quit }
 class NativeMacosShell {
   NativeMacosShell({required this.onTrayAction}) {
     _channel.setMethodCallHandler(_handleNativeCall);
+    _dockChannel.setMethodCallHandler(_handleDockMenuCall);
   }
 
   static const MethodChannel _channel = MethodChannel(
     'music_channel_macos/shell',
+  );
+  static const MethodChannel _dockChannel = MethodChannel(
+    'yunshu.music/dock_menu',
   );
 
   final void Function(NativeTrayAction action) onTrayAction;
@@ -39,9 +43,38 @@ class NativeMacosShell {
     'isPlaying': isPlaying,
   });
 
+  Future<void> updateDockMenu({
+    required String title,
+    required String artist,
+    required bool isPlaying,
+    required bool canSkipPrevious,
+    required bool canSkipNext,
+  }) async {
+    try {
+      await _dockChannel.invokeMethod('updateDockMenu', {
+        'title': title,
+        'artist': artist,
+        'isPlaying': isPlaying,
+        'canSkipPrevious': canSkipPrevious,
+        'canSkipNext': canSkipNext,
+      });
+    } on MissingPluginException {
+      // Older native hosts do not provide the optional Dock menu bridge.
+    }
+  }
+
   Future<void> _handleNativeCall(MethodCall call) async {
     if (call.method != 'trayAction') return;
-    final action = switch (call.arguments) {
+    _dispatchAction(call.arguments);
+  }
+
+  Future<void> _handleDockMenuCall(MethodCall call) async {
+    if (call.method != 'dockMenuAction') return;
+    _dispatchAction(call.arguments);
+  }
+
+  void _dispatchAction(dynamic rawAction) {
+    final action = switch (rawAction) {
       'show' => NativeTrayAction.show,
       'previous' => NativeTrayAction.previous,
       'next' => NativeTrayAction.next,

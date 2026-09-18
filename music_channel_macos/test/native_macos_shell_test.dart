@@ -72,4 +72,58 @@ void main() {
       expect(actions, [NativeTrayAction.next]);
     },
   );
+
+  test('syncs Dock menu state and dispatches Dock menu actions', () async {
+    const dockChannel = MethodChannel('yunshu.music/dock_menu');
+    final calls = <MethodCall>[];
+    final actions = <NativeTrayAction>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(dockChannel, (call) async {
+          calls.add(call);
+          return null;
+        });
+    final shell = NativeMacosShell(onTrayAction: actions.add);
+
+    await shell.updateDockMenu(
+      title: '测试歌曲',
+      artist: '测试歌手',
+      isPlaying: true,
+      canSkipPrevious: true,
+      canSkipNext: false,
+    );
+    await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .handlePlatformMessage(
+          'yunshu.music/dock_menu',
+          const StandardMethodCodec().encodeMethodCall(
+            const MethodCall('dockMenuAction', 'toggle'),
+          ),
+          (_) {},
+        );
+    await pumpEventQueue();
+
+    expect(calls.single.method, 'updateDockMenu');
+    expect(calls.single.arguments, {
+      'title': '测试歌曲',
+      'artist': '测试歌手',
+      'isPlaying': true,
+      'canSkipPrevious': true,
+      'canSkipNext': false,
+    });
+    expect(actions, [NativeTrayAction.toggle]);
+  });
+
+  test('ignores an unavailable Dock menu bridge', () async {
+    const dockChannel = MethodChannel('yunshu.music/dock_menu');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(dockChannel, null);
+    final shell = NativeMacosShell(onTrayAction: (_) {});
+
+    await shell.updateDockMenu(
+      title: '测试歌曲',
+      artist: '测试歌手',
+      isPlaying: false,
+      canSkipPrevious: false,
+      canSkipNext: false,
+    );
+  });
 }
