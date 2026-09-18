@@ -21,6 +21,7 @@ import 'package:yunshu_music/provider/search_model.dart';
 import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/provider/theme_model.dart';
 import 'package:yunshu_music/provider/volume_data_model.dart';
+import 'package:yunshu_music/router/app_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,24 +64,27 @@ class _YunShuMusicAppState extends State<YunShuMusicApp> {
       ),
       GoRoute(
         path: '/musicPlay',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => buildAppPage(
           key: state.pageKey,
           child: const MusicPlayPage(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-              FadeTransition(opacity: animation, child: child),
+          useCupertinoPage: !kIsWeb && Platform.isIOS,
         ),
       ),
       GoRoute(
         path: '/setting',
-        builder: (BuildContext context, GoRouterState state) {
-          return const AppSettingPage();
-        },
+        pageBuilder: (context, state) => buildAppPage(
+          key: state.pageKey,
+          child: const AppSettingPage(),
+          useCupertinoPage: !kIsWeb && Platform.isIOS,
+        ),
       ),
       GoRoute(
         path: '/login',
-        builder: (BuildContext context, GoRouterState state) {
-          return const LoginPage();
-        },
+        pageBuilder: (context, state) => buildAppPage(
+          key: state.pageKey,
+          child: const LoginPage(),
+          useCupertinoPage: !kIsWeb && Platform.isIOS,
+        ),
       ),
     ],
     redirect: (BuildContext context, GoRouterState state) {

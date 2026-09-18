@@ -15,6 +15,12 @@ import 'package:yunshu_music/provider/music_list_status_model.dart';
 import 'package:yunshu_music/provider/setting_model.dart';
 import 'package:yunshu_music/util/common_utils.dart';
 
+const musicListDragDevices = <PointerDeviceKind>{
+  PointerDeviceKind.touch,
+  PointerDeviceKind.mouse,
+  PointerDeviceKind.trackpad,
+};
+
 class MusicList extends StatefulWidget {
   const MusicList({super.key});
 
@@ -92,10 +98,7 @@ class _MusicListState extends State<MusicList> {
               }
               return ScrollConfiguration(
                 behavior: ScrollConfiguration.of(context).copyWith(
-                  dragDevices: {
-                    PointerDeviceKind.touch,
-                    PointerDeviceKind.mouse,
-                  },
+                  dragDevices: musicListDragDevices,
                 ),
                 child: Scrollbar(
                   controller: _scrollController,

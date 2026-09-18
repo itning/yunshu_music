@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'package:music_platform_interface/encryption_tool.dart';
 import 'package:music_platform_interface/music_model.dart';
@@ -10,10 +9,12 @@ import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
 import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tray_manager/tray_manager.dart';
-import 'package:window_manager/window_manager.dart';
 
-class MusicChannelMacOS extends MusicPlatform with TrayListener {
+import 'native_audio_player.dart';
+import 'native_macos_shell.dart';
+import 'native_now_playing.dart';
+
+class MusicChannelMacOS extends MusicPlatform {
   static void registerWith() {
     MusicPlatform.instance = MusicChannelMacOS();
   }
@@ -30,7 +31,7 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
   static const String _playListKey = "PLAY_LIST";
 
   /// 播放实例
-  late AudioPlayer _player;
+  late NativeAudioPlayer _player;
 
   /// 播放元数据信息：歌曲信息，时长等。
   late StreamController<dynamic> _metadataEventController;
@@ -69,8 +70,11 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
   Music? _nowPlayMusic;
 
   bool _isPlayNow = false;
+  String _trayTitle = '云舒音乐';
+  String _trayTooltip = '';
 
-  late Menu _menu;
+  late NativeMacosShell _shell;
+  late NativeNowPlaying _nowPlaying;
 
   late Map<String, dynamic> _authorizationData;
 
@@ -80,9 +84,10 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
     StreamController<dynamic> playbackStateController,
     StreamController<double> volumeController,
   ) async {
-    await windowManager.ensureInitialized();
-    windowManager.setTitle("云舒音乐");
-    windowManager.setMinimumSize(const Size(450, 900));
+    _shell = NativeMacosShell(onTrayAction: _handleTrayAction);
+    await _shell.initialize();
+    _nowPlaying = NativeNowPlaying(onCommand: _handleNowPlayingCommand);
+    await _nowPlaying.initialize();
 
     _metadataEventController = metadataEventController;
     _playbackStateController = playbackStateController;
@@ -93,97 +98,147 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
     _playMode = valueOf(
       _sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE',
     );
+    await _syncNowPlayingPlayMode(_playMode);
 
-    _player = AudioPlayer(playerId: "69420");
-    _player.setReleaseMode(ReleaseMode.stop);
-    _player.setPlayerMode(PlayerMode.mediaPlayer);
-
-    _menu = Menu(
-      items: [
-        MenuItem(label: '云舒音乐', onClick: (_) => windowManager.show()),
-        MenuItem.separator(),
-        MenuItem(label: '上一曲', onClick: (_) => skipToPrevious()),
-        MenuItem(label: '下一曲', onClick: (_) => skipToNext()),
-        MenuItem(
-          label: '播放',
-          key: 'PlayStatus',
-          onClick: (_) => _isPlayNow ? pause() : play(),
-        ),
-        MenuItem.separator(),
-        MenuItem(
-          label: '退出',
-          onClick: (_) async {
-            await _player.dispose();
-            exit(0);
-          },
-        ),
-      ],
-    );
+    _player = NativeAudioPlayer();
 
     _player.onPositionChanged.listen((Duration event) {
       int position = event.inMilliseconds;
       _playbackState.position = position;
       playbackStateController.sink.add(_playbackState.toMap());
+      _nowPlaying.updatePosition(event);
     });
 
-    _player.onPlayerStateChanged.listen((PlayerState event) {
-      if (PlayerState.completed == event) {
-        return;
-      }
-      bool playing = PlayerState.playing == event;
+    _player.onPlayerStateChanged.listen((bool playing) {
       _playbackState.state = playing ? MusicStatus.playing : MusicStatus.paused;
       playbackStateController.sink.add(_playbackState.toMap());
       _isPlayNow = playing;
-      _upContextMenu();
+      _updateTray();
+      _nowPlaying.updatePlaybackState(isPlaying: playing);
     });
 
-    _player.eventStream.listen((AudioEvent event) {
-      switch (event.eventType) {
-        case AudioEventType.log:
-          break;
-        case AudioEventType.duration:
-          if (null != event.duration) {
-            int duration = event.duration!.inMilliseconds;
-            _metaData.duration = duration;
-            metadataEventController.sink.add(_metaData.toMap());
-          }
-        case AudioEventType.seekComplete:
-          break;
-        case AudioEventType.complete:
-          _playbackState.state = MusicStatus.none;
-          playbackStateController.sink.add(_playbackState.toMap());
-          next(false);
-          initPlay(autoStart: true);
-        case AudioEventType.prepared:
-          if (event.isPrepared ?? false) {
-            _playbackState.state = MusicStatus.paused;
-            _playbackStateController.sink.add(_playbackState.toMap());
-          }
+    _player.onPrepared.listen((duration) {
+      if (duration != null) {
+        _metaData.duration = duration.inMilliseconds;
+        metadataEventController.sink.add(_metaData.toMap());
+        _updateNowPlayingMetadata();
       }
+      _playbackState.state = MusicStatus.paused;
+      _playbackStateController.sink.add(_playbackState.toMap());
+    });
+    _player.onComplete.listen((_) {
+      _playbackState.state = MusicStatus.none;
+      playbackStateController.sink.add(_playbackState.toMap());
+      next(false);
+      initPlay(autoStart: true);
+    });
+    _player.onError.listen((_) {
+      _playbackState.state = MusicStatus.none;
+      _playbackStateController.sink.add(_playbackState.toMap());
+      _isPlayNow = false;
+      _updateTray();
     });
 
     _playbackState.state = MusicStatus.none;
-
-    await trayManager.setIcon("asserts/icon/app_icon.ico");
-    await trayManager.setContextMenu(_menu);
-    trayManager.addListener(this);
   }
 
-  @override
-  void onTrayIconMouseDown() {
-    windowManager.isVisible().then(
-      (visible) => visible ? windowManager.hide() : windowManager.show(),
+  Future<void> _handleTrayAction(NativeTrayAction action) async {
+    switch (action) {
+      case NativeTrayAction.show:
+        await _shell.showWindow();
+      case NativeTrayAction.previous:
+        await skipToPrevious();
+      case NativeTrayAction.next:
+        await skipToNext();
+      case NativeTrayAction.toggle:
+        if (_isPlayNow) {
+          await pause();
+        } else {
+          await play();
+        }
+      case NativeTrayAction.quit:
+        await _nowPlaying.clear();
+        await _player.dispose();
+        exit(0);
+    }
+  }
+
+  Future<void> _handleNowPlayingCommand(
+    NativeNowPlayingCommand command,
+    Duration? position,
+  ) async {
+    switch (command) {
+      case NativeNowPlayingCommand.play:
+        await play();
+      case NativeNowPlayingCommand.pause:
+        await pause();
+      case NativeNowPlayingCommand.next:
+        await skipToNext();
+      case NativeNowPlayingCommand.previous:
+        await skipToPrevious();
+      case NativeNowPlayingCommand.toggle:
+        if (_isPlayNow) {
+          await pause();
+        } else {
+          await play();
+        }
+      case NativeNowPlayingCommand.seek:
+        if (position != null) await seekTo(position);
+      case NativeNowPlayingCommand.shuffleEnabled:
+        await _applyNowPlayingPlayMode(MusicPlayMode.RANDOMLY);
+      case NativeNowPlayingCommand.shuffleDisabled:
+        await _applyNowPlayingPlayMode(MusicPlayMode.SEQUENCE);
+      case NativeNowPlayingCommand.repeatLoop:
+        await _applyNowPlayingPlayMode(MusicPlayMode.LOOP);
+      case NativeNowPlayingCommand.repeatNone:
+        await _applyNowPlayingPlayMode(MusicPlayMode.SEQUENCE);
+    }
+  }
+
+  Future<void> _applyNowPlayingPlayMode(MusicPlayMode mode) async {
+    await setPlayMode(mode.name().toLowerCase());
+  }
+
+  void _updateTray() {
+    _shell.updateTray(
+      title: _trayTitle,
+      tooltip: _trayTooltip,
+      isPlaying: _isPlayNow,
+    );
+    _shell.updateDockMenu(
+      title: _metaData.title,
+      artist: _metaData.subTitle,
+      isPlaying: _isPlayNow,
+      canSkipPrevious: _musicList.isNotEmpty,
+      canSkipNext: _musicList.isNotEmpty,
     );
   }
 
-  @override
-  void onTrayIconRightMouseDown() {
-    trayManager.popUpContextMenu();
+  void _updateNowPlayingMetadata() {
+    var coverUri = _metaData.coverUri;
+    if (coverUri.isNotEmpty && _authorizationData['ENABLE'] == true) {
+      coverUri = sign(
+        url: coverUri,
+        pkey: _authorizationData['SIGN'],
+        signParamName: _authorizationData['SIGN_PARAM'],
+        timeParamName: _authorizationData['TIME_PARAM'],
+      );
+    }
+    _nowPlaying.updateMetadata(
+      title: _metaData.title,
+      artist: _metaData.subTitle,
+      artworkUrl: coverUri,
+      duration: Duration(milliseconds: _metaData.duration),
+    );
   }
 
-  void _upContextMenu() {
-    _menu.getMenuItem('PlayStatus')!.label = _isPlayNow ? '暂停' : '播放';
-    trayManager.setContextMenu(_menu);
+  String _trayTitleLabel() {
+    final title = _metaData.title;
+    final subTitle = _metaData.subTitle;
+    if (title.isEmpty && subTitle.isEmpty) return '云舒音乐';
+    if (title.isEmpty) return subTitle;
+    if (subTitle.isEmpty) return title;
+    return '$title - $subTitle';
   }
 
   void initPlay({bool autoStart = false}) {
@@ -205,14 +260,17 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
       );
     }
     if (autoStart) {
-      _player.play(UrlSource(url));
+      _player.play(url);
     } else {
       _player.setSourceUrl(url);
     }
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
-    windowManager.setTitle("${_metaData.title}-${_metaData.subTitle}");
-    trayManager.setToolTip('${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}');
+    _updateNowPlayingMetadata();
+    _shell.setTitle("${_metaData.title}-${_metaData.subTitle}");
+    _trayTitle = _trayTitleLabel();
+    _trayTooltip = '${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}';
+    _updateTray();
   }
 
   @override
@@ -271,6 +329,13 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
     _playMode = musicPlayMode;
     _randomSet.clear();
     _sharedPreferences.setString(_playModeKey, musicPlayMode.name());
+    await _syncNowPlayingPlayMode(musicPlayMode);
+  }
+
+  Future<void> _syncNowPlayingPlayMode(MusicPlayMode mode) {
+    final shuffle = mode == MusicPlayMode.RANDOMLY;
+    final repeat = mode == MusicPlayMode.LOOP ? 'list' : 'none';
+    return _nowPlaying.updatePlayMode(shuffle: shuffle, repeat: repeat);
   }
 
   @override
@@ -485,9 +550,7 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
         .toList();
     if (canPlayList.isEmpty) {
       _randomSet.clear();
-      canPlayList = _musicList
-          .where((item) => item != _nowPlayMusic)
-          .toList();
+      canPlayList = _musicList.where((item) => item != _nowPlayMusic).toList();
     }
     if (canPlayList.isEmpty) {
       canPlayList = _musicList;
