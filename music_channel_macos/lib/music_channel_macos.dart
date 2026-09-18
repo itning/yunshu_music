@@ -9,12 +9,11 @@ import 'package:music_platform_interface/music_platform_interface.dart';
 import 'package:music_platform_interface/music_play_mode.dart';
 import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tray_manager/tray_manager.dart';
-import 'package:window_manager/window_manager.dart';
 
 import 'native_audio_player.dart';
+import 'native_macos_shell.dart';
 
-class MusicChannelMacOS extends MusicPlatform with TrayListener {
+class MusicChannelMacOS extends MusicPlatform {
   static void registerWith() {
     MusicPlatform.instance = MusicChannelMacOS();
   }
@@ -70,8 +69,10 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
   Music? _nowPlayMusic;
 
   bool _isPlayNow = false;
+  String _trayTitle = '云舒音乐';
+  String _trayTooltip = '';
 
-  late Menu _menu;
+  late NativeMacosShell _shell;
 
   late Map<String, dynamic> _authorizationData;
 
@@ -81,9 +82,8 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
     StreamController<dynamic> playbackStateController,
     StreamController<double> volumeController,
   ) async {
-    await windowManager.ensureInitialized();
-    windowManager.setTitle("云舒音乐");
-    windowManager.setMinimumSize(const Size(450, 900));
+    _shell = NativeMacosShell(onTrayAction: _handleTrayAction);
+    await _shell.initialize();
 
     _metadataEventController = metadataEventController;
     _playbackStateController = playbackStateController;
@@ -97,28 +97,6 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
 
     _player = NativeAudioPlayer();
 
-    _menu = Menu(
-      items: [
-        MenuItem(label: '云舒音乐', onClick: (_) => windowManager.show()),
-        MenuItem.separator(),
-        MenuItem(label: '上一曲', onClick: (_) => skipToPrevious()),
-        MenuItem(label: '下一曲', onClick: (_) => skipToNext()),
-        MenuItem(
-          label: '播放',
-          key: 'PlayStatus',
-          onClick: (_) => _isPlayNow ? pause() : play(),
-        ),
-        MenuItem.separator(),
-        MenuItem(
-          label: '退出',
-          onClick: (_) async {
-            await _player.dispose();
-            exit(0);
-          },
-        ),
-      ],
-    );
-
     _player.onPositionChanged.listen((Duration event) {
       int position = event.inMilliseconds;
       _playbackState.position = position;
@@ -129,7 +107,7 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
       _playbackState.state = playing ? MusicStatus.playing : MusicStatus.paused;
       playbackStateController.sink.add(_playbackState.toMap());
       _isPlayNow = playing;
-      _upContextMenu();
+      _updateTray();
     });
 
     _player.onPrepared.listen((duration) {
@@ -150,31 +128,47 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
       _playbackState.state = MusicStatus.none;
       _playbackStateController.sink.add(_playbackState.toMap());
       _isPlayNow = false;
-      _upContextMenu();
+      _updateTray();
     });
 
     _playbackState.state = MusicStatus.none;
-
-    await trayManager.setIcon("asserts/icon/app_icon.ico");
-    await trayManager.setContextMenu(_menu);
-    trayManager.addListener(this);
   }
 
-  @override
-  void onTrayIconMouseDown() {
-    windowManager.isVisible().then(
-      (visible) => visible ? windowManager.hide() : windowManager.show(),
+  Future<void> _handleTrayAction(NativeTrayAction action) async {
+    switch (action) {
+      case NativeTrayAction.show:
+        await _shell.showWindow();
+      case NativeTrayAction.previous:
+        await skipToPrevious();
+      case NativeTrayAction.next:
+        await skipToNext();
+      case NativeTrayAction.toggle:
+        if (_isPlayNow) {
+          await pause();
+        } else {
+          await play();
+        }
+      case NativeTrayAction.quit:
+        await _player.dispose();
+        exit(0);
+    }
+  }
+
+  void _updateTray() {
+    _shell.updateTray(
+      title: _trayTitle,
+      tooltip: _trayTooltip,
+      isPlaying: _isPlayNow,
     );
   }
 
-  @override
-  void onTrayIconRightMouseDown() {
-    trayManager.popUpContextMenu();
-  }
-
-  void _upContextMenu() {
-    _menu.getMenuItem('PlayStatus')!.label = _isPlayNow ? '暂停' : '播放';
-    trayManager.setContextMenu(_menu);
+  String _trayTitleLabel() {
+    final title = _metaData.title;
+    final subTitle = _metaData.subTitle;
+    if (title.isEmpty && subTitle.isEmpty) return '云舒音乐';
+    if (title.isEmpty) return subTitle;
+    if (subTitle.isEmpty) return title;
+    return '$title - $subTitle';
   }
 
   void initPlay({bool autoStart = false}) {
@@ -202,8 +196,10 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
     }
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
-    windowManager.setTitle("${_metaData.title}-${_metaData.subTitle}");
-    trayManager.setToolTip('${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}');
+    _shell.setTitle("${_metaData.title}-${_metaData.subTitle}");
+    _trayTitle = _trayTitleLabel();
+    _trayTooltip = '${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}';
+    _updateTray();
   }
 
   @override

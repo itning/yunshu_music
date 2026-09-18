@@ -9,6 +9,11 @@ public class MusicChannelMacosPlugin: NSObject, FlutterPlugin, FlutterStreamHand
   private var playerStateObserver: NSKeyValueObservation?
   private var endObserver: NSObjectProtocol?
   private var periodicTimeObserver: Any?
+  private var shellChannel: FlutterMethodChannel?
+  private var statusItem: NSStatusItem?
+  private var trayMenu: NSMenu?
+  private var titleMenuItem: NSMenuItem?
+  private var playMenuItem: NSMenuItem?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let instance = MusicChannelMacosPlugin()
@@ -18,6 +23,9 @@ public class MusicChannelMacosPlugin: NSObject, FlutterPlugin, FlutterStreamHand
     registrar.addMethodCallDelegate(instance, channel: audioChannel)
     let events = FlutterEventChannel(name: "music_channel_macos/audio/events", binaryMessenger: registrar.messenger)
     events.setStreamHandler(instance)
+    let shellChannel = FlutterMethodChannel(name: "music_channel_macos/shell", binaryMessenger: registrar.messenger)
+    instance.shellChannel = shellChannel
+    registrar.addMethodCallDelegate(instance, channel: shellChannel)
   }
 
   public override init() {
@@ -48,6 +56,33 @@ public class MusicChannelMacosPlugin: NSObject, FlutterPlugin, FlutterStreamHand
       if let volume = (call.arguments as? [String: Any])?["volume"] as? Double { player.volume = Float(volume) }
       result(nil)
     case "dispose": disposePlayer(); result(nil)
+    case "initialize":
+      DispatchQueue.main.async { [weak self] in
+        self?.configureShell(arguments: call.arguments)
+        result(nil)
+      }
+    case "setTitle":
+      DispatchQueue.main.async { [weak self] in
+        self?.hostWindow?.title = (call.arguments as? [String: Any])?["title"] as? String ?? "云舒音乐"
+        result(nil)
+      }
+    case "setMinimumSize":
+      DispatchQueue.main.async { [weak self] in
+        let arguments = call.arguments as? [String: Any]
+        let width = (arguments?["width"] as? NSNumber)?.doubleValue ?? 450
+        let height = (arguments?["height"] as? NSNumber)?.doubleValue ?? 900
+        self?.hostWindow?.minSize = NSSize(width: width, height: height)
+        result(nil)
+      }
+    case "showWindow":
+      DispatchQueue.main.async { [weak self] in self?.showWindow(); result(nil) }
+    case "hideWindow":
+      DispatchQueue.main.async { [weak self] in self?.hostWindow?.orderOut(nil); result(nil) }
+    case "updateTray":
+      DispatchQueue.main.async { [weak self] in
+        self?.updateTray(arguments: call.arguments)
+        result(nil)
+      }
     default: result(FlutterMethodNotImplemented)
     }
   }
@@ -90,4 +125,82 @@ public class MusicChannelMacosPlugin: NSObject, FlutterPlugin, FlutterStreamHand
   }
 
   private func emit(_ event: [String: Any]) { eventSink?(event) }
+
+  private var hostWindow: NSWindow? {
+    NSApplication.shared.windows.first { $0.contentViewController is FlutterViewController }
+      ?? NSApplication.shared.mainWindow
+  }
+
+  private func configureShell(arguments: Any?) {
+    let values = arguments as? [String: Any]
+    let title = values?["title"] as? String ?? "云舒音乐"
+    let width = (values?["minWidth"] as? NSNumber)?.doubleValue ?? 450
+    let height = (values?["minHeight"] as? NSNumber)?.doubleValue ?? 900
+    hostWindow?.title = title
+    hostWindow?.minSize = NSSize(width: width, height: height)
+    configureStatusItem()
+  }
+
+  private func configureStatusItem() {
+    guard statusItem == nil else { return }
+    let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    if let icon = NSApp.applicationIconImage {
+      icon.size = NSSize(width: 18, height: 18)
+      icon.isTemplate = false
+      item.button?.image = icon
+    }
+    item.button?.target = self
+    item.button?.action = #selector(handleStatusItemClick(_:))
+    item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+    statusItem = item
+
+    let menu = NSMenu()
+    let titleItem = menuItem(title: "云舒音乐", action: "show")
+    menu.addItem(titleItem)
+    titleMenuItem = titleItem
+    menu.addItem(.separator())
+    menu.addItem(menuItem(title: "上一曲", action: "previous"))
+    menu.addItem(menuItem(title: "下一曲", action: "next"))
+    let playItem = menuItem(title: "播放", action: "toggle")
+    menu.addItem(playItem)
+    playMenuItem = playItem
+    menu.addItem(.separator())
+    menu.addItem(menuItem(title: "退出", action: "quit"))
+    trayMenu = menu
+  }
+
+  private func menuItem(title: String, action: String) -> NSMenuItem {
+    let item = NSMenuItem(title: title, action: #selector(handleMenuAction(_:)), keyEquivalent: "")
+    item.target = self
+    item.representedObject = action
+    return item
+  }
+
+  private func updateTray(arguments: Any?) {
+    let values = arguments as? [String: Any]
+    titleMenuItem?.title = values?["title"] as? String ?? "云舒音乐"
+    statusItem?.button?.toolTip = values?["tooltip"] as? String
+    let isPlaying = values?["isPlaying"] as? Bool ?? false
+    playMenuItem?.title = isPlaying ? "暂停" : "播放"
+  }
+
+  @objc private func handleStatusItemClick(_ sender: NSStatusBarButton) {
+    if NSApp.currentEvent?.type == .rightMouseUp, let menu = trayMenu {
+      menu.popUp(positioning: nil, at: .zero, in: sender)
+      return
+    }
+    guard let window = hostWindow else { return }
+    if window.isVisible { window.orderOut(nil) } else { showWindow() }
+  }
+
+  @objc private func handleMenuAction(_ sender: NSMenuItem) {
+    guard let action = sender.representedObject as? String else { return }
+    shellChannel?.invokeMethod("trayAction", arguments: action)
+  }
+
+  private func showWindow() {
+    guard let window = hostWindow else { return }
+    NSApplication.shared.activate(ignoringOtherApps: true)
+    window.makeKeyAndOrderFront(nil)
+  }
 }
