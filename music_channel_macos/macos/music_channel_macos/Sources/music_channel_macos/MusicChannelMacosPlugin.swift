@@ -1,6 +1,7 @@
 import AVFoundation
 import Cocoa
 import FlutterMacOS
+import MediaPlayer
 
 public class MusicChannelMacosPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private let player = AVPlayer()
@@ -10,14 +11,18 @@ public class MusicChannelMacosPlugin: NSObject, FlutterPlugin, FlutterStreamHand
   private var endObserver: NSObjectProtocol?
   private var periodicTimeObserver: Any?
   private var shellChannel: FlutterMethodChannel?
+  private var mainChannel: FlutterMethodChannel?
   private var statusItem: NSStatusItem?
   private var trayMenu: NSMenu?
   private var titleMenuItem: NSMenuItem?
   private var playMenuItem: NSMenuItem?
+  private var nowPlayingInfo: [String: Any] = [:]
+  private var artworkRequestID = 0
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let instance = MusicChannelMacosPlugin()
     let channel = FlutterMethodChannel(name: "music_channel_macos", binaryMessenger: registrar.messenger)
+    instance.mainChannel = channel
     registrar.addMethodCallDelegate(instance, channel: channel)
     let audioChannel = FlutterMethodChannel(name: "music_channel_macos/audio", binaryMessenger: registrar.messenger)
     registrar.addMethodCallDelegate(instance, channel: audioChannel)
@@ -56,6 +61,32 @@ public class MusicChannelMacosPlugin: NSObject, FlutterPlugin, FlutterStreamHand
       if let volume = (call.arguments as? [String: Any])?["volume"] as? Double { player.volume = Float(volume) }
       result(nil)
     case "dispose": disposePlayer(); result(nil)
+    case "initializeNowPlaying":
+      configureNowPlayingCommands()
+      result(nil)
+    case "updateNowPlayingMetadata":
+      updateNowPlayingMetadata(arguments: call.arguments)
+      result(nil)
+    case "updateNowPlayingPlaybackState":
+      let isPlaying = (call.arguments as? [String: Any])?["isPlaying"] as? Bool ?? false
+      MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
+      nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+      publishNowPlayingInfo()
+      result(nil)
+    case "updateNowPlayingPosition":
+      let milliseconds = (call.arguments as? [String: Any])?["positionMs"] as? NSNumber
+      nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = (milliseconds?.doubleValue ?? 0) / 1000
+      publishNowPlayingInfo()
+      result(nil)
+    case "updateNowPlayingPlayMode":
+      updateNowPlayingPlayMode(arguments: call.arguments)
+      result(nil)
+    case "clearNowPlaying":
+      artworkRequestID += 1
+      nowPlayingInfo = [:]
+      MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+      MPNowPlayingInfoCenter.default().playbackState = .stopped
+      result(nil)
     case "initialize":
       DispatchQueue.main.async { [weak self] in
         self?.configureShell(arguments: call.arguments)
@@ -125,6 +156,78 @@ public class MusicChannelMacosPlugin: NSObject, FlutterPlugin, FlutterStreamHand
   }
 
   private func emit(_ event: [String: Any]) { eventSink?(event) }
+
+  private func configureNowPlayingCommands() {
+    let commandCenter = MPRemoteCommandCenter.shared()
+    commandCenter.playCommand.isEnabled = true
+    commandCenter.playCommand.addTarget { [weak self] _ in self?.sendNowPlayingCommand("play") ?? .commandFailed }
+    commandCenter.pauseCommand.isEnabled = true
+    commandCenter.pauseCommand.addTarget { [weak self] _ in self?.sendNowPlayingCommand("pause") ?? .commandFailed }
+    commandCenter.nextTrackCommand.isEnabled = true
+    commandCenter.nextTrackCommand.addTarget { [weak self] _ in self?.sendNowPlayingCommand("next") ?? .commandFailed }
+    commandCenter.previousTrackCommand.isEnabled = true
+    commandCenter.previousTrackCommand.addTarget { [weak self] _ in self?.sendNowPlayingCommand("previous") ?? .commandFailed }
+    commandCenter.togglePlayPauseCommand.isEnabled = true
+    commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in self?.sendNowPlayingCommand("toggle") ?? .commandFailed }
+    commandCenter.changePlaybackPositionCommand.isEnabled = true
+    commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
+      guard let event = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
+      return self?.sendNowPlayingCommand("seek", positionMs: Int(event.positionTime * 1000)) ?? .commandFailed
+    }
+    commandCenter.changeShuffleModeCommand.isEnabled = true
+    commandCenter.changeShuffleModeCommand.addTarget { [weak self] event in
+      guard let event = event as? MPChangeShuffleModeCommandEvent else { return .commandFailed }
+      return self?.sendNowPlayingCommand(event.shuffleType == .off ? "shuffleDisabled" : "shuffleEnabled") ?? .commandFailed
+    }
+    commandCenter.changeRepeatModeCommand.isEnabled = true
+    commandCenter.changeRepeatModeCommand.addTarget { [weak self] event in
+      guard let event = event as? MPChangeRepeatModeCommandEvent else { return .commandFailed }
+      return self?.sendNowPlayingCommand(event.repeatType == .off ? "repeatNone" : "repeatLoop") ?? .commandFailed
+    }
+  }
+
+  private func updateNowPlayingMetadata(arguments: Any?) {
+    let values = arguments as? [String: Any]
+    let duration = ((values?["durationMs"] as? NSNumber)?.doubleValue ?? 0) / 1000
+    nowPlayingInfo = [
+      MPMediaItemPropertyTitle: values?["title"] as? String ?? "",
+      MPMediaItemPropertyArtist: values?["artist"] as? String ?? "",
+      MPMediaItemPropertyPlaybackDuration: duration,
+    ]
+    publishNowPlayingInfo()
+
+    guard let artworkURL = values?["artworkUrl"] as? String,
+          !artworkURL.isEmpty,
+          let url = URL(string: artworkURL) else { return }
+    artworkRequestID += 1
+    let requestID = artworkRequestID
+    DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+      guard let data = try? Data(contentsOf: url), let image = NSImage(data: data) else { return }
+      DispatchQueue.main.async {
+        guard let self, requestID == self.artworkRequestID else { return }
+        self.nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+        self.publishNowPlayingInfo()
+      }
+    }
+  }
+
+  private func publishNowPlayingInfo() {
+    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+  }
+
+  private func updateNowPlayingPlayMode(arguments: Any?) {
+    let values = arguments as? [String: Any]
+    let commandCenter = MPRemoteCommandCenter.shared()
+    commandCenter.changeShuffleModeCommand.currentShuffleType = (values?["shuffle"] as? Bool ?? false) ? .items : .off
+    commandCenter.changeRepeatModeCommand.currentRepeatType = (values?["repeat"] as? String ?? "none") == "none" ? .off : .all
+  }
+
+  private func sendNowPlayingCommand(_ command: String, positionMs: Int? = nil) -> MPRemoteCommandHandlerStatus {
+    var arguments: [String: Any] = ["command": command]
+    if let positionMs { arguments["positionMs"] = positionMs }
+    mainChannel?.invokeMethod("nowPlayingCommand", arguments: arguments)
+    return .success
+  }
 
   private var hostWindow: NSWindow? {
     NSApplication.shared.windows.first { $0.contentViewController is FlutterViewController }

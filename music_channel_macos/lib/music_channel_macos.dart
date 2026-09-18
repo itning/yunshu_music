@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'native_audio_player.dart';
 import 'native_macos_shell.dart';
+import 'native_now_playing.dart';
 
 class MusicChannelMacOS extends MusicPlatform {
   static void registerWith() {
@@ -73,6 +74,7 @@ class MusicChannelMacOS extends MusicPlatform {
   String _trayTooltip = '';
 
   late NativeMacosShell _shell;
+  late NativeNowPlaying _nowPlaying;
 
   late Map<String, dynamic> _authorizationData;
 
@@ -84,6 +86,8 @@ class MusicChannelMacOS extends MusicPlatform {
   ) async {
     _shell = NativeMacosShell(onTrayAction: _handleTrayAction);
     await _shell.initialize();
+    _nowPlaying = NativeNowPlaying(onCommand: _handleNowPlayingCommand);
+    await _nowPlaying.initialize();
 
     _metadataEventController = metadataEventController;
     _playbackStateController = playbackStateController;
@@ -94,6 +98,7 @@ class MusicChannelMacOS extends MusicPlatform {
     _playMode = valueOf(
       _sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE',
     );
+    await _syncNowPlayingPlayMode(_playMode);
 
     _player = NativeAudioPlayer();
 
@@ -101,6 +106,7 @@ class MusicChannelMacOS extends MusicPlatform {
       int position = event.inMilliseconds;
       _playbackState.position = position;
       playbackStateController.sink.add(_playbackState.toMap());
+      _nowPlaying.updatePosition(event);
     });
 
     _player.onPlayerStateChanged.listen((bool playing) {
@@ -108,12 +114,14 @@ class MusicChannelMacOS extends MusicPlatform {
       playbackStateController.sink.add(_playbackState.toMap());
       _isPlayNow = playing;
       _updateTray();
+      _nowPlaying.updatePlaybackState(isPlaying: playing);
     });
 
     _player.onPrepared.listen((duration) {
       if (duration != null) {
         _metaData.duration = duration.inMilliseconds;
         metadataEventController.sink.add(_metaData.toMap());
+        _updateNowPlayingMetadata();
       }
       _playbackState.state = MusicStatus.paused;
       _playbackStateController.sink.add(_playbackState.toMap());
@@ -149,9 +157,46 @@ class MusicChannelMacOS extends MusicPlatform {
           await play();
         }
       case NativeTrayAction.quit:
+        await _nowPlaying.clear();
         await _player.dispose();
         exit(0);
     }
+  }
+
+  Future<void> _handleNowPlayingCommand(
+    NativeNowPlayingCommand command,
+    Duration? position,
+  ) async {
+    switch (command) {
+      case NativeNowPlayingCommand.play:
+        await play();
+      case NativeNowPlayingCommand.pause:
+        await pause();
+      case NativeNowPlayingCommand.next:
+        await skipToNext();
+      case NativeNowPlayingCommand.previous:
+        await skipToPrevious();
+      case NativeNowPlayingCommand.toggle:
+        if (_isPlayNow) {
+          await pause();
+        } else {
+          await play();
+        }
+      case NativeNowPlayingCommand.seek:
+        if (position != null) await seekTo(position);
+      case NativeNowPlayingCommand.shuffleEnabled:
+        await _applyNowPlayingPlayMode(MusicPlayMode.RANDOMLY);
+      case NativeNowPlayingCommand.shuffleDisabled:
+        await _applyNowPlayingPlayMode(MusicPlayMode.SEQUENCE);
+      case NativeNowPlayingCommand.repeatLoop:
+        await _applyNowPlayingPlayMode(MusicPlayMode.LOOP);
+      case NativeNowPlayingCommand.repeatNone:
+        await _applyNowPlayingPlayMode(MusicPlayMode.SEQUENCE);
+    }
+  }
+
+  Future<void> _applyNowPlayingPlayMode(MusicPlayMode mode) async {
+    await setPlayMode(mode.name().toLowerCase());
   }
 
   void _updateTray() {
@@ -159,6 +204,24 @@ class MusicChannelMacOS extends MusicPlatform {
       title: _trayTitle,
       tooltip: _trayTooltip,
       isPlaying: _isPlayNow,
+    );
+  }
+
+  void _updateNowPlayingMetadata() {
+    var coverUri = _metaData.coverUri;
+    if (coverUri.isNotEmpty && _authorizationData['ENABLE'] == true) {
+      coverUri = sign(
+        url: coverUri,
+        pkey: _authorizationData['SIGN'],
+        signParamName: _authorizationData['SIGN_PARAM'],
+        timeParamName: _authorizationData['TIME_PARAM'],
+      );
+    }
+    _nowPlaying.updateMetadata(
+      title: _metaData.title,
+      artist: _metaData.subTitle,
+      artworkUrl: coverUri,
+      duration: Duration(milliseconds: _metaData.duration),
     );
   }
 
@@ -196,6 +259,7 @@ class MusicChannelMacOS extends MusicPlatform {
     }
     _metaData.from(_nowPlayMusic!);
     _metadataEventController.sink.add(_metaData.toMap());
+    _updateNowPlayingMetadata();
     _shell.setTitle("${_metaData.title}-${_metaData.subTitle}");
     _trayTitle = _trayTitleLabel();
     _trayTooltip = '${_nowPlayMusic!.name}-${_nowPlayMusic!.singer}';
@@ -258,6 +322,13 @@ class MusicChannelMacOS extends MusicPlatform {
     _playMode = musicPlayMode;
     _randomSet.clear();
     _sharedPreferences.setString(_playModeKey, musicPlayMode.name());
+    await _syncNowPlayingPlayMode(musicPlayMode);
+  }
+
+  Future<void> _syncNowPlayingPlayMode(MusicPlayMode mode) {
+    final shuffle = mode == MusicPlayMode.RANDOMLY;
+    final repeat = mode == MusicPlayMode.LOOP ? 'list' : 'none';
+    return _nowPlaying.updatePlayMode(shuffle: shuffle, repeat: repeat);
   }
 
   @override
