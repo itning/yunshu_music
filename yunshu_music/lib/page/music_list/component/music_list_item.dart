@@ -43,12 +43,16 @@ class MusicListItem extends StatelessWidget {
                   Text(
                     '$title',
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 16.0),
+                    style: const TextStyle(fontSize: 16.0, height: 1.0),
                   ),
                   Text(
                     '$subTitle',
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12.0, color: Colors.grey),
+                    style: const TextStyle(
+                      fontSize: 12.0,
+                      height: 1.0,
+                      color: Colors.grey,
+                    ),
                   ),
                 ],
               ),
