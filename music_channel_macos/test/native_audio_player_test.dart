@@ -53,7 +53,7 @@ void main() {
       'setVolume',
     ]);
     expect(calls[4].arguments, {'positionMs': 30000});
-    expect(calls[5].arguments, {'volume': 0.5});
+    expect(calls[5].arguments, {'volume': closeTo(0.1, 0.000001)});
     expect(player.volume, 0.5);
     await player.dispose();
   });

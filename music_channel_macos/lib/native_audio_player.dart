@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 
@@ -60,7 +61,18 @@ class NativeAudioPlayer {
   });
   Future<void> setVolume(double value) {
     _volume = value;
-    return _methodChannel.invokeMethod('setVolume', {'volume': value});
+    return _methodChannel.invokeMethod('setVolume', {
+      'volume': _toPlayerVolume(value),
+    });
+  }
+
+  double _toPlayerVolume(double value) {
+    final normalized = value.clamp(0.0, 1.0).toDouble();
+    if (normalized == 0) return 0;
+
+    const minimumDb = -40.0;
+    final decibels = minimumDb + normalized * -minimumDb;
+    return math.pow(10, decibels / 20).toDouble();
   }
 
   Future<void> dispose() async {
