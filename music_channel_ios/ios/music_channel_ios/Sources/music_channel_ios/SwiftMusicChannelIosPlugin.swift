@@ -12,6 +12,9 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin, FlutterStreamH
   private var playerStateObserver: NSKeyValueObservation?
   private var endObserver: NSObjectProtocol?
   private var periodicTimeObserver: Any?
+  private var remoteCommandsConfigured = false
+  private var artworkTask: URLSessionDataTask?
+  private var artworkRequestID = UUID()
 
   override init() {
     super.init()
@@ -21,12 +24,12 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin, FlutterStreamH
     // 监听音频路由变化（如耳机插入/拔出）
     NotificationCenter.default.addObserver(self, selector: #selector(handleRouteChange(notification:)), name: AVAudioSession.routeChangeNotification, object: session)
     playerStateObserver = player.observe(\AVPlayer.timeControlStatus, options: [.new]) { [weak self] player, _ in
-      let isPlaying = player.timeControlStatus == .playing
-      MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
-      self?.emitAudio(["event": "state", "playing": isPlaying])
+      self?.syncNowPlayingTimeline()
+      self?.emitAudio(["event": "state", "playing": player.timeControlStatus == .playing])
     }
     periodicTimeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: 600), queue: .main) { [weak self] time in
       guard time.isValid else { return }
+      self?.syncNowPlayingTimeline(position: time.seconds)
       self?.emitAudio(["event": "position", "positionMs": Int(time.seconds * 1000)])
     }
   }
@@ -35,7 +38,10 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin, FlutterStreamH
     let session = AVAudioSession.sharedInstance()
     NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: session)
     NotificationCenter.default.removeObserver(self, name: AVAudioSession.routeChangeNotification, object: session)
-    disposePlayer()
+    clearCurrentItem()
+    playerStateObserver?.invalidate()
+    if let periodicTimeObserver { player.removeTimeObserver(periodicTimeObserver) }
+    artworkTask?.cancel()
   }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -59,112 +65,24 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin, FlutterStreamH
         player.pause(); result(nil)
      case "seek":
         let milliseconds = (call.arguments as? [String: Any])?["positionMs"] as? Int ?? 0
-        player.seek(to: CMTime(value: CMTimeValue(milliseconds), timescale: 1000)) { [weak self] _ in self?.emitAudio(["event": "seekComplete"]) }
+        player.seek(to: CMTime(value: CMTimeValue(milliseconds), timescale: 1000)) { [weak self] completed in
+          guard completed else { return }
+          self?.syncNowPlayingTimeline(position: Double(milliseconds) / 1000)
+          self?.emitAudio(["event": "position", "positionMs": milliseconds])
+          self?.emitAudio(["event": "seekComplete"])
+        }
         result(nil)
      case "setVolume":
         if let volume = (call.arguments as? [String: Any])?["volume"] as? Double { player.volume = Float(volume) }
         result(nil)
      case "dispose":
-        disposePlayer(); result(nil)
-     case "init":
-        let session = AVAudioSession.sharedInstance()
-        do {
-            try session.setActive(true)
-            try session.setCategory(AVAudioSession.Category.playback)
-        } catch {
-            print(error)
-        }
-        UIApplication.shared.beginReceivingRemoteControlEvents()
-
-        let commandCenter = MPRemoteCommandCenter.shared()
-
-        // 监听播放/暂停事件
-        commandCenter.playCommand.isEnabled = true
-        commandCenter.playCommand.addTarget(self, action: #selector(playButtonTapped))
-        commandCenter.pauseCommand.isEnabled = true
-        commandCenter.pauseCommand.addTarget(self, action: #selector(pauseButtonTapped))
-
-        // 监听下一曲/上一曲事件
-        commandCenter.nextTrackCommand.isEnabled = true
-        commandCenter.nextTrackCommand.addTarget(self, action: #selector(nextButtonTapped))
-        commandCenter.previousTrackCommand.isEnabled = true
-        commandCenter.previousTrackCommand.addTarget(self, action: #selector(previousButtonTapped))
-
-        // 监听进度条拖动事件
-        commandCenter.changePlaybackPositionCommand.isEnabled = true
-        commandCenter.changePlaybackPositionCommand.addTarget(self, action: #selector(seekToTime(_:)))
-
-        // 监听播放/暂停切换事件
-        commandCenter.togglePlayPauseCommand.isEnabled = true
-        commandCenter.togglePlayPauseCommand.addTarget(self, action: #selector(togglePlayPauseButtonTapped))
-
-        result(nil)
-
-     case "setLockScreenDisplay":
-        if let args = call.arguments as? Dictionary<String, Any> {
-            DispatchQueue.global().async {
-
-                        var data:Data?
-                        do{
-                            if let url = URL(string: args["coverUri"] as? String ?? ""){
-                                data = try Data(contentsOf: url)
-                            }
-                        }catch let error{
-                            print("get cover iamge failed \(error)")
-                        }
-
-                        DispatchQueue.main.async {
-                            if data != nil {
-                                let image =  UIImage(data: data!)!
-                                let metadata: [String: Any] = [
-                                    MPMediaItemPropertyTitle:args["name"] as? String ?? "",
-                                    MPMediaItemPropertyArtist: args["singer"] as? String ?? "",
-                                    MPMediaItemPropertyAlbumTitle: args["singer"] as? String ?? "",
-                                    MPMediaItemPropertyPlaybackDuration: args["duration"] as? Int ?? 0,
-                                    MPNowPlayingInfoPropertyPlaybackRate: 1.0,
-                                    MPMediaItemPropertyArtwork: MPMediaItemArtwork(image: image)
-                                ]
-                                MPNowPlayingInfoCenter.default().nowPlayingInfo = metadata
-                            }else{
-                                let metadata: [String: Any] = [
-                                    MPMediaItemPropertyTitle: args["name"] as? String ?? "",
-                                    MPMediaItemPropertyArtist: args["singer"] as? String ?? "",
-                                    MPMediaItemPropertyAlbumTitle: args["singer"] as? String ?? "",
-                                    MPMediaItemPropertyPlaybackDuration: args["duration"] as? Int ?? 0,
-                                    MPNowPlayingInfoPropertyPlaybackRate: 1.0
-                                ]
-                                MPNowPlayingInfoCenter.default().nowPlayingInfo = metadata
-                            }
-                        }
-                    }
-            result(nil)
-        } else {
-            result(FlutterError.init(code: "error setLockScreenDisplay", message: "data or format error", details: nil))
-        }
-
-     case "setLockScreenDisplayTime":
-          if let args = call.arguments as? Dictionary<String, Any> {
-                  let duration = args["duration"] as? Int ?? 0
-
-                  let elapsedTime = args["time"] as? Int ?? 0
-
-                  var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
-                  nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
-                  nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = elapsedTime
-
-                  MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-                  result(nil)
-          } else {
-             result(FlutterError.init(code: "error setLockScreenDisplayTime", message: "data or format error", details: nil))
-          }
-
-     case "changeToPlaying":
-         MPNowPlayingInfoCenter.default().playbackState  = MPNowPlayingPlaybackState.playing
-         result(nil)
-
-     case "changeToPaused":
-         MPNowPlayingInfoCenter.default().playbackState  = MPNowPlayingPlaybackState.paused
-         result(nil)
+        clearCurrentItem(); result(nil)
+     case "init", "initializeMediaSession":
+        configureMediaSession(result: result)
+     case "updateNowPlaying":
+        updateNowPlaying(arguments: call.arguments, result: result)
+     case "updatePlaybackOptions":
+        updatePlaybackOptions(arguments: call.arguments, result: result)
 
      default:
          print("call \(call.method)")
@@ -198,15 +116,38 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin, FlutterStreamH
       guard let positionEvent = event as? MPChangePlaybackPositionCommandEvent else {
           return MPRemoteCommandHandlerStatus.commandFailed
       }
-      // 获取用户拖动到的时间点（秒）
-      let seekTime = Int(positionEvent.positionTime)
-      SwiftMusicChannelIosPlugin.channel?.invokeMethod("seekTo", arguments: ["position": seekTime])
+      SwiftMusicChannelIosPlugin.channel?.invokeMethod("seekTo", arguments: ["positionMs": Int(positionEvent.positionTime * 1000)])
        return MPRemoteCommandHandlerStatus.success
   }
 
   @objc func togglePlayPauseButtonTapped(_ event: Any) -> MPRemoteCommandHandlerStatus {
       SwiftMusicChannelIosPlugin.channel?.invokeMethod("togglePlayPause", arguments: nil)
       return MPRemoteCommandHandlerStatus.success
+  }
+
+  @objc func shuffleModeChanged(_ event: MPChangeShuffleModeCommandEvent) -> MPRemoteCommandHandlerStatus {
+      let enabled = event.shuffleType == .items
+      SwiftMusicChannelIosPlugin.channel?.invokeMethod("shuffleChanged", arguments: ["enabled": enabled])
+      return .success
+  }
+
+  @objc func repeatModeChanged(_ event: MPChangeRepeatModeCommandEvent) -> MPRemoteCommandHandlerStatus {
+      let mode: String
+      switch event.repeatType {
+      case .one: mode = "one"
+      case .all: mode = "all"
+      default: mode = "off"
+      }
+      SwiftMusicChannelIosPlugin.channel?.invokeMethod("repeatChanged", arguments: ["mode": mode])
+      return .success
+  }
+
+  @objc func skipForward(_ event: MPSkipIntervalCommandEvent) -> MPRemoteCommandHandlerStatus {
+      return skip(by: event.interval)
+  }
+
+  @objc func skipBackward(_ event: MPSkipIntervalCommandEvent) -> MPRemoteCommandHandlerStatus {
+      return skip(by: -event.interval)
   }
 
   @objc func handleInterruption(notification: Notification) {
@@ -302,6 +243,7 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin, FlutterStreamH
     }
     endObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [weak self] _ in self?.emitAudio(["event": "complete"]) }
     player.replaceCurrentItem(with: item)
+    syncNowPlayingTimeline(position: 0)
     if autoplay { player.play() }
     result(nil)
   }
@@ -312,11 +254,124 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin, FlutterStreamH
     endObserver = nil
   }
 
-  private func disposePlayer() {
+  private func clearCurrentItem() {
     player.pause(); player.replaceCurrentItem(with: nil); clearItemObservers()
-    playerStateObserver?.invalidate(); playerStateObserver = nil
-    if let periodicTimeObserver { player.removeTimeObserver(periodicTimeObserver) }
-    periodicTimeObserver = nil
+  }
+
+  private func configureMediaSession(result: @escaping FlutterResult) {
+    let session = AVAudioSession.sharedInstance()
+    do {
+      try session.setCategory(.playback, mode: .default)
+      try session.setActive(true)
+      UIApplication.shared.beginReceivingRemoteControlEvents()
+      configureRemoteCommands()
+      result(nil)
+    } catch {
+      result(FlutterError(code: "AUDIO_SESSION", message: error.localizedDescription, details: nil))
+    }
+  }
+
+  private func configureRemoteCommands() {
+    guard !remoteCommandsConfigured else { return }
+    remoteCommandsConfigured = true
+    let center = MPRemoteCommandCenter.shared()
+    center.playCommand.isEnabled = true
+    center.playCommand.addTarget(self, action: #selector(playButtonTapped))
+    center.pauseCommand.isEnabled = true
+    center.pauseCommand.addTarget(self, action: #selector(pauseButtonTapped))
+    center.togglePlayPauseCommand.isEnabled = true
+    center.togglePlayPauseCommand.addTarget(self, action: #selector(togglePlayPauseButtonTapped))
+    center.nextTrackCommand.isEnabled = true
+    center.nextTrackCommand.addTarget(self, action: #selector(nextButtonTapped))
+    center.previousTrackCommand.isEnabled = true
+    center.previousTrackCommand.addTarget(self, action: #selector(previousButtonTapped))
+    center.changePlaybackPositionCommand.isEnabled = true
+    center.changePlaybackPositionCommand.addTarget(self, action: #selector(seekToTime(_:)))
+    center.skipForwardCommand.isEnabled = true
+    center.skipForwardCommand.preferredIntervals = [15]
+    center.skipForwardCommand.addTarget(self, action: #selector(skipForward(_:)))
+    center.skipBackwardCommand.isEnabled = true
+    center.skipBackwardCommand.preferredIntervals = [15]
+    center.skipBackwardCommand.addTarget(self, action: #selector(skipBackward(_:)))
+    center.changeShuffleModeCommand.isEnabled = true
+    center.changeShuffleModeCommand.addTarget(self, action: #selector(shuffleModeChanged(_:)))
+    center.changeRepeatModeCommand.isEnabled = true
+    center.changeRepeatModeCommand.addTarget(self, action: #selector(repeatModeChanged(_:)))
+  }
+
+  private func updateNowPlaying(arguments: Any?, result: @escaping FlutterResult) {
+    guard let arguments = arguments as? [String: Any] else {
+      result(FlutterError(code: "NOW_PLAYING_ARGUMENTS", message: "Expected Now Playing metadata.", details: nil))
+      return
+    }
+    let duration = (arguments["durationMs"] as? NSNumber)?.doubleValue ?? 0
+    let queueIndex = (arguments["queueIndex"] as? NSNumber)?.intValue ?? 0
+    let queueCount = (arguments["queueCount"] as? NSNumber)?.intValue ?? 0
+    MPNowPlayingInfoCenter.default().nowPlayingInfo = [
+      MPMediaItemPropertyTitle: arguments["title"] as? String ?? "",
+      MPMediaItemPropertyArtist: arguments["artist"] as? String ?? "",
+      MPMediaItemPropertyPlaybackDuration: duration / 1000,
+      MPNowPlayingInfoPropertyPlaybackQueueIndex: queueIndex,
+      MPNowPlayingInfoPropertyPlaybackQueueCount: queueCount,
+      MPNowPlayingInfoPropertyElapsedPlaybackTime: player.currentTime().seconds.isFinite ? player.currentTime().seconds : 0,
+      MPNowPlayingInfoPropertyPlaybackRate: player.timeControlStatus == .playing ? player.rate : 0,
+    ]
+    loadArtwork(from: arguments["artworkUrl"] as? String ?? "")
+    result(nil)
+  }
+
+  private func updatePlaybackOptions(arguments: Any?, result: @escaping FlutterResult) {
+    guard let arguments = arguments as? [String: Any] else {
+      result(FlutterError(code: "PLAYBACK_OPTIONS_ARGUMENTS", message: "Expected playback options.", details: nil))
+      return
+    }
+    let center = MPRemoteCommandCenter.shared()
+    center.changeShuffleModeCommand.currentShuffleType = (arguments["shuffle"] as? Bool ?? false) ? .items : .off
+    switch arguments["repeatMode"] as? String {
+    case "one": center.changeRepeatModeCommand.currentRepeatType = .one
+    case "all": center.changeRepeatModeCommand.currentRepeatType = .all
+    default: center.changeRepeatModeCommand.currentRepeatType = .off
+    }
+    result(nil)
+  }
+
+  private func syncNowPlayingTimeline(position: Double? = nil) {
+    guard var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
+    let elapsed = position ?? player.currentTime().seconds
+    guard elapsed.isFinite else { return }
+    info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = elapsed
+    info[MPNowPlayingInfoPropertyPlaybackRate] = player.timeControlStatus == .playing ? player.rate : 0
+    MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+  }
+
+  private func skip(by interval: TimeInterval) -> MPRemoteCommandHandlerStatus {
+    let duration = player.currentItem?.duration.seconds ?? 0
+    guard duration.isFinite, duration > 0 else { return .commandFailed }
+    let target = min(max(player.currentTime().seconds + interval, 0), duration)
+    player.seek(to: CMTime(seconds: target, preferredTimescale: 1000)) { [weak self] completed in
+      guard completed else { return }
+      self?.syncNowPlayingTimeline(position: target)
+      self?.emitAudio(["event": "position", "positionMs": Int(target * 1000)])
+      self?.emitAudio(["event": "seekComplete"])
+    }
+    return .success
+  }
+
+  private func loadArtwork(from rawURL: String) {
+    artworkTask?.cancel()
+    artworkRequestID = UUID()
+    let requestID = artworkRequestID
+    guard let url = URL(string: rawURL), !rawURL.isEmpty else { return }
+    artworkTask = URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+      guard let self, requestID == self.artworkRequestID, let data, let image = UIImage(data: data) else { return }
+      DispatchQueue.main.async {
+        guard requestID == self.artworkRequestID else { return }
+        var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+        info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+      }
+    }
+    artworkTask?.resume()
   }
 
   private func emitAudio(_ event: [String: Any]) { audioEventSink?(event) }

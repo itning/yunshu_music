@@ -40,6 +40,16 @@ void main() {
     await player.resume();
     await player.pause();
     await player.seek(const Duration(seconds: 30));
+    await player.initializeMediaSession();
+    await player.updateNowPlaying(
+      title: 'Song',
+      artist: 'Artist',
+      artworkUrl: 'https://example.com/cover.jpg',
+      duration: const Duration(minutes: 3),
+      queueIndex: 1,
+      queueCount: 4,
+    );
+    await player.updatePlaybackOptions(shuffle: true, repeatMode: 'all');
     await player.setVolume(0.5);
     expect(calls.map((call) => call.method), [
       'setSource',
@@ -47,10 +57,22 @@ void main() {
       'resume',
       'pause',
       'seek',
+      'initializeMediaSession',
+      'updateNowPlaying',
+      'updatePlaybackOptions',
       'setVolume',
     ]);
     expect(calls[4].arguments, {'positionMs': 30000});
-    expect(calls[5].arguments, {'volume': 0.5});
+    expect(calls[6].arguments, {
+      'title': 'Song',
+      'artist': 'Artist',
+      'artworkUrl': 'https://example.com/cover.jpg',
+      'durationMs': 180000,
+      'queueIndex': 1,
+      'queueCount': 4,
+    });
+    expect(calls[7].arguments, {'shuffle': true, 'repeatMode': 'all'});
+    expect(calls[8].arguments, {'volume': 0.5});
     expect(player.volume, 0.5);
     await player.dispose();
   });

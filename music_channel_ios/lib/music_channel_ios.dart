@@ -86,9 +86,15 @@ class MusicChannelIos extends MusicPlatform {
         case 'previousButtonTapped':
           await skipToPrevious();
         case "seekTo":
-          await seekTo(Duration(seconds: call.arguments["position"]));
+          await seekTo(Duration(milliseconds: call.arguments["positionMs"]));
         case 'togglePlayPause':
           _isPlayNow ? await pause() : await play();
+        case 'shuffleChanged':
+          final enabled = (call.arguments as Map?)?['enabled'] == true;
+          await setPlayMode(enabled ? 'RANDOMLY' : 'SEQUENCE');
+        case 'repeatChanged':
+          final mode = (call.arguments as Map?)?['mode'];
+          await setPlayMode(mode == 'one' ? 'LOOP' : 'SEQUENCE');
         case 'headphonesUnplugged':
         case 'audioInterruptionBegan':
           if (_isPlayNow) {
@@ -100,55 +106,32 @@ class MusicChannelIos extends MusicPlatform {
       }
     });
 
-    _channel.invokeMethod("init");
-
     _nowPlayIndex = -1;
     _playMode = valueOf(
       _sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE',
     );
 
     _player = NativeAudioPlayer();
+    await _player.initializeMediaSession();
 
     _player.onPositionChanged.listen((Duration event) {
       int position = event.inMilliseconds;
       _playbackState.position = position;
       playbackStateController.sink.add(_playbackState.toMap());
-      _channel.invokeMethod("setLockScreenDisplayTime", {
-        "duration": Duration(milliseconds: _metaData.duration).inSeconds,
-        "time": event.inSeconds,
-      });
     });
 
     _player.onPlayerStateChanged.listen((bool playing) {
       _playbackState.state = playing ? MusicStatus.playing : MusicStatus.paused;
       playbackStateController.sink.add(_playbackState.toMap());
       _isPlayNow = playing;
-      _channel.invokeMethod(playing ? "changeToPlaying" : "changeToPaused");
     });
 
     _player.onPrepared.listen((duration) {
       if (duration != null) {
         _metaData.duration = duration.inMilliseconds;
         metadataEventController.sink.add(_metaData.toMap());
-        String coverUri = _nowPlayMusic!.coverUri!;
-        if (_authorizationData["ENABLE"]) {
-          coverUri = sign(
-            url: _nowPlayMusic!.coverUri!,
-            pkey: _authorizationData['SIGN'],
-            signParamName: _authorizationData['SIGN_PARAM'],
-            timeParamName: _authorizationData['TIME_PARAM'],
-          );
-        }
-        _channel.invokeMethod("setLockScreenDisplay", {
-          "name": _nowPlayMusic!.name,
-          "singer": _nowPlayMusic!.singer,
-          "coverUri": coverUri,
-          "duration": duration.inSeconds,
-        });
+        _syncNowPlaying();
       }
-      _playbackState.state = MusicStatus.paused;
-      _playbackStateController.sink.add(_playbackState.toMap());
-      _channel.invokeMethod("changeToPaused");
     });
     _player.onComplete.listen((_) {
       _playbackState.state = MusicStatus.none;
@@ -160,7 +143,6 @@ class MusicChannelIos extends MusicPlatform {
       _playbackState.state = MusicStatus.none;
       _playbackStateController.sink.add(_playbackState.toMap());
       _isPlayNow = false;
-      _channel.invokeMethod("changeToPaused");
     });
 
     _playbackState.state = MusicStatus.none;
@@ -176,14 +158,7 @@ class MusicChannelIos extends MusicPlatform {
     _playbackState.state = MusicStatus.connecting;
     _playbackStateController.sink.add(_playbackState.toMap());
     String musicUri = _nowPlayMusic!.musicUri!;
-    String coverUri = _nowPlayMusic!.coverUri!;
     if (_authorizationData["ENABLE"]) {
-      coverUri = sign(
-        url: _nowPlayMusic!.coverUri!,
-        pkey: _authorizationData['SIGN'],
-        signParamName: _authorizationData['SIGN_PARAM'],
-        timeParamName: _authorizationData['TIME_PARAM'],
-      );
       musicUri = sign(
         url: _nowPlayMusic!.musicUri!,
         pkey: _authorizationData['SIGN'],
@@ -191,19 +166,16 @@ class MusicChannelIos extends MusicPlatform {
         timeParamName: _authorizationData['TIME_PARAM'],
       );
     }
-    _channel.invokeMethod("setLockScreenDisplay", {
-      "name": _nowPlayMusic!.name,
-      "singer": _nowPlayMusic!.singer,
-      "coverUri": coverUri,
-      "duration": 0,
-    });
+    _metaData.duration = 0;
+    _metaData.from(_nowPlayMusic!);
+    _metadataEventController.sink.add(_metaData.toMap());
+    _playbackState.position = 0;
+    _syncNowPlaying();
     if (autoStart) {
       _player.play(musicUri);
     } else {
       _player.setSourceUrl(musicUri);
     }
-    _metaData.from(_nowPlayMusic!);
-    _metadataEventController.sink.add(_metaData.toMap());
   }
 
   @override
@@ -262,7 +234,41 @@ class MusicChannelIos extends MusicPlatform {
     _playMode = musicPlayMode;
     _randomSet.clear();
     _sharedPreferences.setString(_playModeKey, musicPlayMode.name());
+    await _syncNowPlayingPlaybackOptions();
   }
+
+  void _syncNowPlaying() {
+    final music = _nowPlayMusic;
+    if (music == null) return;
+    var artworkUrl = music.coverUri ?? '';
+    if (artworkUrl.isNotEmpty && _authorizationData['ENABLE'] == true) {
+      artworkUrl = sign(
+        url: artworkUrl,
+        pkey: _authorizationData['SIGN'],
+        signParamName: _authorizationData['SIGN_PARAM'],
+        timeParamName: _authorizationData['TIME_PARAM'],
+      );
+    }
+    _player.updateNowPlaying(
+      title: music.name ?? '',
+      artist: music.singer ?? '',
+      artworkUrl: artworkUrl,
+      duration: Duration(milliseconds: _metaData.duration),
+      queueIndex: _nowPlayIndex < 0 ? 0 : _nowPlayIndex,
+      queueCount: _playList.length,
+    );
+    _syncNowPlayingPlaybackOptions();
+  }
+
+  Future<void> _syncNowPlayingPlaybackOptions() =>
+      _player.updatePlaybackOptions(
+        shuffle: _playMode == MusicPlayMode.RANDOMLY,
+        repeatMode: switch (_playMode) {
+          MusicPlayMode.LOOP => 'one',
+          MusicPlayMode.SEQUENCE => 'all',
+          MusicPlayMode.RANDOMLY => 'all',
+        },
+      );
 
   @override
   Future<String> getPlayMode() async {

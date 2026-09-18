@@ -60,6 +60,33 @@ class NativeAudioPlayer {
     return _methodChannel.invokeMethod('setVolume', {'volume': value});
   }
 
+  Future<void> initializeMediaSession() =>
+      _methodChannel.invokeMethod('initializeMediaSession');
+
+  Future<void> updateNowPlaying({
+    required String title,
+    required String artist,
+    required String artworkUrl,
+    required Duration duration,
+    required int queueIndex,
+    required int queueCount,
+  }) => _methodChannel.invokeMethod('updateNowPlaying', {
+    'title': title,
+    'artist': artist,
+    'artworkUrl': artworkUrl,
+    'durationMs': duration.inMilliseconds,
+    'queueIndex': queueIndex,
+    'queueCount': queueCount,
+  });
+
+  Future<void> updatePlaybackOptions({
+    required bool shuffle,
+    required String repeatMode,
+  }) => _methodChannel.invokeMethod('updatePlaybackOptions', {
+    'shuffle': shuffle,
+    'repeatMode': repeatMode,
+  });
+
   Future<void> dispose() async {
     await _subscription.cancel();
     await _eventsController.close();
