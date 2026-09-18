@@ -3,9 +3,15 @@ import UIKit
 import AVFoundation
 import MediaPlayer
 
-public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin {
+public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
   static var channel:FlutterMethodChannel?
+  private let player = AVPlayer()
+  private var audioEventSink: FlutterEventSink?
+  private var itemStatusObserver: NSKeyValueObservation?
+  private var playerStateObserver: NSKeyValueObservation?
+  private var endObserver: NSObjectProtocol?
+  private var periodicTimeObserver: Any?
 
   override init() {
     super.init()
@@ -14,22 +20,52 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin {
     NotificationCenter.default.addObserver(self, selector: #selector(handleInterruption(notification:)), name: AVAudioSession.interruptionNotification, object: session)
     // 监听音频路由变化（如耳机插入/拔出）
     NotificationCenter.default.addObserver(self, selector: #selector(handleRouteChange(notification:)), name: AVAudioSession.routeChangeNotification, object: session)
+    playerStateObserver = player.observe(\AVPlayer.timeControlStatus, options: [.new]) { [weak self] player, _ in
+      let isPlaying = player.timeControlStatus == .playing
+      MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
+      self?.emitAudio(["event": "state", "playing": isPlaying])
+    }
+    periodicTimeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: 600), queue: .main) { [weak self] time in
+      guard time.isValid else { return }
+      self?.emitAudio(["event": "position", "positionMs": Int(time.seconds * 1000)])
+    }
   }
 
   deinit {
     let session = AVAudioSession.sharedInstance()
     NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: session)
     NotificationCenter.default.removeObserver(self, name: AVAudioSession.routeChangeNotification, object: session)
+    disposePlayer()
   }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     channel = FlutterMethodChannel(name: "music_channel_ios", binaryMessenger: registrar.messenger())
     let instance = SwiftMusicChannelIosPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel!)
+    let audioChannel = FlutterMethodChannel(name: "music_channel_ios/audio", binaryMessenger: registrar.messenger())
+    registrar.addMethodCallDelegate(instance, channel: audioChannel)
+    FlutterEventChannel(name: "music_channel_ios/audio/events", binaryMessenger: registrar.messenger()).setStreamHandler(instance)
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
      switch call.method {
+     case "setSource":
+        loadAudio(arguments: call.arguments, autoplay: false, result: result)
+     case "play":
+        loadAudio(arguments: call.arguments, autoplay: true, result: result)
+     case "resume":
+        player.play(); result(nil)
+     case "pause":
+        player.pause(); result(nil)
+     case "seek":
+        let milliseconds = (call.arguments as? [String: Any])?["positionMs"] as? Int ?? 0
+        player.seek(to: CMTime(value: CMTimeValue(milliseconds), timescale: 1000)) { [weak self] _ in self?.emitAudio(["event": "seekComplete"]) }
+        result(nil)
+     case "setVolume":
+        if let volume = (call.arguments as? [String: Any])?["volume"] as? Double { player.volume = Float(volume) }
+        result(nil)
+     case "dispose":
+        disposePlayer(); result(nil)
      case "init":
         let session = AVAudioSession.sharedInstance()
         do {
@@ -237,4 +273,51 @@ public class SwiftMusicChannelIosPlugin: NSObject, FlutterPlugin {
         break
     }
  }
+
+  public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    audioEventSink = events
+    return nil
+  }
+
+  public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    audioEventSink = nil
+    return nil
+  }
+
+  private func loadAudio(arguments: Any?, autoplay: Bool, result: @escaping FlutterResult) {
+    guard let rawURL = (arguments as? [String: Any])?["url"] as? String, let url = URL(string: rawURL) else {
+      result(FlutterError(code: "INVALID_URL", message: "A valid playback URL is required", details: nil))
+      return
+    }
+    clearItemObservers()
+    let item = AVPlayerItem(url: url)
+    itemStatusObserver = item.observe(\AVPlayerItem.status, options: [.new]) { [weak self] item, _ in
+      guard let self else { return }
+      if item.status == .readyToPlay {
+        let seconds = item.duration.seconds
+        self.emitAudio(["event": "prepared", "durationMs": seconds.isFinite ? Int(seconds * 1000) : NSNull()])
+      } else if item.status == .failed {
+        self.emitAudio(["event": "error", "message": item.error?.localizedDescription ?? "Unable to load audio"])
+      }
+    }
+    endObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [weak self] _ in self?.emitAudio(["event": "complete"]) }
+    player.replaceCurrentItem(with: item)
+    if autoplay { player.play() }
+    result(nil)
+  }
+
+  private func clearItemObservers() {
+    itemStatusObserver?.invalidate(); itemStatusObserver = nil
+    if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
+    endObserver = nil
+  }
+
+  private func disposePlayer() {
+    player.pause(); player.replaceCurrentItem(with: nil); clearItemObservers()
+    playerStateObserver?.invalidate(); playerStateObserver = nil
+    if let periodicTimeObserver { player.removeTimeObserver(periodicTimeObserver) }
+    periodicTimeObserver = nil
+  }
+
+  private func emitAudio(_ event: [String: Any]) { audioEventSink?(event) }
 }

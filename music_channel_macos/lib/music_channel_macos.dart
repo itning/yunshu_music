@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'package:music_platform_interface/encryption_tool.dart';
 import 'package:music_platform_interface/music_model.dart';
@@ -12,6 +11,8 @@ import 'package:music_platform_interface/music_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
+
+import 'native_audio_player.dart';
 
 class MusicChannelMacOS extends MusicPlatform with TrayListener {
   static void registerWith() {
@@ -30,7 +31,7 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
   static const String _playListKey = "PLAY_LIST";
 
   /// 播放实例
-  late AudioPlayer _player;
+  late NativeAudioPlayer _player;
 
   /// 播放元数据信息：歌曲信息，时长等。
   late StreamController<dynamic> _metadataEventController;
@@ -94,9 +95,7 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
       _sharedPreferences.getString(_playModeKey) ?? 'SEQUENCE',
     );
 
-    _player = AudioPlayer(playerId: "69420");
-    _player.setReleaseMode(ReleaseMode.stop);
-    _player.setPlayerMode(PlayerMode.mediaPlayer);
+    _player = NativeAudioPlayer();
 
     _menu = Menu(
       items: [
@@ -126,40 +125,32 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
       playbackStateController.sink.add(_playbackState.toMap());
     });
 
-    _player.onPlayerStateChanged.listen((PlayerState event) {
-      if (PlayerState.completed == event) {
-        return;
-      }
-      bool playing = PlayerState.playing == event;
+    _player.onPlayerStateChanged.listen((bool playing) {
       _playbackState.state = playing ? MusicStatus.playing : MusicStatus.paused;
       playbackStateController.sink.add(_playbackState.toMap());
       _isPlayNow = playing;
       _upContextMenu();
     });
 
-    _player.eventStream.listen((AudioEvent event) {
-      switch (event.eventType) {
-        case AudioEventType.log:
-          break;
-        case AudioEventType.duration:
-          if (null != event.duration) {
-            int duration = event.duration!.inMilliseconds;
-            _metaData.duration = duration;
-            metadataEventController.sink.add(_metaData.toMap());
-          }
-        case AudioEventType.seekComplete:
-          break;
-        case AudioEventType.complete:
-          _playbackState.state = MusicStatus.none;
-          playbackStateController.sink.add(_playbackState.toMap());
-          next(false);
-          initPlay(autoStart: true);
-        case AudioEventType.prepared:
-          if (event.isPrepared ?? false) {
-            _playbackState.state = MusicStatus.paused;
-            _playbackStateController.sink.add(_playbackState.toMap());
-          }
+    _player.onPrepared.listen((duration) {
+      if (duration != null) {
+        _metaData.duration = duration.inMilliseconds;
+        metadataEventController.sink.add(_metaData.toMap());
       }
+      _playbackState.state = MusicStatus.paused;
+      _playbackStateController.sink.add(_playbackState.toMap());
+    });
+    _player.onComplete.listen((_) {
+      _playbackState.state = MusicStatus.none;
+      playbackStateController.sink.add(_playbackState.toMap());
+      next(false);
+      initPlay(autoStart: true);
+    });
+    _player.onError.listen((_) {
+      _playbackState.state = MusicStatus.none;
+      _playbackStateController.sink.add(_playbackState.toMap());
+      _isPlayNow = false;
+      _upContextMenu();
     });
 
     _playbackState.state = MusicStatus.none;
@@ -205,7 +196,7 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
       );
     }
     if (autoStart) {
-      _player.play(UrlSource(url));
+      _player.play(url);
     } else {
       _player.setSourceUrl(url);
     }
@@ -485,9 +476,7 @@ class MusicChannelMacOS extends MusicPlatform with TrayListener {
         .toList();
     if (canPlayList.isEmpty) {
       _randomSet.clear();
-      canPlayList = _musicList
-          .where((item) => item != _nowPlayMusic)
-          .toList();
+      canPlayList = _musicList.where((item) => item != _nowPlayMusic).toList();
     }
     if (canPlayList.isEmpty) {
       canPlayList = _musicList;
