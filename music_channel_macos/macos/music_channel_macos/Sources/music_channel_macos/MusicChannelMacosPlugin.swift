@@ -1,5 +1,6 @@
 import AVFoundation
 import Cocoa
+import CoreAudio
 import FlutterMacOS
 import MediaPlayer
 
@@ -18,6 +19,13 @@ public class MusicChannelMacosPlugin: NSObject, FlutterPlugin, FlutterStreamHand
   private var playMenuItem: NSMenuItem?
   private var nowPlayingInfo: [String: Any] = [:]
   private var artworkRequestID = 0
+  private var sleepObserver: NSObjectProtocol?
+  private var wakeObserver: NSObjectProtocol?
+  private var outputDeviceObserver: AudioObjectPropertyListenerBlock?
+  private lazy var interruptionController = PlaybackInterruptionController(
+    isPlaying: { [weak self] in self?.player.timeControlStatus == .playing },
+    pause: { [weak self] in self?.player.pause() }
+  )
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let instance = MusicChannelMacosPlugin()
@@ -42,6 +50,7 @@ public class MusicChannelMacosPlugin: NSObject, FlutterPlugin, FlutterStreamHand
       guard time.isValid else { return }
       self?.emit(["event": "position", "positionMs": Int(time.seconds * 1000)])
     }
+    observePlaybackInterruptions()
   }
 
   deinit { disposePlayer() }
@@ -153,6 +162,65 @@ public class MusicChannelMacosPlugin: NSObject, FlutterPlugin, FlutterStreamHand
     playerStateObserver?.invalidate(); playerStateObserver = nil
     if let periodicTimeObserver { player.removeTimeObserver(periodicTimeObserver) }
     periodicTimeObserver = nil
+    removePlaybackInterruptionObservers()
+  }
+
+  private func observePlaybackInterruptions() {
+    let notificationCenter = NSWorkspace.shared.notificationCenter
+    sleepObserver = notificationCenter.addObserver(
+      forName: NSWorkspace.willSleepNotification,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      self?.interruptionController.handle(.systemSleep)
+    }
+    wakeObserver = notificationCenter.addObserver(
+      forName: NSWorkspace.didWakeNotification,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      self?.interruptionController.handle(.systemWake)
+    }
+
+    var address = AudioObjectPropertyAddress(
+      mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+      mScope: kAudioObjectPropertyScopeGlobal,
+      mElement: kAudioObjectPropertyElementMain
+    )
+    let observer: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+      DispatchQueue.main.async {
+        self?.interruptionController.handle(.outputDeviceChanged)
+      }
+    }
+    guard AudioObjectAddPropertyListenerBlock(
+      AudioObjectID(kAudioObjectSystemObject),
+      &address,
+      .main,
+      observer
+    ) == noErr else { return }
+    outputDeviceObserver = observer
+  }
+
+  private func removePlaybackInterruptionObservers() {
+    let notificationCenter = NSWorkspace.shared.notificationCenter
+    if let sleepObserver { notificationCenter.removeObserver(sleepObserver) }
+    sleepObserver = nil
+    if let wakeObserver { notificationCenter.removeObserver(wakeObserver) }
+    wakeObserver = nil
+
+    guard let outputDeviceObserver else { return }
+    var address = AudioObjectPropertyAddress(
+      mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+      mScope: kAudioObjectPropertyScopeGlobal,
+      mElement: kAudioObjectPropertyElementMain
+    )
+    AudioObjectRemovePropertyListenerBlock(
+      AudioObjectID(kAudioObjectSystemObject),
+      &address,
+      .main,
+      outputDeviceObserver
+    )
+    self.outputDeviceObserver = nil
   }
 
   private func emit(_ event: [String: Any]) { eventSink?(event) }
