@@ -33,19 +33,13 @@ jobs:
         run: |
           cd yunshu_music
           flutter build ios --release --no-codesign
-          flutter build macos --release
+          ./build_dmg.sh
           
       - name: Zip_ios
         uses: thedoctor0/zip-release@master
         with:
          filename: 'ios.zip'
          path: 'yunshu_music/build/ios/iphoneos'
-
-      - name: Zip_mac
-        uses: thedoctor0/zip-release@master
-        with:
-         filename: 'mac_arm64.zip'
-         path: 'yunshu_music/build/macos/Build/Products/Release'
 
       - name: Create Github ios Release
         uses: ncipollo/release-action@v1
@@ -55,10 +49,10 @@ jobs:
           draft: true
           allowUpdates: true
 
-      - name: Create Github mac_arm64 Release
+      - name: Create Github macOS Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "mac_arm64.zip"
+          artifacts: "yunshu_music/build/云舒音乐.dmg"
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           allowUpdates: true
