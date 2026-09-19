@@ -16,7 +16,7 @@ class MusicIndexPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-        canPop: false,
+      canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (!kIsWeb && !didPop) {
           MusicChannel.get().minimizeApp();
