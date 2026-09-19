@@ -31,7 +31,8 @@ class MusicChannel {
   late Stream<double> volumeEvent;
 
   bool supportMusicChannel() {
-    return kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isIOS;
+    return !_isAndroid &&
+        (kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isIOS);
   }
 
   /// 播放模式变更事件（如系统媒体控件触发的随机/循环切换）
@@ -91,7 +92,12 @@ class MusicChannel {
         LoginModel.get().getAuthorizationData(),
       );
     }
-    await _methodChannel.invokeMethod("init");
+    await _methodChannel.invokeMethod("init", {
+      'musicList': MusicDataModel.get().musicList
+          .map((e) => e.toJson())
+          .toList(),
+      'autoPlay': false,
+    });
   }
 
   Future<void> playFromId(String id) async {

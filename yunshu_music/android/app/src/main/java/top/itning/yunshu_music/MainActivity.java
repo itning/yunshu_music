@@ -89,24 +89,28 @@ public class MainActivity extends FlutterActivity {
         methodChannel.setMethodCallHandler((call, result) -> {
             switch (call.method) {
                 case "init":
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, String>> initialMusicList = call.argument("musicList");
                     methodChannel.invokeMethod("getAuthorizationData", null, new MethodChannel.Result() {
                         @Override
                         public void success(@Nullable Object response) {
-                            if (null == response) {
-                                return;
+                            if (response != null) {
+                                @SuppressWarnings("unchecked")
+                                Map<String, Object> data = (Map<String, Object>) response;
+                                MusicChannel.authorizationData = data;
                             }
-                            @SuppressWarnings("unchecked")
-                            Map<String, Object> data = (Map<String, Object>) response;
-                            MusicChannel.authorizationData = data;
+                            updateMusicList(initialMusicList, false);
                         }
 
                         @Override
                         public void error(@NonNull String errorCode, @Nullable String errorMessage, @Nullable Object errorDetails) {
                             Log.e(TAG, "getAuthorizationData error " + errorCode + " " + errorMessage + " " + errorDetails);
+                            updateMusicList(initialMusicList, false);
                         }
 
                         @Override
                         public void notImplemented() {
+                            updateMusicList(initialMusicList, false);
                         }
                     });
                     result.success(null);
@@ -322,16 +326,7 @@ public class MainActivity extends FlutterActivity {
                 }
                 @SuppressWarnings("unchecked")
                 List<Map<String, String>> musicList = (List<Map<String, String>>) response;
-                List<MediaItem> items = musicList.stream()
-                        .map(m -> MusicPlayDataService.buildMediaItem(
-                                m.get("musicId"), m.get("musicUri"), m.get("name"), m.get("singer"),
-                                m.get("coverUri"), m.get("lyricUri")))
-                        .collect(Collectors.toList());
-                MusicChannel.musicPlayDataService.addMusic(items);
-                MediaItem now = MusicChannel.musicPlayDataService.getNowPlayMusic();
-                if (now != null) {
-                    sendCustomCommand(MediaPlayerImpl.ACTION_PLAY_FROM_ID, now.mediaId);
-                }
+                updateMusicList(musicList, false);
             }
 
             @Override
@@ -344,12 +339,33 @@ public class MainActivity extends FlutterActivity {
         });
     }
 
+    private void updateMusicList(@Nullable List<Map<String, String>> musicList, boolean autoPlay) {
+        if (musicList == null) {
+            return;
+        }
+        List<MediaItem> items = musicList.stream()
+                .map(m -> MusicPlayDataService.buildMediaItem(
+                        m.get("musicId"), m.get("musicUri"), m.get("name"), m.get("singer"),
+                        m.get("coverUri"), m.get("lyricUri")))
+                .collect(Collectors.toList());
+        MusicChannel.musicPlayDataService.addMusic(items);
+        MediaItem now = MusicChannel.musicPlayDataService.getNowPlayMusic();
+        if (now != null) {
+            sendCustomCommand(MediaPlayerImpl.ACTION_PLAY_FROM_ID, now.mediaId, autoPlay);
+        }
+    }
+
     private void sendCustomCommand(String action, String id) {
+        sendCustomCommand(action, id, true);
+    }
+
+    private void sendCustomCommand(String action, String id, boolean autoPlay) {
         SessionCommand command = new SessionCommand(action, new Bundle());
         Bundle args = new Bundle();
         if (id != null) {
             args.putString("id", id);
         }
+        args.putBoolean("autoPlay", autoPlay);
         if (controller == null) {
             Log.w(TAG, "controller not ready, drop " + action);
             return;
