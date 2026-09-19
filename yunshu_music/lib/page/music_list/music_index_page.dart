@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app_minimizer_plus/flutter_app_minimizer_plus.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yunshu_music/hotkey/action.dart';
 import 'package:yunshu_music/hotkey/intent.dart';
+import 'package:yunshu_music/method_channel/music_channel.dart';
 import 'package:yunshu_music/page/music_list/component/music_list.dart';
 import 'package:yunshu_music/page/music_list/component/music_mini_play_controller_widget.dart';
 import 'package:yunshu_music/page/music_list/component/music_search_delegate.dart';
@@ -16,10 +16,10 @@ class MusicIndexPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+        canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (!kIsWeb && !didPop) {
-          FlutterAppMinimizerPlus.minimizeApp();
+          MusicChannel.get().minimizeApp();
         }
       },
       child: Actions(

@@ -193,6 +193,14 @@ class MusicChannel {
     }
   }
 
+  /// 将 Android 应用移动到后台。
+  Future<void> minimizeApp() async {
+    if (kIsWeb || !Platform.isAndroid) {
+      return;
+    }
+    await _methodChannel.invokeMethod('minimizeApp');
+  }
+
   /// web 端「添加到主屏幕」是否可用
   bool get canInstallPwa => kIsWeb && channel.canInstallPwa;
 

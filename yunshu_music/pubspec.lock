@@ -174,14 +174,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_app_minimizer_plus:
-    dependency: "direct main"
-    description:
-      name: flutter_app_minimizer_plus
-      sha256: f237d37b9b294a6f55b3397ec9f3e15c8933d1848106a062e451631df915acb5
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.3"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:

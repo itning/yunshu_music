@@ -17,7 +17,6 @@ dependencies:
   provider: ^6.1.5+1
   tuple: ^2.0.2
   dio: ^5.11.1
-  flutter_app_minimizer_plus: ^1.0.3
   shared_preferences: ^2.5.5
   shimmer: ^4.0.0
   audio_video_progress_bar: ^2.0.3
