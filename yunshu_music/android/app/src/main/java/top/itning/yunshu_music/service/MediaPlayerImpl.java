@@ -71,12 +71,12 @@ public class MediaPlayerImpl implements MediaSession.Callback, Player.Listener {
             @NonNull MediaSession.ControllerInfo controller,
             @NonNull SessionCommand command,
             @NonNull Bundle args) {
-        String action = command.customAction;
-        if (ACTION_PLAY_FROM_ID.equals(action)) {
-            String id = args.getString("id");
-            if (id != null) {
-                handlePlayFromId(id);
-            }
+            String action = command.customAction;
+            if (ACTION_PLAY_FROM_ID.equals(action)) {
+                String id = args.getString("id");
+                if (id != null) {
+                    handlePlayFromId(id, args.getBoolean("autoPlay", true));
+                }
             return Futures.immediateFuture(new SessionResult(SessionResult.RESULT_SUCCESS));
         } else if (ACTION_SKIP_NEXT.equals(action)) {
             handleNext(true);
@@ -119,11 +119,11 @@ public class MediaPlayerImpl implements MediaSession.Callback, Player.Listener {
         }
     }
 
-    private void handlePlayFromId(String id) {
+    private void handlePlayFromId(String id, boolean autoPlay) {
         Log.d(TAG, "handlePlayFromId " + id);
         ensureListLoaded(() -> {
             musicPlayDataService.playFromMediaId(id);
-            playCurrent();
+            playCurrent(autoPlay);
         });
     }
 
@@ -132,7 +132,7 @@ public class MediaPlayerImpl implements MediaSession.Callback, Player.Listener {
         player.stop();
         ensureListLoaded(() -> {
             musicPlayDataService.next(userTrigger);
-            playCurrent();
+            playCurrent(true);
         });
     }
 
@@ -141,7 +141,7 @@ public class MediaPlayerImpl implements MediaSession.Callback, Player.Listener {
         player.stop();
         ensureListLoaded(() -> {
             musicPlayDataService.previous(userTrigger);
-            playCurrent();
+            playCurrent(true);
         });
     }
 
@@ -185,14 +185,19 @@ public class MediaPlayerImpl implements MediaSession.Callback, Player.Listener {
         });
     }
 
-    private void playCurrent() {
+    private void playCurrent(boolean autoPlay) {
         MediaItem item = musicPlayDataService.getNowPlayMusic();
         if (item == null) {
             return;
         }
         player.setMediaItem(item);
+        player.setPlayWhenReady(autoPlay);
         player.prepare();
-        player.play();
+        if (autoPlay) {
+            player.play();
+        } else {
+            player.pause();
+        }
     }
 
     @Override
