@@ -213,6 +213,10 @@ public class MainActivity extends FlutterActivity {
                     requestNotificationPermission();
                     result.success(null);
                     break;
+                case "minimizeApp":
+                    moveTaskToBack(true);
+                    result.success(null);
+                    break;
                 default:
                     result.notImplemented();
             }

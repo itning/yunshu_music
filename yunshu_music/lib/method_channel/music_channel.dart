@@ -8,6 +8,10 @@ import 'package:yunshu_music/provider/login_model.dart';
 import 'package:yunshu_music/provider/music_data_model.dart';
 
 class MusicChannel {
+  MusicChannel({MethodChannel? methodChannel, bool? isAndroid})
+    : _minimizeMethodChannel = methodChannel ?? _methodChannel,
+      _isAndroid = isAndroid ?? (kIsWeb ? false : Platform.isAndroid);
+
   static MusicChannel? _instance;
 
   static MusicChannel get() {
@@ -16,6 +20,9 @@ class MusicChannel {
   }
 
   static const _methodChannel = MethodChannel('yunshu.music/method_channel');
+
+  final MethodChannel _minimizeMethodChannel;
+  final bool _isAndroid;
 
   late Stream<dynamic> playbackStateEvent;
 
@@ -193,12 +200,21 @@ class MusicChannel {
     }
   }
 
+  /// 将 Android 应用移动到后台。
+  Future<void> minimizeApp() async {
+    if (!_isAndroid) {
+      return;
+    }
+    await _minimizeMethodChannel.invokeMethod('minimizeApp');
+  }
+
   /// web 端「添加到主屏幕」是否可用
   bool get canInstallPwa => kIsWeb && channel.canInstallPwa;
 
   /// web 端「添加到主屏幕」可用性变化
-  Stream<bool> get pwaInstallAvailability =>
-      supportMusicChannel() ? channel.pwaInstallAvailability : const Stream.empty();
+  Stream<bool> get pwaInstallAvailability => supportMusicChannel()
+      ? channel.pwaInstallAvailability
+      : const Stream.empty();
 
   /// 触发 web 端「添加到主屏幕」安装弹窗
   Future<void> promptPwaInstall() async {
