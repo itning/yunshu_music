@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "top.itning.yunshu_music"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -55,13 +55,13 @@ flutter {
 }
 
 dependencies {
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("androidx.media3:media3-common:1.11.0")
-    implementation("androidx.media3:media3-exoplayer:1.11.0")
-    implementation("androidx.media3:media3-datasource-okhttp:1.11.0")
-    implementation("androidx.media3:media3-session:1.11.0")
-    implementation("com.tencent:mmkv-static:2.2.2")
-    implementation("com.github.bumptech.glide:glide:4.16.0")
-    implementation("com.github.bumptech.glide:okhttp3-integration:4.16.0")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("com.squareup.okhttp3:okhttp:5.5.0")
+    implementation("androidx.media3:media3-common:1.11.1")
+    implementation("androidx.media3:media3-exoplayer:1.11.1")
+    implementation("androidx.media3:media3-datasource-okhttp:1.11.1")
+    implementation("androidx.media3:media3-session:1.11.1")
+    implementation("com.tencent:mmkv-static:2.4.2")
+    implementation("com.github.bumptech.glide:glide:5.0.9")
+    implementation("com.github.bumptech.glide:okhttp3-integration:5.0.9")
+    annotationProcessor("com.github.bumptech.glide:compiler:5.0.9")
 }
